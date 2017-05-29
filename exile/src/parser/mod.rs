@@ -1,9 +1,10 @@
+use std::collections::HashMap;
 use std::iter::Peekable;
 use std::str::Chars;
 
-use xdoc::{Declaration, Document, Encoding, Version, PI};
+use xdoc::{Declaration, Document, Encoding, PI, Version};
 
-use crate::error::{display_char, parse_err, Error, ParseError, Result, ThrowSite, XMLSite};
+use crate::error::{display_char, Error, parse_err, ParseError, Result, ThrowSite, XMLSite};
 use crate::parser::chars::{is_name_char, is_name_start_char};
 use crate::parser::element::parse_element;
 use crate::parser::pi::parse_pi;
@@ -309,11 +310,12 @@ fn parse_declaration(pi_data: &PI) -> Result<Declaration> {
     if pi_data.target != "xml" {
         return raise!("pi_data.target != xml");
     }
-    if pi_data.instructions.map().len() > 2 {
+    if pi_data.instructions.len() > 2 {
         return raise!("");
     }
-    if let Some(val) = pi_data.instructions.map().get("version") {
-        match val.as_str() {
+    let map = parse_as_map(&pi_data.instructions);
+    if let Some(&val) = map.get("version") {
+        match val {
             "1.0" => {
                 declaration.version = Version::One;
             }
@@ -325,8 +327,8 @@ fn parse_declaration(pi_data: &PI) -> Result<Declaration> {
             }
         }
     }
-    if let Some(val) = pi_data.instructions.map().get("encoding") {
-        match val.as_str() {
+    if let Some(&val) = map.get("encoding") {
+        match val {
             "UTF-8" => {
                 declaration.encoding = Encoding::Utf8;
             }
@@ -336,6 +338,20 @@ fn parse_declaration(pi_data: &PI) -> Result<Declaration> {
         }
     }
     Ok(declaration)
+}
+
+fn parse_as_map<'a, S: AsRef<str>>(data: &'a [S]) -> HashMap<&'a str, &'a str> {
+    let mut result = HashMap::new();
+    for item in data {
+        let s = item.as_ref();
+        let split = s.split("=").collect::<Vec<&str>>();
+        match split.len() {
+            0 => continue,
+            1 => { result.insert(*split.first().unwrap(), ""); }
+            _ => { result.insert(*split.first().unwrap(), *split.get(1).unwrap()); }
+        }
+    }
+    result
 }
 
 fn state_must_be_before_declaration(iter: &Iter) -> Result<()> {
