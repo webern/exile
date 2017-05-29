@@ -1,14 +1,14 @@
 use std::io::Write;
 
+use crate::{Node, OrdMap, WriteOpts};
 use crate::error::Result;
 use crate::write_ops::write_attribute_value;
-use crate::{Node, OrdMap, WriteOpts};
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash, Default)]
 #[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(rename_all = "snake_case")
+feature = "serde",
+derive(Serialize, Deserialize),
+serde(rename_all = "snake_case")
 )]
 /// Represents an Element in an XML Document.
 pub struct Element {
@@ -42,7 +42,7 @@ impl Element {
     /// ```
     /// r's `children()` function would return an iterator over 'a' and 'b'.
     /// Text nodes, processing instructions and comments are skipped/ignored by the iterator.
-    pub fn children(&self) -> impl Iterator<Item = &Element> {
+    pub fn children(&self) -> impl Iterator<Item=&Element> {
         self.nodes.iter().filter_map(|n| {
             if let Node::Element(element) = n {
                 return Some(element);
@@ -105,6 +105,9 @@ impl Element {
         false
     }
 
+    /// Returns the contents of the first `Text` or `CData` node encountered in the element. Useful
+    /// for simple 'text' elements like `<something>text is here</something>` where this function
+    /// will return `Some("text is here")`.
     pub fn text(&self) -> Option<String> {
         for node in &self.nodes {
             match node {
@@ -119,8 +122,8 @@ impl Element {
 
     /// Write the element to the `Write` object.
     pub fn write<W>(&self, writer: &mut W, opts: &WriteOpts, depth: usize) -> Result<()>
-    where
-        W: Write,
+        where
+            W: Write,
     {
         if let Err(e) = self.check() {
             return wrap!(e);
@@ -164,22 +167,13 @@ impl Element {
             if let Err(e) = write!(writer, "/>") {
                 return wrap!(e);
             } else {
-                // if let Err(e) = opts.newline(writer) {
-                //     return wrap!(e);
-                // }
                 return Ok(());
             }
         } else {
-            // if let Err(e) = opts.indent(writer, depth) {
-            //     return wrap!(e);
-            // }
             if let Err(e) = write!(writer, ">") {
                 return wrap!(e);
             }
         }
-        // if let Err(e) = opts.newline(writer) {
-        //     return wrap!(e);
-        // }
 
         for (index, node) in self.nodes.iter().enumerate() {
             if index == 0 && !node.is_text() {

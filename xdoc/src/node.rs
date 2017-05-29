@@ -1,14 +1,14 @@
 use std::io::Write;
 
+use crate::{Element, WriteOpts};
 use crate::error::Result;
 use crate::write_ops::write_element_string;
-use crate::{Element, WriteOpts};
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
 #[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(rename_all = "lowercase")
+feature = "serde",
+derive(Serialize, Deserialize),
+serde(rename_all = "lowercase")
 )]
 /// Represents a Node in an XML Document. The Document consists of a recursive nesting of these.
 pub enum Node {
@@ -26,7 +26,6 @@ pub enum Node {
     /// `<!-- comment -->` - not implemented
     Comment(String),
 
-    // TODO - support pis https://github.com/webern/exile/issues/12
     /// ProcessingInstruction, e.g. `<?target whatever?>` - not implemented
     PI(crate::PI),
 
@@ -44,8 +43,8 @@ impl Default for Node {
 impl Node {
     /// Serialize the XML Document to a `Write` stream.
     pub fn write<W>(&self, writer: &mut W, opts: &WriteOpts, depth: usize) -> Result<()>
-    where
-        W: Write,
+        where
+            W: Write,
     {
         match self {
             Node::Element(data) => data.write(writer, opts, depth),

@@ -13,19 +13,19 @@ compilation dependencies.
 #[macro_use]
 extern crate serde;
 
-use std::hash::Hash;
-
-pub use doc::Document;
+pub use chars::{contains_whitespace, is_whitespace};
 pub use doc::{Declaration, Encoding, Version};
+pub use doc::Document;
 pub use element::Element;
 pub use node::Node;
 pub use ord_map::OrdMap;
+pub use pi::PI;
 pub use write_ops::{Newline, WriteOpts};
 
 pub use crate::error::Result;
 
+/// The public error type for this library. Macros are for internal use.
 #[macro_use]
-/// The public error type for this library.
 pub mod error;
 
 mod doc;
@@ -33,20 +33,8 @@ mod element;
 mod node;
 mod ord_map;
 mod write_ops;
-
-/// Represents a Processing Instruction (PI) in an XML document.
-#[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash, Default)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(rename_all = "snake_case")
-)]
-pub struct PI {
-    /// The processing instruction target.
-    pub target: String,
-    /// The processing instructions.
-    pub instructions: OrdMap,
-}
+mod pi;
+mod chars;
 
 #[cfg(test)]
 mod tests {
