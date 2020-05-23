@@ -1,0 +1,22 @@
+name: exile ci
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ "*" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - run: rustup update stable
+      - run: cargo clippy -- --version && cargo fmt -- --version
+      - run: cargo fmt -- --check
+      - run: cargo clippy --locked -- -D warnings
+      - run: cargo clippy --tests --locked -- -D warnings
+      - run: cargo test --all-features
+      - run: cargo build --package exile --lib

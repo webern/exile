@@ -372,18 +372,6 @@ mod tests {
         assert!(result.is_ok());
         let data = c.into_inner();
         let data_str = std::str::from_utf8(data.as_slice()).unwrap();
-        // TODO - remove this debugging write
-        let we = std::fs::write("/Users/mjb/Desktop/early.xml", data_str);
-        assert!(we.is_ok());
         assert_eq!(data_str, EZFILE_STR);
     }
-
-    // TODO - feature flagging is not working for serde
-    // #[test]
-    // #[cfg(feature = "serde")]
-    // fn write_ezfile_as_json() {
-    //     let doc = create_ezfile();
-    //     let json_str = serde_json::to_string_pretty(&doc).unwrap();
-    //     std::fs::write("/Users/mjb/Desktop/ezfile.json", json_str).unwrap();
-    // }
 }
