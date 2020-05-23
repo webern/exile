@@ -1,28 +1,36 @@
 use std::default::Default;
-use std::io::Write;
+use std::io::{Cursor, Write};
 
 use crate::error::Result;
-use crate::Node;
+use crate::ElementData;
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum XmlVersion {
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(rename_all = "snake_case")
+)]
+pub enum Version {
     None,
     One,
     OneDotOne,
 }
 
-impl Default for XmlVersion {
+impl Default for Version {
     fn default() -> Self {
-        XmlVersion::None
+        Version::None
     }
 }
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(rename_all = "snake_case")
+)]
 pub enum Encoding {
     None,
-    UTF8,
+    Utf8,
 }
 
 impl Default for Encoding {
@@ -32,17 +40,39 @@ impl Default for Encoding {
 }
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash, Default)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct XmlDeclaration {
-    xml_version: XmlVersion,
-    encoding: Encoding,
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(rename_all = "snake_case")
+)]
+pub struct Declaration {
+    pub version: Version,
+    pub encoding: Encoding,
 }
 
-#[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash, Default)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(rename_all = "snake_case")
+)]
 pub struct Document {
-    pub xml_declaration: XmlDeclaration,
-    pub root: Node,
+    pub declaration: Declaration,
+    pub root: ElementData,
+}
+
+impl Default for Document {
+    fn default() -> Self {
+        Document {
+            declaration: Declaration::default(),
+            root: ElementData {
+                namespace: None,
+                name: "root".to_string(),
+                attributes: Default::default(),
+                nodes: vec![],
+            },
+        }
+    }
 }
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
@@ -135,14 +165,14 @@ impl Document {
         Document::default()
     }
 
-    pub fn from_root(root: Node) -> Self {
+    pub fn from_root(root: ElementData) -> Self {
         Document {
-            xml_declaration: Default::default(),
+            declaration: Default::default(),
             root,
         }
     }
 
-    pub fn root(&self) -> &Node {
+    pub fn root(&self) -> &ElementData {
         &self.root
     }
 
@@ -157,30 +187,29 @@ impl Document {
     where
         W: Write,
     {
-        if self.xml_declaration.encoding != Encoding::None
-            || self.xml_declaration.xml_version != XmlVersion::None
+        if self.declaration.encoding != Encoding::None || self.declaration.version != Version::None
         {
             if let Err(e) = write!(writer, "<?xml ") {
                 return wrap!(e);
             }
             let mut need_space = true;
-            match self.xml_declaration.xml_version {
-                XmlVersion::None => need_space = false,
-                XmlVersion::One => {
+            match self.declaration.version {
+                Version::None => need_space = false,
+                Version::One => {
                     if let Err(e) = write!(writer, "version=\"1.0\"") {
                         return wrap!(e);
                     }
                 }
-                XmlVersion::OneDotOne => {
+                Version::OneDotOne => {
                     if let Err(e) = write!(writer, "version=\"1.1\"") {
                         return wrap!(e);
                     }
                 }
             }
 
-            match self.xml_declaration.encoding {
+            match self.declaration.encoding {
                 Encoding::None => {}
-                Encoding::UTF8 => {
+                Encoding::Utf8 => {
                     if need_space {
                         if let Err(e) = write!(writer, " ") {
                             return wrap!(e);
@@ -199,15 +228,33 @@ impl Document {
             }
         }
 
-        if let Node::Element(e) = self.root() {
-            if let Err(e) = e.write(writer, opts, 0) {
-                return wrap!(e);
-            }
-        } else {
-            return raise!("the root is not a node of element type.");
+        if let Err(e) = self.root().write(writer, opts, 0) {
+            return wrap!(e);
         }
 
         Ok(())
+    }
+
+    pub fn to_string_opts(&self, opts: &WriteOpts) -> Result<String> {
+        let mut c = Cursor::new(Vec::new());
+        if let Err(e) = self.write_opts(&mut c, &opts) {
+            return wrap!(e);
+        }
+        let data = c.into_inner();
+        match std::str::from_utf8(data.as_slice()) {
+            Ok(s) => Ok(s.to_owned()),
+            Err(e) => wrap!(e),
+        }
+    }
+}
+
+impl ToString for Document {
+    fn to_string(&self) -> String {
+        let opts = WriteOpts::default();
+        match self.to_string_opts(&opts) {
+            Ok(s) => s,
+            Err(_) => "<error/>".to_string(),
+        }
     }
 }
 
@@ -228,46 +275,43 @@ macro_rules! map (
 mod tests {
     use std::io::Cursor;
 
-    use crate::doc::{Encoding, XmlDeclaration, XmlVersion};
+    use crate::doc::{Declaration, Encoding, Version};
     use crate::*;
 
     fn assert_ezfile(doc: &Document) {
         let root = doc.root();
-        if let Node::Element(root_data) = root {
-            assert_eq!(root_data.name, "cats");
-            assert_eq!(root_data.namespace, None);
-            assert_eq!(root_data.attributes.map().len(), 0);
-            assert_eq!(root_data.nodes.len(), 2);
-            let bones_element = root_data.nodes.get(0).unwrap();
-            if let Node::Element(bones) = bones_element {
-                assert_eq!(bones.name, "cat");
-                assert_eq!(bones.namespace, None);
-                assert_eq!(bones.attributes.map().len(), 1);
-                assert_eq!(bones.nodes.len(), 0);
-                let name = bones.attributes.map().get("name").unwrap();
-                assert_eq!(name, "bones");
+        let root_data = root;
+        assert_eq!(root_data.name, "cats");
+        assert_eq!(root_data.namespace, None);
+        assert_eq!(root_data.attributes.map().len(), 0);
+        assert_eq!(root_data.nodes.len(), 2);
+        let bones_element = root_data.nodes.get(0).unwrap();
+        if let Node::Element(bones) = bones_element {
+            assert_eq!(bones.name, "cat");
+            assert_eq!(bones.namespace, None);
+            assert_eq!(bones.attributes.map().len(), 1);
+            assert_eq!(bones.nodes.len(), 0);
+            let name = bones.attributes.map().get("name").unwrap();
+            assert_eq!(name, "bones");
+        } else {
+            panic!("bones was supposed to be an element but was not");
+        }
+        let bishop_element = root_data.nodes.get(1).unwrap();
+        if let Node::Element(bishop) = bishop_element {
+            assert_eq!(bishop.name, "cat");
+            assert_eq!(bishop.namespace, None);
+            assert_eq!(bishop.attributes.map().len(), 1);
+            let name = bishop.attributes.map().get("name").unwrap();
+            assert_eq!(name, "bishop");
+            // assert text data
+            assert_eq!(bishop.nodes.len(), 1);
+            if let Node::String(text) = bishop.nodes.get(0).unwrap() {
+                assert_eq!(text, "punks");
             } else {
-                panic!("bones was supposed to be an element but was not");
-            }
-            let bishop_element = root_data.nodes.get(1).unwrap();
-            if let Node::Element(bishop) = bishop_element {
-                assert_eq!(bishop.name, "cat");
-                assert_eq!(bishop.namespace, None);
-                assert_eq!(bishop.attributes.map().len(), 1);
-                let name = bishop.attributes.map().get("name").unwrap();
-                assert_eq!(name, "bishop");
-                // assert text data
-                assert_eq!(bishop.nodes.len(), 1);
-                if let Node::String(text) = bishop.nodes.get(0).unwrap() {
-                    assert_eq!(text, "punks");
-                } else {
-                    panic!("Expected to find a text node but it was not there.");
-                }
-            } else {
-                panic!("bones was supposed to be an element but was not");
+                panic!("Expected to find a text node but it was not there.");
             }
         } else {
-            panic!("the root was not an element");
+            panic!("bones was supposed to be an element but was not");
         }
     }
 
@@ -306,11 +350,11 @@ mod tests {
         // Document::from_root(Node::Element(cats_data))
 
         Document {
-            xml_declaration: XmlDeclaration {
-                xml_version: XmlVersion::One,
-                encoding: Encoding::UTF8,
+            declaration: Declaration {
+                version: Version::One,
+                encoding: Encoding::Utf8,
             },
-            root: Node::Element(cats_data),
+            root: cats_data,
         }
     }
 
@@ -333,4 +377,13 @@ mod tests {
         assert!(we.is_ok());
         assert_eq!(data_str, EZFILE_STR);
     }
+
+    // TODO - feature flagging is not working for serde
+    // #[test]
+    // #[cfg(feature = "serde")]
+    // fn write_ezfile_as_json() {
+    //     let doc = create_ezfile();
+    //     let json_str = serde_json::to_string_pretty(&doc).unwrap();
+    //     std::fs::write("/Users/mjb/Desktop/ezfile.json", json_str).unwrap();
+    // }
 }

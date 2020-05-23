@@ -3,22 +3,41 @@
   "syntax": {
     "good": {}
   },
-  "assertions": [
-    {
-      "path": "/cats/cat[0]/name",
-      "expected": {
-        "attribute": {
-          "value": "bones"
-        }
-      }
+  "expected": {
+    "declaration": {
+      "version": "one",
+      "encoding": "utf8"
     },
-    {
-      "path": "/cats/cat[1]/name",
-      "expected": {
-        "attribute": {
-          "value": "bishop"
+    "root": {
+      "namespace": null,
+      "name": "cats",
+      "attributes": {},
+      "nodes": [
+        {
+          "element": {
+            "namespace": null,
+            "name": "cat",
+            "attributes": {
+              "name": "bones"
+            },
+            "nodes": []
+          }
+        },
+        {
+          "element": {
+            "namespace": null,
+            "name": "cat",
+            "attributes": {
+              "name": "bishop"
+            },
+            "nodes": [
+              {
+                "string": "punks"
+              }
+            ]
+          }
         }
-      }
+      ]
     }
-  ]
+  }
 }

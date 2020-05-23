@@ -3,7 +3,6 @@ name = "xtest"
 version = "0.0.0"
 authors = ["Matthew James Briggs <matthew.james.briggs@gmail.com>"]
 edition = "2018"
-license = "MIT OR Apache-2.0"
 
 [dependencies]
 env_logger = "0.7.1"

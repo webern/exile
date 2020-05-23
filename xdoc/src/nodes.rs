@@ -5,7 +5,11 @@ use std::hash::{Hash, Hasher};
 use crate::node::Node;
 
 #[derive(Debug, Eq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(rename_all = "snake_case")
+)]
 pub struct Nodes(VecDeque<Node>);
 
 impl Clone for Nodes {

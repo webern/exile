@@ -4,7 +4,11 @@ use crate::doc::WriteOpts;
 use crate::error::Result;
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(rename_all = "snake_case")
+)]
 pub enum Node {
     // <element>
     Element(crate::ElementData),

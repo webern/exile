@@ -6,6 +6,7 @@ use std::hash::Hash;
 use std::io::Write;
 
 pub use doc::Document;
+pub use doc::{Declaration, Encoding, Version};
 pub use node::Node;
 pub use nodes::Nodes;
 pub use ord_map::OrdMap;
@@ -22,25 +23,44 @@ mod nodes;
 mod ord_map;
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash, Default)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(rename_all = "snake_case")
+)]
 pub struct Name {
     pub namespace: Option<String>,
     pub name: String,
 }
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash, Default)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct PIData {}
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(rename_all = "snake_case")
+)]
+pub struct PIData {
+    pub target: String,
+    pub instructions: OrdMap,
+}
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash, Default)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(rename_all = "snake_case")
+)]
 struct Attribute {
     key: String,
     value: String,
 }
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash, Default)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(rename_all = "snake_case")
+)]
 pub struct ElementData {
     pub namespace: Option<String>,
     pub name: String,
@@ -64,6 +84,15 @@ impl ElementData {
             }
         }
         Ok(())
+    }
+
+    pub fn fullname(&self) -> String {
+        if let Some(ns) = &self.namespace {
+            if !ns.is_empty() {
+                return format!("{}:{}", ns, self.name);
+            }
+        }
+        self.name.clone()
     }
 
     pub fn write<W>(&self, writer: &mut W, opts: &WriteOpts, depth: usize) -> Result<()>
@@ -179,12 +208,12 @@ mod tests {
     #[test]
     fn structs_test() {
         let mut doc = Document::new();
-        doc.root = Node::Element(ElementData {
+        doc.root = ElementData {
             namespace: None,
             name: "root-element".to_string(),
             attributes: Default::default(),
             nodes: vec![],
-        });
+        };
         let mut c = Cursor::new(Vec::new());
         let result = doc.write(&mut c);
         assert!(result.is_ok());
