@@ -42,7 +42,7 @@ impl Position {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash, Default)]
 pub(crate) struct ParserState {
     pub(crate) position: Position,
     pub(crate) c: char,
