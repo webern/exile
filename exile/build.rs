@@ -37,7 +37,7 @@ fn generate_readme() {
 
 fn generate_tests() {
     // Check for environment variable "SKIP_TEST_GENERATION". If it is set, skip test generation.
-    if env::var_os("EZXML_GENERATE_TESTS").is_none() {
+    if env::var_os("EXILE_GENERATE_TESTS").is_none() {
         return;
     }
     let test_file_path = integ_test_dir().join("parse_tests.rs");

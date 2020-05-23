@@ -10,9 +10,6 @@ repository = "https://github.com/webern/exile/"
 
 
 [dependencies]
-env_logger = "0.7.1"
-log = "0.4.8"
-snafu = "0.6.2"
 xdoc = { version = "0.0.0", path = "../xdoc" }
 
 [build-dependencies]

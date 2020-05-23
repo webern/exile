@@ -7,10 +7,10 @@ fn bad_syntax_unescaped_angle_test() {
     assert!(parse_result.is_err());
     let err = parse_result.err().unwrap();
     match err {
-        exile::error::Error::Parse { position, .. } => {
-            assert_eq!(position.absolute, 95);
-            assert_eq!(position.line, 4);
-            assert_eq!(position.column, 39);
+        exile::error::Error::Parse(parse_error) => {
+            assert_eq!(parse_error.xml_site.position, 95);
+            assert_eq!(parse_error.xml_site.line, 4);
+            assert_eq!(parse_error.xml_site.column, 39);
         }
         _ => panic!("Error was expected to be of type exile::error::Error::Parse, but was not."),
     }
@@ -24,10 +24,10 @@ fn bad_syntax_angle_in_attribute_value_test() {
     assert!(parse_result.is_err());
     let err = parse_result.err().unwrap();
     match err {
-        exile::error::Error::Parse { position, .. } => {
-            assert_eq!(position.absolute, 51);
-            assert_eq!(position.line, 2);
-            assert_eq!(position.column, 12);
+        exile::error::Error::Parse(parse_error) => {
+            assert_eq!(parse_error.xml_site.position, 51);
+            assert_eq!(parse_error.xml_site.line, 2);
+            assert_eq!(parse_error.xml_site.column, 12);
         }
         _ => panic!("Error was expected to be of type exile::error::Error::Parse, but was not."),
     }
