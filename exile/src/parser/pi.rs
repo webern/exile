@@ -100,7 +100,7 @@ fn take_processing_instruction_char(iter: &mut Iter, processor: &mut PIProcessor
             if iter.st.c.is_ascii_whitespace() {
                 processor.status = PIStatus::AfterTarget;
             } else if !is_name_char(iter.st.c) {
-                return parse!(&iter.st);
+                return parse_err!(iter);
             } else {
                 processor.pi_data.target.push(iter.st.c);
             }

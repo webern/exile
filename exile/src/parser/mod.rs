@@ -109,7 +109,7 @@ impl<'a> Iter<'a> {
         if self.advance() {
             Ok(())
         } else {
-            parse!(&self.st, "iter could not be advanced")
+            parse_err!(self, "iter could not be advanced")
         }
     }
 
@@ -129,7 +129,7 @@ impl<'a> Iter<'a> {
         if self.is(expected) {
             Ok(())
         } else {
-            parse!(
+            parse_err!(
                 &self.st,
                 "expected '{}' but found '{}'",
                 expected,
@@ -157,7 +157,7 @@ impl<'a> Iter<'a> {
         if self.is_name_start_char() {
             Ok(())
         } else {
-            parse!(&self.st, "expected name start char, found '{}'", self.st.c)
+            parse_err!(self, "expected name start char, found '{}'", self.st.c)
         }
     }
 
@@ -165,7 +165,7 @@ impl<'a> Iter<'a> {
         if self.is_name_char() {
             Ok(())
         } else {
-            parse!(&self.st, "expected name char, found '{}'", self.st.c)
+            parse_err!(self, "expected name char, found '{}'", self.st.c)
         }
     }
 

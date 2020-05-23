@@ -200,24 +200,11 @@ where
     })
 }
 
-// pub(crate) fn parse_result<S, E, T>(
-//     parser_state: &ParserState,
-//     throw_site: ThrowSite,
-//     message: Option<S>,
-//     source: Option<E>,
-// ) -> crate::error::Result<T>
-// where
-//     S: Into<String>,
-//     E: std::error::Error + 'static,
-// {
-//     Err(parse_err(parser_state, throw_site, message, source))
-// }
-
 /// Creates a ParseError object.
 /// parser_state: required as the first argument
 /// message: optional, can be a string or a format
 #[macro_export]
-macro_rules! parse_err {
+macro_rules! create_parser_error {
     // required: first argument must be the ParserState object
     ($parser_state:expr) => {
         crate::error::parse_err(
@@ -255,17 +242,17 @@ macro_rules! expect {
 }
 
 /// Creates a Result populated by a ParseError
-/// parser_state: required as the first object
+/// iter: required as the first argument, `Iter`
 /// message: optional, can be a string or a format
 #[macro_export]
-macro_rules! parse {
+macro_rules! parse_err {
     // required: first argument must be the ParserState object
-    ($parser_state:expr) => { Err(parse_err!($parser_state)) };
+    ($iter:expr) => { Err(create_parser_error!(&$iter.st)) };
     // optional: second argument can be a simple string message
-    ($parser_state:expr, $msg:expr) => { Err(parse_err!($parser_state, $msg) ) };
+    ($iter:expr, $msg:expr) => { Err(create_parser_error!(&$iter.st, $msg) ) };
     // optional: format!
-    ($parser_state:expr, $fmt:expr, $($arg:expr),+) => {
-        Err(parse_err!($parser_state, $fmt, $($arg),+))
+    ($iter:expr, $fmt:expr, $($arg:expr),+) => {
+        Err(create_parser_error!(&$iter.st, $fmt, $($arg),+))
     };
 }
 
@@ -278,7 +265,7 @@ fn parse_err_test_simple() {
     p.c = 'o';
     let expected_file = file!().to_owned();
     let expected_line = line!() + 1;
-    let e = parse_err!(&p);
+    let e = create_parser_error!(&p);
     if let Error::Parse(pe) = e {
         assert_eq!(2, pe.xml_site.line);
         assert_eq!(31, pe.xml_site.position);
@@ -301,7 +288,7 @@ fn parse_err_test_message() {
     let message = "some message";
     let expected_file = file!().to_owned();
     let expected_line = line!() + 1;
-    let e = parse_err!(&p, message);
+    let e = create_parser_error!(&p, message);
     if let Error::Parse(pe) = e {
         assert_eq!(2, pe.xml_site.line);
         assert_eq!(31, pe.xml_site.position);
@@ -324,7 +311,7 @@ fn parse_err_test_message_fmt() {
     let message = format!("some message {}", 6);
     let expected_file = file!().to_owned();
     let expected_line = line!() + 1;
-    let e = parse_err!(&p, "some message {}", 6);
+    let e = create_parser_error!(&p, "some message {}", 6);
     if let Error::Parse(pe) = e {
         assert_eq!(5, pe.xml_site.line);
         assert_eq!(45, pe.xml_site.position);
@@ -339,14 +326,23 @@ fn parse_err_test_message_fmt() {
 
 #[test]
 fn parse_result_test_simple() {
-    let mut p = ParserState::default();
-    p.position.line = 2;
-    p.position.absolute = 31;
-    p.position.column = 10;
-    p.c = 'o';
+    use crate::parser::Position;
+    let mut iter = crate::parser::Iter {
+        it: "".chars().peekable(),
+        st: ParserState {
+            position: Position {
+                line: 2,
+                column: 10,
+                absolute: 31,
+            },
+            c: 'o',
+            doc_status: Default::default(),
+            tag_status: Default::default(),
+        },
+    };
     let expected_file = file!().to_owned();
     let expected_line = line!() + 1;
-    let result: crate::error::Result<u32> = parse!(&p);
+    let result: crate::error::Result<u32> = parse_err!(iter);
     let e = result.err().unwrap();
     if let Error::Parse(pe) = e {
         assert_eq!(2, pe.xml_site.line);
@@ -362,15 +358,24 @@ fn parse_result_test_simple() {
 
 #[test]
 fn parse_result_test_message() {
-    let mut p = ParserState::default();
-    p.position.line = 2;
-    p.position.absolute = 31;
-    p.position.column = 10;
-    p.c = 'o';
+    use crate::parser::Position;
+    let mut iter = crate::parser::Iter {
+        it: "".chars().peekable(),
+        st: ParserState {
+            position: Position {
+                line: 2,
+                column: 10,
+                absolute: 31,
+            },
+            c: 'o',
+            doc_status: Default::default(),
+            tag_status: Default::default(),
+        },
+    };
     let message = "some message";
     let expected_file = file!().to_owned();
     let expected_line = line!() + 1;
-    let result: Result<Option<String>> = parse!(&p, message);
+    let result: Result<Option<String>> = parse_err!(iter, message);
     let e = result.err().unwrap();
     if let Error::Parse(pe) = e {
         assert_eq!(2, pe.xml_site.line);
@@ -386,16 +391,25 @@ fn parse_result_test_message() {
 
 #[test]
 fn parse_result_test_message_fmt() {
+    use crate::parser::Position;
     use xdoc::ElementData;
-    let mut p = ParserState::default();
-    p.position.line = 5;
-    p.position.absolute = 45;
-    p.position.column = 9;
-    p.c = 'o';
+    let mut iter = crate::parser::Iter {
+        it: "".chars().peekable(),
+        st: ParserState {
+            position: Position {
+                line: 5,
+                column: 45,
+                absolute: 9,
+            },
+            c: 'o',
+            doc_status: Default::default(),
+            tag_status: Default::default(),
+        },
+    };
     let message = format!("some message {}", 6);
     let expected_file = file!().to_owned();
     let expected_line = line!() + 1;
-    let result: Result<ElementData> = parse!(&p, "some message {}", 6);
+    let result: Result<ElementData> = parse_err!(iter "some message {}", 6);
     let e = result.err().unwrap();
     if let Error::Parse(pe) = e {
         assert_eq!(5, pe.xml_site.line);
