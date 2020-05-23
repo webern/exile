@@ -1,25 +1,25 @@
 use core::fmt;
 use std::cmp::Ordering;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::hash::{Hash, Hasher};
 
 // TODO - extract key and value types
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct OrdMap(HashMap<String, String>);
+pub struct OrdMap(BTreeMap<String, String>);
 
 impl OrdMap {
     pub fn new() -> Self {
-        OrdMap(HashMap::new())
+        OrdMap(BTreeMap::new())
     }
 
-    pub fn from(inner: HashMap<String, String>) -> Self {
+    pub fn from(inner: BTreeMap<String, String>) -> Self {
         OrdMap(inner)
     }
 }
 
 impl Clone for OrdMap {
     fn clone(&self) -> Self {
-        let mut result = HashMap::new();
+        let mut result = BTreeMap::new();
         for (k, v) in self.0.iter() {
             result.insert(k.clone(), v.clone());
         }
@@ -29,7 +29,7 @@ impl Clone for OrdMap {
 
 impl Default for OrdMap {
     fn default() -> Self {
-        Self(HashMap::new())
+        Self(BTreeMap::new())
     }
 }
 
@@ -54,11 +54,11 @@ impl PartialEq for OrdMap {
 impl Eq for OrdMap {}
 
 impl OrdMap {
-    pub fn map(&self) -> &HashMap<String, String> {
+    pub fn map(&self) -> &BTreeMap<String, String> {
         &self.0
     }
 
-    pub fn mut_map(&mut self) -> &mut HashMap<String, String> {
+    pub fn mut_map(&mut self) -> &mut BTreeMap<String, String> {
         &mut self.0
     }
 
@@ -137,5 +137,46 @@ impl Hash for OrdMap {
             k.hash(state);
             v.hash(state);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::OrdMap;
+
+    /// Although this test does nothing but explore the behavior of a built-in data structure, it's
+    /// here to demonstrate the desired characteristic of that data structure. We want attributes to
+    /// serialize in the order that they were inserted.
+    #[test]
+    fn map_insertion_order() {
+        let mut a = OrdMap::new();
+        a.mut_map().insert("0".to_string(), String::new());
+        a.mut_map().insert("1".to_string(), String::new());
+        a.mut_map().insert("2".to_string(), String::new());
+        a.mut_map().insert("3".to_string(), String::new());
+        a.mut_map().insert("4".to_string(), String::new());
+        let entries = a.map().keys();
+        for (i, item) in entries.enumerate() {
+            assert_eq!(format!("{}", i), item.to_owned());
+        }
+    }
+
+    /// This test demonstrates that two maps containing the same entries are equal irrespective of
+    /// insertion order.
+    #[test]
+    fn map_equality() {
+        let mut a = OrdMap::new();
+        a.mut_map().insert("0".to_string(), "a".to_string());
+        a.mut_map().insert("1".to_string(), "b".to_string());
+        a.mut_map().insert("2".to_string(), "c".to_string());
+        a.mut_map().insert("3".to_string(), "d".to_string());
+        a.mut_map().insert("4".to_string(), "e".to_string());
+        let mut b = OrdMap::new();
+        b.mut_map().insert("4".to_string(), "e".to_string());
+        b.mut_map().insert("3".to_string(), "d".to_string());
+        b.mut_map().insert("1".to_string(), "b".to_string());
+        b.mut_map().insert("2".to_string(), "c".to_string());
+        b.mut_map().insert("0".to_string(), "a".to_string());
+        assert_eq!(a, b);
     }
 }
