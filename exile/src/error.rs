@@ -6,7 +6,7 @@ use core::fmt;
 use std::fmt::{Display, Formatter};
 use std::ops::Deref;
 
-use crate::parser::{ParserState, Position};
+use crate::parser::ParserState;
 
 /// Alias for `Result<T, Error>`.
 pub type Result<T> = std::result::Result<T, Error>;
@@ -67,17 +67,13 @@ pub struct XMLSite {
     pub column: u64,
     /// The absolute character position within the line where an error was encountered. 1-based.
     pub position: u64,
+    /// The character that was in scope with the error was encountered.
+    pub character: char,
 }
 
-impl From<Position> for XMLSite {
-    fn from(p: Position) -> Self {
-        XMLSite::from_position(&p)
-    }
-}
-
-impl From<XMLSite> for Position {
-    fn from(x: XMLSite) -> Self {
-        x.to_position()
+impl From<ParserState> for XMLSite {
+    fn from(p: ParserState) -> Self {
+        XMLSite::from_parser(&p)
     }
 }
 
@@ -153,19 +149,12 @@ impl std::error::Error for crate::error::Error {
 // PRIVATE
 
 impl XMLSite {
-    fn from_position(p: &Position) -> Self {
+    fn from_parser(p: &ParserState) -> Self {
         Self {
-            line: p.line,
-            column: p.column,
-            position: p.absolute,
-        }
-    }
-
-    fn to_position(&self) -> Position {
-        Position {
-            line: self.line,
-            column: self.column,
-            absolute: self.position,
+            line: p.position.line,
+            column: p.position.column,
+            position: p.position.absolute,
+            character: p.c,
         }
     }
 }
@@ -173,7 +162,7 @@ impl XMLSite {
 #[macro_export]
 macro_rules! throw_site {
     () => {
-        ThrowSite {
+        crate::error::ThrowSite {
             file: file!().to_owned(),
             line: line!(),
         }
@@ -190,7 +179,7 @@ where
     }
 }
 
-fn parse_err<S, E>(
+pub(crate) fn parse_err<S, E>(
     parser_state: &ParserState,
     throw_site: ThrowSite,
     message: Option<S>,
@@ -202,7 +191,7 @@ where
 {
     crate::error::Error::Parse(ParseError {
         throw_site,
-        xml_site: XMLSite::from_position(&parser_state.position),
+        xml_site: XMLSite::from_parser(&parser_state),
         message: match message {
             None => None,
             Some(s) => Some(s.into()),
@@ -211,27 +200,27 @@ where
     })
 }
 
-fn parse_result<S, E, T>(
-    parser_state: &ParserState,
-    throw_site: ThrowSite,
-    message: Option<S>,
-    source: Option<E>,
-) -> crate::error::Result<T>
-where
-    S: Into<String>,
-    E: std::error::Error + 'static,
-{
-    Err(parse_err(parser_state, throw_site, message, source))
-}
+// pub(crate) fn parse_result<S, E, T>(
+//     parser_state: &ParserState,
+//     throw_site: ThrowSite,
+//     message: Option<S>,
+//     source: Option<E>,
+// ) -> crate::error::Result<T>
+// where
+//     S: Into<String>,
+//     E: std::error::Error + 'static,
+// {
+//     Err(parse_err(parser_state, throw_site, message, source))
+// }
 
 /// Creates a ParseError object.
-/// parser_state: required as the first object
+/// parser_state: required as the first argument
 /// message: optional, can be a string or a format
 #[macro_export]
 macro_rules! parse_err {
     // required: first argument must be the ParserState object
     ($parser_state:expr) => {
-        parse_err(
+        crate::error::parse_err(
             $parser_state,
             throw_site!(),
             Option::<String>::None,
@@ -240,7 +229,7 @@ macro_rules! parse_err {
     };
     // optional: second argument can be a simple string message
     ($parser_state:expr, $msg:expr) => {
-        parse_err(
+        crate::error::parse_err(
             $parser_state,
             throw_site!(),
             Some($msg),
@@ -248,12 +237,20 @@ macro_rules! parse_err {
         )
     };
     ($parser_state:expr, $fmt:expr, $($arg:expr),+) => {
-        parse_err(
+        crate::error::parse_err(
             $parser_state,
             throw_site!(),
             Some(format!($fmt, $($arg),+)),
             Option::<crate::error::Error>::None,
         )
+    };
+}
+
+/// Creates a ParseError object, requires an 'Iter' and the expected 'char'.
+#[macro_export]
+macro_rules! expect {
+    ($iter:expr, $c:expr) => {
+        $iter.expect($c, throw_site!())
     };
 }
 

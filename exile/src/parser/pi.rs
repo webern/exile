@@ -68,9 +68,9 @@ impl PIProcessor {
 }
 
 pub(crate) fn parse_pi(iter: &mut Iter) -> Result<PIData> {
-    iter.expect('<')?;
+    expect!(iter, '<')?;
     iter.advance_or_die()?;
-    iter.expect('?')?;
+    expect!(iter, '?')?;
     iter.advance_or_die()?;
     let mut processor = PIProcessor::new();
     loop {
@@ -100,7 +100,7 @@ fn take_processing_instruction_char(iter: &mut Iter, processor: &mut PIProcessor
             if iter.st.c.is_ascii_whitespace() {
                 processor.status = PIStatus::AfterTarget;
             } else if !is_name_char(iter.st.c) {
-                return Err(iter.err(file!(), line!()));
+                return parse!(&iter.st);
             } else {
                 processor.pi_data.target.push(iter.st.c);
             }

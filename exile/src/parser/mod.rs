@@ -3,7 +3,7 @@ use std::str::Chars;
 
 use xdoc::{Declaration, Document, Encoding, PIData, Version};
 
-use crate::error::{Error, ParseError, Result, ThrowSite};
+use crate::error::{Error, ParseError, Result, ThrowSite, XMLSite};
 use crate::parser::chars::{is_name_char, is_name_start_char};
 use crate::parser::element::parse_element;
 use crate::parser::pi::parse_pi;
@@ -42,12 +42,23 @@ impl Position {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash, Default)]
+#[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
 pub(crate) struct ParserState {
     pub(crate) position: Position,
     pub(crate) c: char,
     pub(crate) doc_status: DocStatus,
     pub(crate) tag_status: TagStatus,
+}
+
+impl Default for ParserState {
+    fn default() -> Self {
+        Self {
+            position: Default::default(),
+            c: '_',
+            doc_status: Default::default(),
+            tag_status: Default::default(),
+        }
+    }
 }
 
 pub(crate) struct Iter<'a> {
@@ -73,7 +84,7 @@ impl<'a> Iter<'a> {
                     file: file!().to_owned(),
                     line: line!(),
                 },
-                xml_site: Position::default().into(),
+                xml_site: ParserState::default().into(),
                 message: Some("iter advancement was required, but not possible".to_string()),
                 source: None,
             }));
@@ -98,27 +109,32 @@ impl<'a> Iter<'a> {
         if self.advance() {
             Ok(())
         } else {
-            Err(self.err(file!(), line!()))
+            parse!(&self.st, "iter could not be advanced")
         }
     }
 
-    pub(crate) fn err(&self, file: &str, line: u32) -> Error {
+    pub(crate) fn errx(&self, file: &str, line: u32) -> Error {
         Error::Parse(ParseError {
             throw_site: ThrowSite {
                 file: file.to_owned(),
                 line,
             },
-            xml_site: self.st.position.clone().into(),
+            xml_site: self.st.clone().into(),
             message: None,
             source: None,
         })
     }
 
-    pub(crate) fn expect(&self, expected: char) -> Result<()> {
+    pub(crate) fn expect(&self, expected: char, site: ThrowSite) -> Result<()> {
         if self.is(expected) {
             Ok(())
         } else {
-            Err(self.err(file!(), line!()))
+            parse!(
+                &self.st,
+                "expected '{}' but found '{}'",
+                expected,
+                self.st.c
+            )
         }
     }
 
@@ -138,18 +154,18 @@ impl<'a> Iter<'a> {
     }
 
     pub(crate) fn expect_name_start_char(&self) -> Result<()> {
-        if !self.is_name_start_char() {
-            Err(self.err(file!(), line!()))
-        } else {
+        if self.is_name_start_char() {
             Ok(())
+        } else {
+            parse!(&self.st, "expected name start char, found '{}'", self.st.c)
         }
     }
 
     pub(crate) fn expect_name_char(&self) -> Result<()> {
-        if !self.is_name_char() {
-            Err(self.err(file!(), line!()))
-        } else {
+        if self.is_name_char() {
             Ok(())
+        } else {
+            parse!(&self.st, "expected name char, found '{}'", self.st.c)
         }
     }
 
@@ -233,9 +249,12 @@ fn parse_document(iter: &mut Iter, document: &mut Document) -> Result<()> {
                 break;
             }
             continue;
-        } else if iter.st.c != '<' {
-            return Err(iter.err(file!(), line!()));
         }
+        expect!(iter, '<')?;
+        // iter.expect('<')?;
+        // else if iter.st.c != '<' {
+        //     return Err(iter.err(file!(), line!()));
+        // }
         let next = peek_or_die(iter)?;
         match next {
             '?' => {
