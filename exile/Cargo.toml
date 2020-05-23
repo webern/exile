@@ -1,0 +1,22 @@
+[package]
+name = "exile"
+version = "0.0.0"
+authors = ["Matthew James Briggs <matthew.james.briggs@gmail.com>"]
+edition = "2018"
+license = "MIT OR Apache-2.0"
+keywords = ["xml"]
+categories = ["encoding", "parsing"]
+repository = "https://github.com/webern/exile/"
+
+
+[dependencies]
+snafu = "0.6.2"
+env_logger = "0.7.1"
+log = "0.4.8"
+
+[build-dependencies]
+xml-files = {path = "../xml-files"}
+cargo-readme = "3.2.0"
+
+[dev-dependencies]
+xml-files = {path = "../xml-files"}

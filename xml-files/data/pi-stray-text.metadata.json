@@ -1,0 +1,10 @@
+{
+  "description": "processing instruction close with no open",
+  "syntax": {
+    "bad": {
+      "character_position": 85,
+      "line": 3,
+      "column": 39
+    }
+  }
+}
