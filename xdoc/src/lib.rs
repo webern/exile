@@ -50,17 +50,6 @@ pub struct PIData {
     derive(Serialize, Deserialize),
     serde(rename_all = "snake_case")
 )]
-struct Attribute {
-    key: String,
-    value: String,
-}
-
-#[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash, Default)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(rename_all = "snake_case")
-)]
 pub struct ElementData {
     pub namespace: Option<String>,
     pub name: String,

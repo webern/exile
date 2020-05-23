@@ -262,7 +262,7 @@ impl ToString for Document {
 macro_rules! map (
     { $($key:expr => $value:expr),+ } => {
         {
-            let mut m = ::std::collections::HashMap::new();
+            let mut m = ::std::collections::BTreeMap::new();
             $(
                 m.insert($key, $value);
             )+
