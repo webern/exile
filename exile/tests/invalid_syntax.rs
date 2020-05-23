@@ -31,7 +31,7 @@
 //     pub metadata: PathBuf,
 // }
 
-// pub fn get_xml_files(listing: &Vec<PathBuf>) -> Vec<TestXmlFile> {
+// pub fn get_xtest(listing: &Vec<PathBuf>) -> Vec<TestXmlFile> {
 //     let mut map: HashMap<String, TestXmlFile> = HashMap::new();
 //     let mut result = Vec::new();
 //     for p in listing.iter() {
@@ -106,7 +106,7 @@
 // fn test() {
 //     init_logger();
 //     let files = get_files();
-//     let stuff = get_xml_files(&files);
+//     let stuff = get_xtest(&files);
 //     assert!(stuff.len() > 0);
 //     for x in stuff.iter() {
 //         println!("{:?}", x);

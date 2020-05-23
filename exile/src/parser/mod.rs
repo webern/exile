@@ -5,28 +5,10 @@ use std::str::Chars;
 
 use snafu::{Backtrace, GenerateBacktrace, ResultExt};
 
-// use crate::error::Error::Bug;
+use xdoc::Document;
+
 use crate::error::{self, Result};
 use crate::parser::TagStatus::OutsideTag;
-// use crate::parser::UserDataStatus::Outside;
-use crate::structure;
-use crate::structure::{ElementContent, ParserMetadata};
-
-// mod error;
-
-// #[derive(Debug, Clone, Copy, Eq, PartialOrd, PartialEq, Hash)]
-// pub enum DocState {
-//     BeforeFirstTag,
-//     XmlDeclaration,
-//     Doctype,
-//     RootElement,
-// }
-
-// impl Default for DocState {
-//     fn default() -> Self {
-//         DocState::BeforeFirstTag
-//     }
-// }
 
 // Comparison traits: Eq, PartialEq, Ord, PartialOrd.
 // Clone, to create T from &T via a copy.
@@ -38,7 +20,7 @@ use crate::structure::{ElementContent, ParserMetadata};
 
 const _BUFF_SIZE: usize = 1024;
 
-pub fn _parse<R: BufRead>(r: &mut R) -> error::Result<structure::Document> {
+pub fn _parse<R: BufRead>(r: &mut R) -> error::Result<Document> {
     let mut s = String::new();
     let _ = r.read_to_string(&mut s).context(error::IoRead {
         parse_location: error::ParseLocation { line: 0, column: 0 },
@@ -84,7 +66,7 @@ struct ParserState {
     tag_status: TagStatus,
 }
 
-pub fn parse_str(s: &str) -> Result<structure::Document> {
+pub fn parse_str(s: &str) -> Result<Document> {
     let mut state = ParserState {
         position: Default::default(),
         // doc_state: DocState::BeforeFirstTag,
@@ -99,19 +81,9 @@ pub fn parse_str(s: &str) -> Result<structure::Document> {
         trace!("{:?}", state);
     }
 
-    Ok(structure::Document {
-        // version: None,
-        // encoding: None,
-        root: structure::Element {
-            parser_metadata: ParserMetadata {},
-            namespace: None,
-            name: "x".to_string(),
-            content: ElementContent::Empty,
-        },
-    })
+    Ok(Document::new())
 }
 
-// <tag></tag>
 #[derive(Debug, Clone, Copy, Eq, PartialOrd, PartialEq, Hash)]
 enum TagStatus {
     TagOpen(u64),
@@ -126,22 +98,7 @@ impl Default for TagStatus {
     }
 }
 
-// #[derive(Debug, Clone, Copy, Eq, PartialOrd, PartialEq, Hash)]
-// enum UserDataStatus {
-//     Inside,
-//     Outside,
-// }
-
-// impl Default for UserDataStatus {
-//     fn default() -> Self {
-//         return UserDataStatus::Outside;
-//     }
-// }
-
 fn is_space_or_alpha(c: char) -> bool {
-    // if (c == ' ') {
-    //     return true;
-    // }
     c.is_alphabetic() || c.is_ascii_whitespace()
 }
 
@@ -185,7 +142,7 @@ fn process_char(_iter: &mut Chars, state: &mut ParserState) -> Result<()> {
             } else {
                 state.tag_status = TagStatus::OutsideTag;
             }
-            // TODO pop the start and stop locations over to a tag parer?
+            // TODO pop the start and stop locations over to a tag parser?
         }
         OutsideTag => {
             if state.current_char == '<' {

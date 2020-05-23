@@ -1,0 +1,9 @@
+[package]
+name = "xdoc"
+version = "0.0.0"
+authors = ["Matthew James Briggs <matthew.james.briggs@gmail.com>"]
+edition = "2018"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+serde = { version = "1.0.106", optional = true, features = ["derive"] }

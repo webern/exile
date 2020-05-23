@@ -2,5 +2,6 @@
 
 members = [
     "exile",
-    "xml-files"
+    "xdoc",
+    "xtest"
 ]

@@ -1,0 +1,6 @@
+{
+  "description": "a valid, but awkward xml file",
+  "syntax": {
+    "good": {}
+  }
+}

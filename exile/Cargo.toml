@@ -10,13 +10,14 @@ repository = "https://github.com/webern/exile/"
 
 
 [dependencies]
-snafu = "0.6.2"
 env_logger = "0.7.1"
 log = "0.4.8"
+snafu = "0.6.2"
+xdoc = { version = "0.0.0", path = "../xdoc" }
 
 [build-dependencies]
-xml-files = {path = "../xml-files"}
 cargo-readme = "3.2.0"
+xtest = {path = "../xtest"}
 
 [dev-dependencies]
-xml-files = {path = "../xml-files"}
+xtest = {path = "../xtest"}

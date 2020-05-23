@@ -1,6 +1,24 @@
 {
-  "description": "processing instruction close with no open",
+  "description": "a simple, small, well-formed xml file",
   "syntax": {
     "good": {}
-  }
+  },
+  "assertions": [
+    {
+      "path": "/cats/cat[0]/name",
+      "expected": {
+        "attribute": {
+          "value": "bones"
+        }
+      }
+    },
+    {
+      "path": "/cats/cat[1]/name",
+      "expected": {
+        "attribute": {
+          "value": "bishop"
+        }
+      }
+    }
+  ]
 }
