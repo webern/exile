@@ -1,11 +1,9 @@
-extern crate env_logger;
-
 use std::iter::Peekable;
 use std::str::Chars;
 
 use xdoc::{Declaration, Document, Encoding, PIData, Version};
 
-use crate::error::{Error, Result};
+use crate::error::{Error, ParseError, Result, ThrowSite};
 use crate::parser::chars::{is_name_char, is_name_start_char};
 use crate::parser::element::parse_element;
 use crate::parser::pi::parse_pi;
@@ -70,11 +68,15 @@ impl<'a> Iter<'a> {
             },
         };
         if !i.advance() {
-            return Err(Error::Parse {
-                source_file: file!().to_owned(),
-                source_line: line!(),
-                position: Position::default(),
-            });
+            return Err(Error::Parse(ParseError {
+                throw_site: ThrowSite {
+                    file: file!().to_owned(),
+                    line: line!(),
+                },
+                xml_site: Position::default().into(),
+                message: Some("iter advancement was required, but not possible".to_string()),
+                source: None,
+            }));
         }
         Ok(i)
     }
@@ -101,11 +103,15 @@ impl<'a> Iter<'a> {
     }
 
     pub(crate) fn err(&self, file: &str, line: u32) -> Error {
-        Error::Parse {
-            source_file: file.to_owned(),
-            source_line: line,
-            position: self.st.position,
-        }
+        Error::Parse(ParseError {
+            throw_site: ThrowSite {
+                file: file.to_owned(),
+                line,
+            },
+            xml_site: self.st.position.clone().into(),
+            message: None,
+            source: None,
+        })
     }
 
     pub(crate) fn expect(&self, expected: char) -> Result<()> {
@@ -179,7 +185,6 @@ pub fn parse_str(s: &str) -> Result<Document> {
     let mut document = Document::new();
     loop {
         parse_document(&mut iter, &mut document)?;
-        trace!("{:?}", iter.st);
         if !iter.advance() {
             break;
         }

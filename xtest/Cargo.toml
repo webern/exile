@@ -5,10 +5,7 @@ authors = ["Matthew James Briggs <matthew.james.briggs@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-env_logger = "0.7.1"
-log = "0.4.8"
 serde = { version = "1.0.92", features = ["derive"] }
 serde_json = "1.0.48"
 serde_plain = "0.3.0"
-snafu = "0.6.2"
 xdoc = {path = "../xdoc", features = ["serde"] }

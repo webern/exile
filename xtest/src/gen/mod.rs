@@ -73,10 +73,22 @@ fn write_bad_syntax_test(f: &mut File, character_position: u64, line: u64, colum
     writeln!(f, "assert!(parse_result.is_err());").unwrap();
     writeln!(f, "let err = parse_result.err().unwrap();").unwrap();
     writeln!(f, "match err {{").unwrap();
-    writeln!(f, "exile::error::Error::Parse {{ position, ..}} => {{").unwrap();
-    writeln!(f, "assert_eq!(position.absolute, {});", character_position).unwrap();
-    writeln!(f, "assert_eq!(position.line, {});", line).unwrap();
-    writeln!(f, "assert_eq!(position.column, {});", column).unwrap();
+    /*
+           exile::error::Error::Parse(pe) => {
+           assert_eq!(pe.xml_site.position, 51);
+           assert_eq!(pe.xml_site.line, 2);
+           assert_eq!(pe.xml_site.column, 12);
+       }
+    */
+    writeln!(f, "exile::error::Error::Parse(parse_error) => {{").unwrap();
+    writeln!(
+        f,
+        "assert_eq!(parse_error.xml_site.position, {});",
+        character_position
+    )
+    .unwrap();
+    writeln!(f, "assert_eq!(parse_error.xml_site.line, {});", line).unwrap();
+    writeln!(f, "assert_eq!(parse_error.xml_site.column, {});", column).unwrap();
     writeln!(f, "}}").unwrap();
     writeln!(f, "_ => panic!(\"Error was expected to be of type exile::error::Error::Parse, but was not.\")").unwrap();
     writeln!(f, "}}").unwrap();
