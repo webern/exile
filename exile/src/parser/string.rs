@@ -1,5 +1,3 @@
-use std::borrow::Cow;
-
 use crate::error::Result;
 use crate::parser::Iter;
 
@@ -39,23 +37,68 @@ fn parse_escape(iter: &mut Iter) -> Result<char> {
 }
 
 fn parse_amp_or_apos(iter: &mut Iter) -> Result<char> {
-    Ok('1')
+    iter.advance_or_die()?;
+    if iter.is('m') {
+        parse_amp(iter)
+    } else if iter.is('p') {
+        parse_apos(iter)
+    } else {
+        parse_err!(iter, "expected either &amp; or &apos;")
+    }
 }
+
 fn parse_amp(iter: &mut Iter) -> Result<char> {
-    Ok('2')
+    iter.advance_or_die()?;
+    expect!(iter, 'p')?;
+    iter.advance_or_die()?;
+    expect!(iter, ';')?;
+    Ok('&')
 }
+
 fn parse_apos(iter: &mut Iter) -> Result<char> {
-    Ok('3')
+    iter.advance_or_die()?;
+    expect!(iter, 'o')?;
+    iter.advance_or_die()?;
+    expect!(iter, 's')?;
+    iter.advance_or_die()?;
+    expect!(iter, ';')?;
+    Ok('\'')
 }
+
 fn parse_gt(iter: &mut Iter) -> Result<char> {
-    Ok('4')
+    iter.advance_or_die()?;
+    expect!(iter, 't')?;
+    iter.advance_or_die()?;
+    expect!(iter, ';')?;
+    Ok('>')
 }
+
 fn parse_lt(iter: &mut Iter) -> Result<char> {
-    Ok('5')
+    iter.advance_or_die()?;
+    expect!(iter, 't')?;
+    iter.advance_or_die()?;
+    expect!(iter, ';')?;
+    Ok('<')
 }
+
 fn parse_quot(iter: &mut Iter) -> Result<char> {
-    Ok('6')
+    iter.advance_or_die()?;
+    expect!(iter, 'u')?;
+    iter.advance_or_die()?;
+    expect!(iter, 'o')?;
+    iter.advance_or_die()?;
+    expect!(iter, 't')?;
+    iter.advance_or_die()?;
+    expect!(iter, ';')?;
+    Ok('"')
 }
+
 fn parse_codepoint(iter: &mut Iter) -> Result<char> {
-    Ok('6')
+    // TODO - implement
+    while iter.advance() {
+        if iter.is(';') {
+            break;
+        }
+    }
+    Ok('🍺')
 }

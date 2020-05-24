@@ -94,19 +94,7 @@ fn parse_attributes(iter: &mut Iter) -> Result<OrdMap> {
 }
 
 fn parse_attribute_value(iter: &mut Iter) -> Result<String> {
-    let mut result = String::new();
-    loop {
-        if iter.is('<') || iter.is('>') {
-            return parse_err!(iter, "expected '<' or '>' but found '{}'", iter.st.c);
-        }
-        if iter.is('"') {
-            break;
-        }
-        // TODO - handle escapes
-        result.push(iter.st.c);
-        iter.advance_or_die()?;
-    }
-    Ok(result)
+    parse_string(iter, '"')
 }
 
 fn parse_children(iter: &mut Iter, parent: &mut ElementData) -> Result<()> {

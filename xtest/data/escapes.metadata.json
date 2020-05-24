@@ -6,7 +6,7 @@
   "expected": {
     "declaration": {
       "version": "one",
-      "encoding": "utf8"
+      "encoding": "none"
     },
     "root": {
       "namespace": null,
