@@ -1,0 +1,43 @@
+{
+  "description": "escape sequences",
+  "syntax": {
+    "good": {}
+  },
+  "expected": {
+    "declaration": {
+      "version": "one",
+      "encoding": "utf8"
+    },
+    "root": {
+      "namespace": null,
+      "name": "escapes",
+      "attributes": {},
+      "nodes": [
+        {
+          "element": {
+            "namespace": null,
+            "name": "a",
+            "attributes": {
+              "s": "<😃>"
+            },
+            "nodes": []
+          }
+        },
+        {
+          "element": {
+            "namespace": null,
+            "name": "b",
+            "attributes": {
+              "x": "&"
+            },
+            "nodes": [
+              {
+                "string": "'\"&"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

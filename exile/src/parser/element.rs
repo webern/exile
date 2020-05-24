@@ -37,8 +37,7 @@ pub(crate) fn parse_element(iter: &mut Iter) -> Result<ElementData> {
     expect!(iter, '>')?;
     iter.advance_or_die()?;
     parse_children(iter, &mut element)?;
-    // TODO - expect to be pointing either at '>' or the iter is at the end
-    // TODO - implement
+    // TODO - expect to be pointing either at '>' or the iter is at the end? What to do here?
     while iter.advance() {}
     Ok(element)
 }
