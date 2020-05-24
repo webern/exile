@@ -7,14 +7,12 @@ use std::fmt::{Display, Formatter};
 
 use crate::parser::ParserState;
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// public error type
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 /// Alias for `Result<T, Error>`.
 pub type Result<T> = std::result::Result<T, Error>;
-
-#[derive(Debug)]
-pub struct ParseLocation {
-    pub line: u64,
-    pub column: u64,
-}
 
 /// The error type for this library.
 #[derive(Debug)]
@@ -32,7 +30,32 @@ impl Display for crate::error::Error {
     }
 }
 
-/// The sourcecode Rust file and line number which is the 'throw' site of an error.
+impl std::error::Error for crate::error::Error {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Error::Parse(e) => {
+                if let Some(s) = &e.source {
+                    Some(s.as_ref())
+                } else {
+                    None
+                }
+            }
+            Error::Other(e) => {
+                if let Some(s) = &e.source {
+                    Some(s.as_ref())
+                } else {
+                    None
+                }
+            }
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// public error data
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/// The Rust sourcecode file and line number which is the 'throw' site of an error.
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash, Default)]
 pub struct ThrowSite {
     /// The rust source file where the error was thrown, i.e. file!()
@@ -63,12 +86,6 @@ pub struct XMLSite {
     pub character: char,
 }
 
-impl From<ParserState> for XMLSite {
-    fn from(p: ParserState) -> Self {
-        XMLSite::from_parser(&p)
-    }
-}
-
 impl Display for XMLSite {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(
@@ -79,6 +96,7 @@ impl Display for XMLSite {
     }
 }
 
+/// Represents an error that occurred during parsing because the XML document is not well-formed.
 #[derive(Debug, Default)]
 pub struct ParseError {
     pub throw_site: ThrowSite,
@@ -105,6 +123,7 @@ impl Display for ParseError {
     }
 }
 
+/// Represents any error that is not related to the syntax of the XML file.
 #[derive(Debug, Default)]
 pub struct OtherError {
     pub throw_site: ThrowSite,
@@ -128,36 +147,12 @@ impl Display for OtherError {
     }
 }
 
-impl std::error::Error for crate::error::Error {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            Error::Parse(e) => {
-                if let Some(s) = &e.source {
-                    Some(s.as_ref())
-                } else {
-                    None
-                }
-            }
-            Error::Other(e) => {
-                if let Some(s) = &e.source {
-                    Some(s.as_ref())
-                } else {
-                    None
-                }
-            }
-        }
-        // if let Some(src) = &self.source {
-        //     return Some(src.as_ref());
-        // }
-        // None
-    }
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// PRIVATE
+// private
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 impl XMLSite {
-    fn from_parser(p: &ParserState) -> Self {
+    pub(crate) fn from_parser(p: &ParserState) -> Self {
         Self {
             line: p.position.line,
             column: p.position.column,
@@ -165,16 +160,6 @@ impl XMLSite {
             character: p.c,
         }
     }
-}
-
-#[macro_export]
-macro_rules! throw_site {
-    () => {
-        crate::error::ThrowSite {
-            file: file!().to_owned(),
-            line: line!(),
-        }
-    };
 }
 
 fn box_err<E>(err: Option<E>) -> Option<Box<dyn std::error::Error>>
@@ -206,6 +191,20 @@ where
         },
         source: box_err(source),
     })
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// internal macros
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#[macro_export]
+macro_rules! throw_site {
+    () => {
+        crate::error::ThrowSite {
+            file: file!().to_owned(),
+            line: line!(),
+        }
+    };
 }
 
 /// Creates a ParseError object.
@@ -328,6 +327,10 @@ macro_rules! parse_err {
         Err(create_parser_error!(&$iter.st, $fmt, $($arg),+))
     };
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// tests
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #[test]
 fn parse_err_test_simple() {
