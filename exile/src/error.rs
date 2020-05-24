@@ -269,25 +269,40 @@ macro_rules! raise {
 #[macro_export]
 macro_rules! wrap {
     ($e:expr) => {
-        Err(crate::error::Error::Other(crate::error::OtherError{
-            throw_site: throw_site!(),
-            message: Option::<String>::None,
-            source: crate::error::box_err(Some($e)),
-        }))
+        match $e {
+            Ok(value) => Ok(value),
+            Err(er) => {
+                Err(crate::error::Error::Other(crate::error::OtherError{
+                    throw_site: throw_site!(),
+                    message: Some("error".into()),
+                    source: crate::error::box_err(Some(er)),
+                }))
+            }
+        }
     };
     ($e:expr, $msg:expr) => {
-        Err(crate::error::Error::Other(crate::error::OtherError{
-            throw_site: throw_site!(),
-            message: Some($msg.into()),
-            source: crate::error::box_err(Some($e)),
-        }))
+        match $e {
+            Ok(value) => Ok(value),
+            Err(er) => {
+                Err(crate::error::Error::Other(crate::error::OtherError{
+                    throw_site: throw_site!(),
+                    message: Some($msg.into()),
+                    source: crate::error::box_err(Some(er)),
+                }))
+            }
+        }
     };
     ($e:expr, $fmt:expr, $($arg:expr),+) => {
-        Err(crate::error::Error::Other(crate::error::OtherError{
-            throw_site: throw_site!(),
-            message: Some(format!($fmt, $($arg),+)),
-            source: crate::error::box_err(Some($e)),
-        }))
+        match $e {
+            Ok(value) => Ok(value),
+            Err(er) => {
+                Err(crate::error::Error::Other(crate::error::OtherError{
+                    throw_site: throw_site!(),
+                    message: Some(format!($fmt, $($arg),+)),
+                    source: crate::error::box_err(Some(er)),
+                }))
+            }
+        }
     };
 }
 
@@ -477,6 +492,25 @@ fn parse_result_test_message_fmt() {
         assert_eq!(expected_line, pe.throw_site.line);
         assert_eq!(message, pe.message.unwrap());
         assert_eq!('🍺', pe.xml_site.character);
+    } else {
+        panic!("wrong error type");
+    }
+}
+
+#[test]
+fn wrap_macro() {
+    let file = file!();
+    let line = line!() + 1;
+    let e = wrap!(std::fs::read_to_string("bad path 🍺🍺🍺"))
+        .err()
+        .unwrap();
+    if let Error::Other(oe) = e {
+        let display = format!("{}", oe);
+        let expected = format!(
+            "{}:{} - error - caused by: No such file or directory (os error 2)",
+            file, line
+        );
+        assert_eq!(expected, display)
     } else {
         panic!("wrong error type");
     }
