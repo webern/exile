@@ -3,7 +3,7 @@ use std::str::Chars;
 
 use xdoc::{Declaration, Document, Encoding, PIData, Version};
 
-use crate::error::{Error, ParseError, Result, ThrowSite};
+use crate::error::{parse_err, Error, ParseError, Result, ThrowSite, XMLSite};
 use crate::parser::chars::{is_name_char, is_name_start_char};
 use crate::parser::element::parse_element;
 use crate::parser::pi::parse_pi;
@@ -50,6 +50,17 @@ pub(crate) struct ParserState {
     pub(crate) tag_status: TagStatus,
 }
 
+impl Default for ParserState {
+    fn default() -> Self {
+        Self {
+            position: Default::default(),
+            c: '_',
+            doc_status: Default::default(),
+            tag_status: Default::default(),
+        }
+    }
+}
+
 pub(crate) struct Iter<'a> {
     pub(crate) it: Peekable<Chars<'a>>,
     pub(crate) st: ParserState,
@@ -73,7 +84,7 @@ impl<'a> Iter<'a> {
                     file: file!().to_owned(),
                     line: line!(),
                 },
-                xml_site: Position::default().into(),
+                xml_site: XMLSite::from_parser(&ParserState::default()),
                 message: Some("iter advancement was required, but not possible".to_string()),
                 source: None,
             }));
@@ -98,27 +109,20 @@ impl<'a> Iter<'a> {
         if self.advance() {
             Ok(())
         } else {
-            Err(self.err(file!(), line!()))
+            parse_err!(self, "iter could not be advanced")
         }
     }
 
-    pub(crate) fn err(&self, file: &str, line: u32) -> Error {
-        Error::Parse(ParseError {
-            throw_site: ThrowSite {
-                file: file.to_owned(),
-                line,
-            },
-            xml_site: self.st.position.clone().into(),
-            message: None,
-            source: None,
-        })
-    }
-
-    pub(crate) fn expect(&self, expected: char) -> Result<()> {
+    pub(crate) fn expect(&self, expected: char, site: ThrowSite) -> Result<()> {
         if self.is(expected) {
             Ok(())
         } else {
-            Err(self.err(file!(), line!()))
+            Err(parse_err(
+                &self.st,
+                site,
+                Some(format!("expected '{}' but found '{}'", expected, self.st.c)),
+                Option::<Error>::None,
+            ))
         }
     }
 
@@ -138,18 +142,18 @@ impl<'a> Iter<'a> {
     }
 
     pub(crate) fn expect_name_start_char(&self) -> Result<()> {
-        if !self.is_name_start_char() {
-            Err(self.err(file!(), line!()))
-        } else {
+        if self.is_name_start_char() {
             Ok(())
+        } else {
+            parse_err!(self, "expected name start char, found '{}'", self.st.c)
         }
     }
 
     pub(crate) fn expect_name_char(&self) -> Result<()> {
-        if !self.is_name_char() {
-            Err(self.err(file!(), line!()))
-        } else {
+        if self.is_name_char() {
             Ok(())
+        } else {
+            parse_err!(self, "expected name char, found '{}'", self.st.c)
         }
     }
 
@@ -233,9 +237,12 @@ fn parse_document(iter: &mut Iter, document: &mut Document) -> Result<()> {
                 break;
             }
             continue;
-        } else if iter.st.c != '<' {
-            return Err(iter.err(file!(), line!()));
         }
+        expect!(iter, '<')?;
+        // iter.expect('<')?;
+        // else if iter.st.c != '<' {
+        //     return parse_err!(iter);
+        // }
         let next = peek_or_die(iter)?;
         match next {
             '?' => {
@@ -263,14 +270,10 @@ fn parse_document(iter: &mut Iter, document: &mut Document) -> Result<()> {
 fn parse_declaration(pi_data: &PIData) -> Result<Declaration> {
     let mut declaration = Declaration::default();
     if pi_data.target != "xml" {
-        return Err(Error::Bug {
-            message: "TODO - better message".to_string(),
-        });
+        return raise!("pi_data.target != xml");
     }
     if pi_data.instructions.map().len() > 2 {
-        return Err(Error::Bug {
-            message: "TODO - better message".to_string(),
-        });
+        return raise!("");
     }
     if let Some(val) = pi_data.instructions.map().get("version") {
         match val.as_str() {
@@ -281,9 +284,7 @@ fn parse_declaration(pi_data: &PIData) -> Result<Declaration> {
                 declaration.version = Version::OneDotOne;
             }
             _ => {
-                return Err(Error::Bug {
-                    message: "TODO - better message".to_string(),
-                });
+                return raise!("");
             }
         }
     }
@@ -293,9 +294,7 @@ fn parse_declaration(pi_data: &PIData) -> Result<Declaration> {
                 declaration.encoding = Encoding::Utf8;
             }
             _ => {
-                return Err(Error::Bug {
-                    message: "TODO - better message".to_string(),
-                });
+                return raise!("");
             }
         }
     }
@@ -304,9 +303,7 @@ fn parse_declaration(pi_data: &PIData) -> Result<Declaration> {
 
 fn state_must_be_before_declaration(iter: &Iter) -> Result<()> {
     if iter.st.doc_status != DocStatus::BeforeDeclaration {
-        Err(Error::Bug {
-            message: "TODO - better message".to_string(),
-        })
+        return raise!("");
     } else {
         Ok(())
     }
@@ -316,16 +313,12 @@ pub(crate) fn peek_or_die(iter: &mut Iter) -> Result<char> {
     let opt = iter.it.peek();
     match opt {
         Some(c) => Ok(*c),
-        None => Err(Error::Bug {
-            message: "TODO - better message".to_string(),
-        }),
+        None => raise!(""),
     }
 }
 
 fn no_comments() -> Result<()> {
-    Err(Error::Bug {
-        message: "comments are not supported".to_string(),
-    })
+    return raise!("");
 }
 
 fn parse_name(iter: &mut Iter) -> Result<String> {

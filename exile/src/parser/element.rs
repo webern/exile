@@ -1,10 +1,10 @@
 use xdoc::{ElementData, Node, OrdMap};
 
-use crate::error::{Error, Result};
+use crate::error::Result;
 use crate::parser::{parse_name, Iter};
 
 pub(crate) fn parse_element(iter: &mut Iter) -> Result<ElementData> {
-    iter.expect('<')?;
+    expect!(iter, '<')?;
     iter.advance_or_die()?;
     let name = parse_name(iter)?;
     let mut element = make_named_element(name.as_str())?;
@@ -16,7 +16,7 @@ pub(crate) fn parse_element(iter: &mut Iter) -> Result<ElementData> {
     if iter.is('/') {
         //println!("It is a self-closing tag with no attributes, i.e. an 'empty' element.");
         iter.advance_or_die()?;
-        iter.expect('>')?;
+        expect!(iter, '>')?;
         return Ok(element);
     }
 
@@ -29,12 +29,12 @@ pub(crate) fn parse_element(iter: &mut Iter) -> Result<ElementData> {
     if iter.is('/') {
         //println!("It is a self-closing tag with no attributes, i.e. an 'empty' element.");
         iter.advance_or_die()?;
-        iter.expect('>')?;
+        expect!(iter, '>')?;
         return Ok(element);
     }
 
     // now the only valid char is '>' and we reach the child nodes
-    iter.expect('>')?;
+    expect!(iter, '>')?;
     iter.advance_or_die()?;
     parse_children(iter, &mut element)?;
     // TODO - expect to be pointing either at '>' or the iter is at the end
@@ -48,9 +48,7 @@ fn split_element_name(input: &str) -> Result<(&str, &str)> {
     match split.len() {
         1 => Ok(("", split.first().unwrap())),
         2 => Ok((split.first().unwrap(), split.last().unwrap())),
-        _ => Err(Error::Bug {
-            message: "Bad string cannot be split".to_string(),
-        }),
+        _ => raise!(""),
     }
 }
 
@@ -80,13 +78,13 @@ fn parse_attributes(iter: &mut Iter) -> Result<OrdMap> {
             String::default()
         };
         iter.skip_whitespace()?;
-        iter.expect('=')?;
+        expect!(iter, '=')?;
         iter.advance_or_die()?;
         iter.skip_whitespace()?;
-        iter.expect('"')?;
+        expect!(iter, '"')?;
         iter.advance_or_die()?;
         let value = parse_attribute_value(iter)?;
-        iter.expect('"')?;
+        expect!(iter, '"')?;
         attributes.mut_map().insert(key, value);
         if !iter.advance() {
             break;
@@ -99,7 +97,7 @@ fn parse_attribute_value(iter: &mut Iter) -> Result<String> {
     let mut result = String::new();
     loop {
         if iter.is('<') || iter.is('>') {
-            return Err(iter.err(file!(), line!()));
+            return parse_err!(iter, "expected '<' or '>' but found '{}'", iter.st.c);
         }
         if iter.is('"') {
             break;
@@ -145,7 +143,12 @@ fn handle_left_angle(iter: &mut Iter, parent: &mut ElementData) -> Result<Option
     if iter.peek_is('/') {
         let end_tag_name = parse_end_tag_name(iter)?;
         if end_tag_name != parent.fullname() {
-            return Err(iter.err(file!(), line!()));
+            return parse_err!(
+                iter,
+                "closing element name '{}' does not match openeing element name '{}'",
+                end_tag_name,
+                parent.fullname()
+            );
         }
         // return None to signal that we have parsed and end tag
         return Ok(None);
@@ -155,9 +158,9 @@ fn handle_left_angle(iter: &mut Iter, parent: &mut ElementData) -> Result<Option
 }
 
 fn parse_end_tag_name(iter: &mut Iter) -> Result<String> {
-    iter.expect('<')?;
+    expect!(iter, '<')?;
     iter.advance_or_die()?;
-    iter.expect('/')?;
+    expect!(iter, '/')?;
     iter.advance_or_die()?;
     iter.skip_whitespace()?;
     iter.expect_name_start_char()?;
@@ -170,11 +173,11 @@ fn parse_end_tag_name(iter: &mut Iter) -> Result<String> {
         } else if iter.is_name_char() {
             name.push(iter.st.c);
         } else {
-            return Err(iter.err(file!(), line!()));
+            return parse_err!(iter);
         }
     }
     iter.skip_whitespace()?;
-    iter.expect('>')?;
+    expect!(iter, '>')?;
     Ok(name)
 }
 
