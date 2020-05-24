@@ -73,8 +73,8 @@ impl Display for XMLSite {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "position: {}, line: {}, column: {}",
-            self.position, self.line, self.column
+            "position: {}, line: {}, column: {}, character: '{}'",
+            self.position, self.line, self.column, self.character
         )
     }
 }
