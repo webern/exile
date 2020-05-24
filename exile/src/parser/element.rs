@@ -1,6 +1,6 @@
 use xdoc::{ElementData, Node, OrdMap};
 
-use crate::error::{Error, Result};
+use crate::error::Result;
 use crate::parser::{parse_name, Iter};
 
 pub(crate) fn parse_element(iter: &mut Iter) -> Result<ElementData> {
@@ -48,9 +48,7 @@ fn split_element_name(input: &str) -> Result<(&str, &str)> {
     match split.len() {
         1 => Ok(("", split.first().unwrap())),
         2 => Ok((split.first().unwrap(), split.last().unwrap())),
-        _ => Err(Error::Bug {
-            message: "Bad string cannot be split".to_string(),
-        }),
+        _ => raise!(""),
     }
 }
 

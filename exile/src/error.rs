@@ -20,21 +20,14 @@ pub struct ParseLocation {
 #[derive(Debug)]
 pub enum Error {
     Parse(ParseError),
-    IoRead {
-        parse_location: ParseLocation,
-        source: std::io::Error,
-    },
-    Bug {
-        message: String,
-    },
+    Other(OtherError),
 }
 
 impl Display for crate::error::Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
             Error::Parse(pe) => pe.fmt(f),
-            Error::IoRead { .. } => Ok(()),
-            Error::Bug { .. } => Ok(()),
+            Error::Other(oe) => oe.fmt(f),
         }
     }
 }
@@ -94,23 +87,34 @@ pub struct ParseError {
     pub source: Option<Box<dyn std::error::Error>>,
 }
 
-/// A cloned ParseError loses its source Error because the source Error cannot be cloned.
-impl Clone for ParseError {
-    fn clone(&self) -> Self {
-        Self {
-            throw_site: self.throw_site.clone(),
-            xml_site: self.xml_site.clone(),
-            message: self.message.clone(),
-            source: None, // TODO - preserve the display of the source error
-        }
-    }
-}
-
 impl Display for ParseError {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         self.throw_site.fmt(f)?;
         write!(f, " xml ")?;
         self.xml_site.fmt(f)?;
+        if let Some(msg) = &self.message {
+            if !msg.is_empty() {
+                write!(f, " - {}", msg)?;
+            }
+        }
+        if let Some(e) = &self.source {
+            write!(f, " - caused by: ")?;
+            e.fmt(f)?;
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct OtherError {
+    pub throw_site: ThrowSite,
+    pub message: Option<String>,
+    pub source: Option<Box<dyn std::error::Error>>,
+}
+
+impl Display for OtherError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        self.throw_site.fmt(f)?;
         if let Some(msg) = &self.message {
             if !msg.is_empty() {
                 write!(f, " - {}", msg)?;
@@ -134,8 +138,13 @@ impl std::error::Error for crate::error::Error {
                     None
                 }
             }
-            Error::IoRead { .. } => None,
-            Error::Bug { .. } => None,
+            Error::Other(e) => {
+                if let Some(s) = &e.source {
+                    Some(s.as_ref())
+                } else {
+                    None
+                }
+            }
         }
         // if let Some(src) = &self.source {
         //     return Some(src.as_ref());
@@ -229,6 +238,56 @@ macro_rules! create_parser_error {
             Some(format!($fmt, $($arg),+)),
             Option::<crate::error::Error>::None,
         )
+    };
+}
+
+#[macro_export]
+macro_rules! raise {
+    () => {
+        Err(crate::error::Error::Other(crate::error::OtherError{
+            throw_site: throw_site!(),
+            message: Option::<String>::None,
+            source: Option::<crate::error::Error>::None,
+        }))
+    };
+    ($msg:expr) => {
+        Err(crate::error::Error::Other(crate::error::OtherError{
+            throw_site: throw_site!(),
+            message: Some($msg.into()),
+            source: Option::<Box<dyn std::error::Error>>::None,
+        }))
+    };
+    ($fmt:expr, $($arg:expr),+) => {
+        Err(crate::error::Error::Other(crate::error::OtherError{
+            throw_site: throw_site!(),
+            message: Some(format!($fmt, $($arg),+)),
+            source: Option::<Box<dyn std::error::Error>>::None,
+        }))
+    };
+}
+
+#[macro_export]
+macro_rules! wrap {
+    ($e:expr) => {
+        Err(crate::error::Error::Other(crate::error::OtherError{
+            throw_site: throw_site!(),
+            message: Option::<String>::None,
+            source: crate::error::box_err(Some($e)),
+        }))
+    };
+    ($e:expr, $msg:expr) => {
+        Err(crate::error::Error::Other(crate::error::OtherError{
+            throw_site: throw_site!(),
+            message: Some($msg.into()),
+            source: crate::error::box_err(Some($e)),
+        }))
+    };
+    ($e:expr, $fmt:expr, $($arg:expr),+) => {
+        Err(crate::error::Error::Other(crate::error::OtherError{
+            throw_site: throw_site!(),
+            message: Some(format!($fmt, $($arg),+)),
+            source: crate::error::box_err(Some($e)),
+        }))
     };
 }
 

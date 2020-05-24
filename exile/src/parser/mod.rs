@@ -270,14 +270,10 @@ fn parse_document(iter: &mut Iter, document: &mut Document) -> Result<()> {
 fn parse_declaration(pi_data: &PIData) -> Result<Declaration> {
     let mut declaration = Declaration::default();
     if pi_data.target != "xml" {
-        return Err(Error::Bug {
-            message: "TODO - better message".to_string(),
-        });
+        return raise!("pi_data.target != xml");
     }
     if pi_data.instructions.map().len() > 2 {
-        return Err(Error::Bug {
-            message: "TODO - better message".to_string(),
-        });
+        return raise!("");
     }
     if let Some(val) = pi_data.instructions.map().get("version") {
         match val.as_str() {
@@ -288,9 +284,7 @@ fn parse_declaration(pi_data: &PIData) -> Result<Declaration> {
                 declaration.version = Version::OneDotOne;
             }
             _ => {
-                return Err(Error::Bug {
-                    message: "TODO - better message".to_string(),
-                });
+                return raise!("");
             }
         }
     }
@@ -300,9 +294,7 @@ fn parse_declaration(pi_data: &PIData) -> Result<Declaration> {
                 declaration.encoding = Encoding::Utf8;
             }
             _ => {
-                return Err(Error::Bug {
-                    message: "TODO - better message".to_string(),
-                });
+                return raise!("");
             }
         }
     }
@@ -311,9 +303,7 @@ fn parse_declaration(pi_data: &PIData) -> Result<Declaration> {
 
 fn state_must_be_before_declaration(iter: &Iter) -> Result<()> {
     if iter.st.doc_status != DocStatus::BeforeDeclaration {
-        Err(Error::Bug {
-            message: "TODO - better message".to_string(),
-        })
+        return raise!("");
     } else {
         Ok(())
     }
@@ -323,16 +313,12 @@ pub(crate) fn peek_or_die(iter: &mut Iter) -> Result<char> {
     let opt = iter.it.peek();
     match opt {
         Some(c) => Ok(*c),
-        None => Err(Error::Bug {
-            message: "TODO - better message".to_string(),
-        }),
+        None => raise!(""),
     }
 }
 
 fn no_comments() -> Result<()> {
-    Err(Error::Bug {
-        message: "comments are not supported".to_string(),
-    })
+    return raise!("");
 }
 
 fn parse_name(iter: &mut Iter) -> Result<String> {

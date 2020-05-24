@@ -1,6 +1,6 @@
 use xdoc::PIData;
 
-use crate::error::{Error, Result};
+use crate::error::Result;
 use crate::parser::Iter;
 
 use super::chars::{is_name_char, is_name_start_char};
@@ -43,11 +43,7 @@ impl PIProcessor {
     /// `instructions`. Clears these buffers to begin processing the next key/value pair.
     fn take_buffers(&mut self) -> Result<()> {
         if self.key_buffer.is_empty() {
-            // TODO - better error
-            return Err(Error::Bug {
-                message: "Empty key - this is a bug and should have been detected sooner."
-                    .to_string(),
-            });
+            return raise!("Empty key - this is a bug and should have been detected sooner.");
         }
         if self
             .pi_data
@@ -56,10 +52,7 @@ impl PIProcessor {
             .insert(self.key_buffer.clone(), self.value_buffer.clone())
             .is_some()
         {
-            // TODO - better error
-            return Err(Error::Bug {
-                message: "Duplicate key".to_string(),
-            });
+            return raise!("duplicate key '{}'", self.key_buffer.clone());
         }
         self.key_buffer.clear();
         self.value_buffer.clear();
