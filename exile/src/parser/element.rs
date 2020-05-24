@@ -1,6 +1,7 @@
 use xdoc::{ElementData, Node, OrdMap};
 
 use crate::error::Result;
+use crate::parser::string::parse_string;
 use crate::parser::{parse_name, Iter};
 
 pub(crate) fn parse_element(iter: &mut Iter) -> Result<ElementData> {
