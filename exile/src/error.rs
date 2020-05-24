@@ -4,7 +4,6 @@
 
 use core::fmt;
 use std::fmt::{Display, Formatter};
-use std::ops::Deref;
 
 use crate::parser::ParserState;
 
@@ -327,7 +326,7 @@ fn parse_err_test_message_fmt() {
 #[test]
 fn parse_result_test_simple() {
     use crate::parser::Position;
-    let mut iter = crate::parser::Iter {
+    let iter = crate::parser::Iter {
         it: "".chars().peekable(),
         st: ParserState {
             position: Position {
@@ -359,7 +358,7 @@ fn parse_result_test_simple() {
 #[test]
 fn parse_result_test_message() {
     use crate::parser::Position;
-    let mut iter = crate::parser::Iter {
+    let iter = crate::parser::Iter {
         it: "".chars().peekable(),
         st: ParserState {
             position: Position {
@@ -393,7 +392,7 @@ fn parse_result_test_message() {
 fn parse_result_test_message_fmt() {
     use crate::parser::Position;
     use xdoc::ElementData;
-    let mut iter = crate::parser::Iter {
+    let iter = crate::parser::Iter {
         it: "".chars().peekable(),
         st: ParserState {
             position: Position {
@@ -401,7 +400,7 @@ fn parse_result_test_message_fmt() {
                 column: 45,
                 absolute: 9,
             },
-            c: 'o',
+            c: '🍺',
             doc_status: Default::default(),
             tag_status: Default::default(),
         },
@@ -409,15 +408,16 @@ fn parse_result_test_message_fmt() {
     let message = format!("some message {}", 6);
     let expected_file = file!().to_owned();
     let expected_line = line!() + 1;
-    let result: Result<ElementData> = parse_err!(iter "some message {}", 6);
+    let result: Result<ElementData> = parse_err!(iter, "some message {}", 6);
     let e = result.err().unwrap();
     if let Error::Parse(pe) = e {
         assert_eq!(5, pe.xml_site.line);
-        assert_eq!(45, pe.xml_site.position);
-        assert_eq!(9, pe.xml_site.column);
+        assert_eq!(9, pe.xml_site.position);
+        assert_eq!(45, pe.xml_site.column);
         assert_eq!(expected_file, pe.throw_site.file);
         assert_eq!(expected_line, pe.throw_site.line);
         assert_eq!(message, pe.message.unwrap());
+        assert_eq!('🍺', pe.xml_site.character);
     } else {
         panic!("wrong error type");
     }

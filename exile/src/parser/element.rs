@@ -99,7 +99,7 @@ fn parse_attribute_value(iter: &mut Iter) -> Result<String> {
     let mut result = String::new();
     loop {
         if iter.is('<') || iter.is('>') {
-            return parse_err!(&iter.st, "expected '<' or '>' but found '{}'", iter.st.c);
+            return parse_err!(iter, "expected '<' or '>' but found '{}'", iter.st.c);
         }
         if iter.is('"') {
             break;
@@ -146,7 +146,7 @@ fn handle_left_angle(iter: &mut Iter, parent: &mut ElementData) -> Result<Option
         let end_tag_name = parse_end_tag_name(iter)?;
         if end_tag_name != parent.fullname() {
             return parse_err!(
-                &iter.st,
+                iter,
                 "closing element name '{}' does not match openeing element name '{}'",
                 end_tag_name,
                 parent.fullname()

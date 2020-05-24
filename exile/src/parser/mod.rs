@@ -3,7 +3,7 @@ use std::str::Chars;
 
 use xdoc::{Declaration, Document, Encoding, PIData, Version};
 
-use crate::error::{Error, ParseError, Result, ThrowSite, XMLSite};
+use crate::error::{parse_err, Error, ParseError, Result, ThrowSite};
 use crate::parser::chars::{is_name_char, is_name_start_char};
 use crate::parser::element::parse_element;
 use crate::parser::pi::parse_pi;
@@ -113,28 +113,16 @@ impl<'a> Iter<'a> {
         }
     }
 
-    pub(crate) fn errx(&self, file: &str, line: u32) -> Error {
-        Error::Parse(ParseError {
-            throw_site: ThrowSite {
-                file: file.to_owned(),
-                line,
-            },
-            xml_site: self.st.clone().into(),
-            message: None,
-            source: None,
-        })
-    }
-
     pub(crate) fn expect(&self, expected: char, site: ThrowSite) -> Result<()> {
         if self.is(expected) {
             Ok(())
         } else {
-            parse_err!(
+            Err(parse_err(
                 &self.st,
-                "expected '{}' but found '{}'",
-                expected,
-                self.st.c
-            )
+                site,
+                Some(format!("expected '{}' but found '{}'", expected, self.st.c)),
+                Option::<Error>::None,
+            ))
         }
     }
 
@@ -253,7 +241,7 @@ fn parse_document(iter: &mut Iter, document: &mut Document) -> Result<()> {
         expect!(iter, '<')?;
         // iter.expect('<')?;
         // else if iter.st.c != '<' {
-        //     return Err(iter.err(file!(), line!()));
+        //     return parse_err!(iter);
         // }
         let next = peek_or_die(iter)?;
         match next {
