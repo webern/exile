@@ -1,8 +1,9 @@
 use xdoc::{ElementData, Node, OrdMap};
 
 use crate::error::Result;
+use crate::parser::chars::is_name_start_char;
 use crate::parser::string::{parse_string, StringType};
-use crate::parser::{parse_name, Iter};
+use crate::parser::{parse_name, skip_comment, skip_processing_instruction, Iter};
 
 pub(crate) fn parse_element(iter: &mut Iter) -> Result<ElementData> {
     expect!(iter, '<')?;
@@ -97,55 +98,88 @@ fn parse_attribute_value(iter: &mut Iter) -> Result<String> {
     parse_string(iter, StringType::Attribute)
 }
 
+// this function takes over after an element's opening tag (the parent element) has been parsed.
+// the nodes that are contained by the parent are parsed and added to the parent. this function is
+// recursive descending until an element with no children is reached.
 fn parse_children(iter: &mut Iter, parent: &mut ElementData) -> Result<()> {
-    // TODO - support comments, processing instructions and whatever else
     loop {
         iter.skip_whitespace()?;
         if iter.is('<') {
-            if let Some(node) = handle_left_angle(iter, parent)? {
-                parent.nodes.push(node);
-            } else {
-                // we received 'None' which means that the end tag was parsed
-                return Ok(());
+            let lt_parse = parse_lt(iter, parent)?;
+            match lt_parse {
+                LTParse::EndTag => {
+                    // this is the recursion's breaking condition
+                    return Ok(());
+                }
+                LTParse::Skip => {
+                    // do nothing
+                }
+                LTParse::Some(node) => {
+                    parent.nodes.push(node);
+                }
             }
         } else {
             let text = parse_text(iter)?;
             parent.nodes.push(Node::String(text));
-            if iter.is('<') {
-                if let Some(node) = handle_left_angle(iter, parent)? {
-                    parent.nodes.push(node);
-                } else {
-                    // we received 'None' which means that the end tag was parsed
-                    return Ok(());
-                }
-            }
         }
-        if !iter.advance() {
+        // some parsing functions may return with the iter pointing to the last thing that was part
+        // of their construct, while others might advance the iter to the next char *after* the
+        // thing they parsed. to deal with this we check, are we pointing to a '<' currently? if so,
+        // we do not want to advance the iter. also, if we have reached the end, we want to break
+        // out of the loop.
+        if !iter.is('<') && !iter.advance() {
             break;
         }
     }
     Ok(())
 }
 
-fn handle_left_angle(iter: &mut Iter, parent: &mut ElementData) -> Result<Option<Node>> {
-    if iter.peek_is('/') {
-        let end_tag_name = parse_end_tag_name(iter)?;
-        if end_tag_name != parent.fullname() {
-            return parse_err!(
-                iter,
-                "closing element name '{}' does not match openeing element name '{}'",
-                end_tag_name,
-                parent.fullname()
-            );
-        }
-        // return None to signal that we have parsed and end tag
-        return Ok(None);
-    }
-    let element = parse_element(iter)?;
-    Ok(Some(Node::Element(element)))
+// the return type for `parse_lt`. since the caller of `parse_lt` doesn't know what type of node
+// has been encountered, this enum is used to describe what was parsed.
+enum LTParse {
+    // the parsed entity was an EndTag.
+    EndTag,
+    // the parsed entity was an unsupported node type, i.e. something we want to skip.
+    Skip,
+    // the parsed entity was a supported node type.
+    Some(Node),
 }
 
-fn parse_end_tag_name(iter: &mut Iter) -> Result<String> {
+// parse the correct type of node (or end tag) when encountering a '<'
+fn parse_lt(iter: &mut Iter, parent: &mut ElementData) -> Result<LTParse> {
+    let next = iter.peek_or_die()?;
+    // do the most common, hottest path first
+    if is_name_start_char(next) {
+        let element = parse_element(iter)?;
+        return Ok(LTParse::Some(Node::Element(element)));
+    }
+    match next {
+        '/' => {
+            parse_end_tag_name(iter, parent)?;
+            Ok(LTParse::EndTag)
+        }
+        '?' => {
+            skip_processing_instruction(iter)?;
+            Ok(LTParse::Skip)
+        }
+        '!' => {
+            // skip comment expects the iter to be advanced passed lt
+            iter.advance_or_die()?;
+            skip_comment(iter)?;
+            Ok(LTParse::Skip)
+        }
+        _ => {
+            // this error occurred on the peeked char, so to report the correct position of the
+            // error, we will first advance the iter (if possible).
+            iter.advance();
+            parse_err!(iter, "unexpected char following '<'")
+        }
+    }
+}
+
+// takes an iter pointing at '<' where the next character is required to be '/'. parses the name of
+// the end tag and compares it to make sure it matches `parent`. if anything goes wrong, Err.
+fn parse_end_tag_name(iter: &mut Iter, parent: &ElementData) -> Result<()> {
     expect!(iter, '<')?;
     iter.advance_or_die()?;
     expect!(iter, '/')?;
@@ -166,7 +200,15 @@ fn parse_end_tag_name(iter: &mut Iter) -> Result<String> {
     }
     iter.skip_whitespace()?;
     expect!(iter, '>')?;
-    Ok(name)
+    if name != parent.fullname() {
+        return parse_err!(
+            iter,
+            "closing element name '{}' does not match openeing element name '{}'",
+            name,
+            parent.fullname()
+        );
+    }
+    Ok(())
 }
 
 fn parse_text(iter: &mut Iter) -> Result<String> {

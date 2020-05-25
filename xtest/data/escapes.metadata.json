@@ -26,7 +26,7 @@
         {
           "element": {
             "namespace": null,
-            "name": "b",
+            "name": "_b",
             "attributes": {
               "x": "&"
             },
