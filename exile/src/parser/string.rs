@@ -47,6 +47,7 @@ fn end_char(string_type: StringType) -> char {
     match string_type {
         StringType::Element => '<',
         StringType::Attribute => '\"',
+        // TODO - support single quoted attributes https://github.com/webern/exile/issues/43
     }
 }
 
