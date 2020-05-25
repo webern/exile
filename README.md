@@ -8,4 +8,4 @@ A Rust library for reading and writing XML.
  * [ ] v0.0.1 Interface
  * [ ] v0.0.2 Conformance
 
-[v0.0.0 MVP](https://github.com/webern/exile/milestone/1)
+[v0.0.0 MVP]: https://github.com/webern/exile/milestone/1
