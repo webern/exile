@@ -32,7 +32,6 @@ const U_203F: char = '\u{203F}';
 const U_2040: char = '\u{2040}';
 
 pub(crate) fn is_name_start_char(c: char) -> bool {
-    // TODO oops make sure its the same as 1.1 https://www.w3.org/TR/2006/REC-xml11-20060816/
     // https://www.w3.org/TR/2008/REC-xml-20081126/#NT-NameStartChar
     // [4]   	NameStartChar	   ::=   	":" | [A-Z] | "_" | [a-z] | [#xC0-#xD6] | [#xD8-#xF6] |
     // [#xF8-#x2FF] | [#x370-#x37D] | [#x37F-#x1FFF] | [#x200C-#x200D] | [#x2070-#x218F] |
@@ -60,7 +59,6 @@ pub(crate) fn is_name_start_char(c: char) -> bool {
 }
 
 pub(crate) fn is_name_char(c: char) -> bool {
-    // TODO oops make sure its the same as 1.1 https://www.w3.org/TR/2006/REC-xml11-20060816/
     // https://www.w3.org/TR/2008/REC-xml-20081126/#NT-NameChar
     // [4a] NameChar ::= NameStartChar | "-" | "." | [0-9] | #xB7 | [#x0300-#x036F] | [#x203F-#x2040]
     if is_name_start_char(c) {

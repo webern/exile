@@ -11,6 +11,7 @@ use crate::parser::pi::parse_pi;
 mod chars;
 mod element;
 mod pi;
+mod string;
 
 #[derive(Debug, Clone, Copy, Eq, PartialOrd, PartialEq, Hash)]
 pub struct Position {
@@ -135,8 +136,11 @@ impl<'a> Iter<'a> {
     }
 
     pub(crate) fn is_after_name_char(&self) -> bool {
+        if self.is_whitespace() {
+            return true;
+        }
         match self.st.c {
-            ' ' | '\t' | '=' | '/' | '>' => true,
+            ' ' | '\t' | '=' | '/' | '>' | '\n' => true,
             _ => false,
         }
     }
@@ -181,6 +185,17 @@ impl<'a> Iter<'a> {
             return next == value;
         }
         false
+    }
+
+    pub(crate) fn is_digit(&self) -> bool {
+        self.st.c.is_ascii_digit()
+    }
+
+    pub(crate) fn is_hex(&self) -> bool {
+        if self.is_digit() {
+            return true;
+        }
+        (self.st.c >= 'A' && self.st.c <= 'F') || (self.st.c >= 'a' && self.st.c <= 'f')
     }
 }
 

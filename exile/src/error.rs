@@ -162,7 +162,7 @@ impl XMLSite {
     }
 }
 
-fn box_err<E>(err: Option<E>) -> Option<Box<dyn std::error::Error>>
+pub(crate) fn box_err<E>(err: Option<E>) -> Option<Box<dyn std::error::Error>>
 where
     E: std::error::Error + 'static,
 {

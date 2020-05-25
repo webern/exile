@@ -9,7 +9,6 @@ license = "MIT OR Apache-2.0"
 # serde is a feature that enables XML structs to be serialized to json.
 default = []
 
-
 [dependencies]
 # TODO - include multiple serde dependencies in a single xdoc feature, e.g. 'json'
 serde = { version = "1.0.106", optional = true, features = ["derive"] }

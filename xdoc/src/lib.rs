@@ -126,10 +126,7 @@ impl ElementData {
                 return wrap!(e);
             }
             if let Some(val) = self.attributes.map().get(k) {
-                // TODO - escape string
-                if let Err(e) = write!(writer, "{}", val) {
-                    return wrap!(e);
-                }
+                better_wrap!(write_attribute_value(val, writer, opts))?;
             }
             if let Err(e) = write!(writer, "\"") {
                 return wrap!(e);
@@ -210,4 +207,23 @@ mod tests {
         let data_str = std::str::from_utf8(data.as_slice()).unwrap();
         assert_eq!("<root-element/>", data_str);
     }
+}
+
+fn write_attribute_value<W, S>(s: S, writer: &mut W, _opts: &WriteOpts) -> Result<()>
+where
+    W: Write,
+    S: AsRef<str>,
+{
+    // TODO - support single quoted attributes https://github.com/webern/exile/issues/45
+    // TODO - support additional escapes https://github.com/webern/exile/issues/44
+    for c in s.as_ref().chars() {
+        match c {
+            '<' => better_wrap!(write!(writer, "&lt;"))?,
+            '>' => better_wrap!(write!(writer, "&gt;"))?,
+            '&' => better_wrap!(write!(writer, "&amp;"))?,
+            '"' => better_wrap!(write!(writer, "&quot;"))?,
+            _ => better_wrap!(write!(writer, "{}", c))?,
+        }
+    }
+    Ok(())
 }

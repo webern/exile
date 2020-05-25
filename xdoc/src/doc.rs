@@ -374,4 +374,27 @@ mod tests {
         let data_str = std::str::from_utf8(data.as_slice()).unwrap();
         assert_eq!(data_str, EZFILE_STR);
     }
+
+    #[test]
+    fn test_escapes() {
+        let expected = format!(
+            r#"<root attr="&lt;&amp;&gt;&quot;🍔&quot;''">&amp;&amp;&amp;&lt;&lt;&lt;'"🍔"'&gt;&gt;&gt;&amp;&amp;&amp;</root>{}"#,
+            '\n'
+        );
+        let mut doc = Document::new();
+        doc.root.name = "root".into();
+        doc.root
+            .attributes
+            .mut_map()
+            .insert("attr".into(), "<&>\"🍔\"\'\'".into());
+        doc.root
+            .nodes
+            .push(Node::String("&&&<<<'\"🍔\"'>>>&&&".into()));
+        let mut c = Cursor::new(Vec::new());
+        let result = doc.write(&mut c);
+        assert!(result.is_ok());
+        let data = c.into_inner();
+        let data_str = std::str::from_utf8(data.as_slice()).unwrap();
+        assert_eq!(expected, data_str);
+    }
 }
