@@ -186,6 +186,17 @@ impl<'a> Iter<'a> {
         }
         false
     }
+
+    pub(crate) fn is_digit(&self) -> bool {
+        self.st.c.is_ascii_digit()
+    }
+
+    pub(crate) fn is_hex(&self) -> bool {
+        if self.is_digit() {
+            return true;
+        }
+        (self.st.c >= 'A' && self.st.c <= 'F') || (self.st.c >= 'a' && self.st.c <= 'f')
+    }
 }
 
 pub fn parse_str(s: &str) -> Result<Document> {
