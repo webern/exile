@@ -1,12 +1,24 @@
 use crate::error::Result;
 use crate::parser::Iter;
 
-pub(crate) fn parse_string(iter: &mut Iter, end_char: char) -> Result<String> {
+#[derive(Clone, Copy, Eq, PartialEq, Debug)]
+pub(crate) enum StringType {
+    Element,
+    Attribute,
+    // TODO - support single quoted attributes https://github.com/webern/exile/issues/43
+    // AttributeSingle,
+    // TODO - support CDATA https://github.com/webern/exile/issues/28
+    // CDATA,
+}
+
+pub(crate) fn parse_string(iter: &mut Iter, string_type: StringType) -> Result<String> {
     let mut result = String::new();
-    while iter.st.c != end_char {
+    while !is_end_char(iter, string_type) {
         if iter.st.c == '&' {
             let c = parse_escape(iter)?;
             result.push(c);
+        } else if is_forbidden(iter, string_type) {
+            return parse_err!(iter, "forbidden character in {:?} string", string_type);
         } else {
             result.push(iter.st.c);
         }
@@ -14,11 +26,32 @@ pub(crate) fn parse_string(iter: &mut Iter, end_char: char) -> Result<String> {
             return parse_err!(
                 iter,
                 "input ended before termination character '{}' was reached",
-                end_char
+                end_char(string_type)
             );
         }
     }
     Ok(result)
+}
+
+fn is_forbidden(iter: &Iter, string_type: StringType) -> bool {
+    // &, < and > are illegal (as well as " or ' in attributes).
+    match iter.st.c {
+        '&' | '<' | '>' => true,
+        '\"' => string_type == StringType::Attribute,
+        // TODO - support single quoted attributes https://github.com/webern/exile/issues/43
+        _ => false,
+    }
+}
+
+fn end_char(string_type: StringType) -> char {
+    match string_type {
+        StringType::Element => '<',
+        StringType::Attribute => '\"',
+    }
+}
+
+fn is_end_char(iter: &Iter, string_type: StringType) -> bool {
+    iter.is(end_char(string_type))
 }
 
 fn parse_escape(iter: &mut Iter) -> Result<char> {
@@ -301,7 +334,7 @@ fn test_parse_string_ok() {
     let expected = "a&b'c>d<e\"f💙g🍺h";
     use crate::parser::Iter;
     let mut iter = Iter::new(input).unwrap();
-    let actual = parse_string(&mut iter, '"').unwrap();
+    let actual = parse_string(&mut iter, StringType::Attribute).unwrap();
     assert_eq!(expected, actual);
 }
 
@@ -310,7 +343,7 @@ fn test_parse_string_end_err() {
     let input = "a&amp;b&apos;c&gt;d&lt;e&quot;f&#x1f499;g&#127866;h";
     use crate::parser::Iter;
     let mut iter = Iter::new(input).unwrap();
-    let result = parse_string(&mut iter, '"');
+    let result = parse_string(&mut iter, StringType::Attribute);
     assert!(result.is_err());
 }
 
@@ -319,7 +352,7 @@ fn test_parse_string_bad_escape_err() {
     let input = "a&zoo;\"";
     use crate::parser::Iter;
     let mut iter = Iter::new(input).unwrap();
-    let result = parse_string(&mut iter, '"');
+    let result = parse_string(&mut iter, StringType::Attribute);
     assert!(result.is_err());
 }
 
@@ -328,6 +361,6 @@ fn test_parse_string_bad_amp_or_apos_err() {
     let input = "a&anp;\"";
     use crate::parser::Iter;
     let mut iter = Iter::new(input).unwrap();
-    let result = parse_string(&mut iter, '"');
+    let result = parse_string(&mut iter, StringType::Attribute);
     assert!(result.is_err());
 }

@@ -1,7 +1,7 @@
 use xdoc::{ElementData, Node, OrdMap};
 
 use crate::error::Result;
-use crate::parser::string::parse_string;
+use crate::parser::string::{parse_string, StringType};
 use crate::parser::{parse_name, Iter};
 
 pub(crate) fn parse_element(iter: &mut Iter) -> Result<ElementData> {
@@ -94,7 +94,7 @@ fn parse_attributes(iter: &mut Iter) -> Result<OrdMap> {
 }
 
 fn parse_attribute_value(iter: &mut Iter) -> Result<String> {
-    parse_string(iter, '"')
+    parse_string(iter, StringType::Attribute)
 }
 
 fn parse_children(iter: &mut Iter, parent: &mut ElementData) -> Result<()> {
@@ -170,14 +170,5 @@ fn parse_end_tag_name(iter: &mut Iter) -> Result<String> {
 }
 
 fn parse_text(iter: &mut Iter) -> Result<String> {
-    let mut result = String::new();
-    loop {
-        if iter.is('<') {
-            break;
-        }
-        // TODO - handle escapes
-        result.push(iter.st.c);
-        iter.advance_or_die()?;
-    }
-    Ok(result)
+    parse_string(iter, StringType::Element)
 }
