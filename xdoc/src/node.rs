@@ -62,7 +62,7 @@ impl Node {
     }
 }
 
-fn write_element_string<W, S>(s: S, writer: &mut W, opts: &WriteOpts, depth: usize) -> Result<()>
+fn write_element_string<W, S>(s: S, writer: &mut W, _opts: &WriteOpts, _depth: usize) -> Result<()>
 where
     W: Write,
     S: AsRef<str>,

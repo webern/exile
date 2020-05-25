@@ -126,7 +126,7 @@ impl ElementData {
                 return wrap!(e);
             }
             if let Some(val) = self.attributes.map().get(k) {
-                better_wrap!(write_attribute_value(val, writer, opts, depth))?;
+                better_wrap!(write_attribute_value(val, writer, opts))?;
             }
             if let Err(e) = write!(writer, "\"") {
                 return wrap!(e);
@@ -209,7 +209,7 @@ mod tests {
     }
 }
 
-fn write_attribute_value<W, S>(s: S, writer: &mut W, opts: &WriteOpts, depth: usize) -> Result<()>
+fn write_attribute_value<W, S>(s: S, writer: &mut W, _opts: &WriteOpts) -> Result<()>
 where
     W: Write,
     S: AsRef<str>,
