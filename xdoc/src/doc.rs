@@ -110,6 +110,14 @@ impl Document {
         self.root = element_data;
     }
 
+    pub fn declaration(&self) -> &Declaration {
+        &self.declaration
+    }
+
+    pub fn set_declaration(&mut self, declaration: Declaration) {
+        self.declaration = declaration;
+    }
+
     pub fn write<W>(&self, writer: &mut W) -> Result<()>
     where
         W: Write,
@@ -319,7 +327,7 @@ mod tests {
             .mut_map()
             .insert("attr".into(), "<&>\"🍔\"\'\'".into());
         root.nodes.push(Node::Text("&&&<<<'\"🍔\"'>>>&&&".into()));
-        let mut doc = Document::from_root(root);
+        let doc = Document::from_root(root);
 
         let mut c = Cursor::new(Vec::new());
         let result = doc.write(&mut c);

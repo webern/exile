@@ -13,7 +13,7 @@ pub fn load(test_name: &str) -> XmlFile {
     load_impl(test_name, &data_dir())
 }
 
-pub fn load_all() -> Vec<XmlFile<'static>> {
+pub fn load_all() -> Vec<XmlFile> {
     let mut result = Vec::new();
     let xtest = xml_file_list();
     for xml_path in xtest.iter() {
@@ -40,7 +40,7 @@ fn my_crate_dir() -> PathBuf {
         .unwrap()
 }
 
-fn load_impl(test_name: &str, dir: &PathBuf) -> XmlFile<'static> {
+fn load_impl(test_name: &str, dir: &PathBuf) -> XmlFile {
     let xml_file = dir.to_path_buf().join(format!("{}{}", test_name, ".xml"));
     let metadata_file = dir
         .to_path_buf()
@@ -53,7 +53,7 @@ fn load_impl(test_name: &str, dir: &PathBuf) -> XmlFile<'static> {
     }
 }
 
-fn load_metadata(p: PathBuf) -> Metadata<'static> {
+fn load_metadata(p: PathBuf) -> Metadata {
     let file = File::open(p).unwrap();
     let reader = BufReader::new(file);
     serde_json::from_reader(reader).unwrap()

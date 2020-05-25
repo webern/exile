@@ -2,7 +2,6 @@
 #[macro_use]
 extern crate serde;
 
-use std::borrow::{Borrow, Cow};
 use std::hash::Hash;
 use std::io::Write;
 
@@ -189,7 +188,6 @@ impl Element {
 
 #[cfg(test)]
 mod tests {
-    use std::borrow::Cow;
     use std::io::Cursor;
 
     use super::*;
