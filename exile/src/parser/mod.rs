@@ -197,6 +197,14 @@ impl<'a> Iter<'a> {
         }
         (self.st.c >= 'A' && self.st.c <= 'F') || (self.st.c >= 'a' && self.st.c <= 'f')
     }
+
+    pub(crate) fn peek_or_die(&mut self) -> Result<char> {
+        let opt = self.it.peek();
+        match opt {
+            Some(c) => Ok(*c),
+            None => raise!(""),
+        }
+    }
 }
 
 pub fn parse_str(s: &str) -> Result<Document> {
@@ -258,7 +266,7 @@ fn parse_document(iter: &mut Iter, document: &mut Document) -> Result<()> {
             continue;
         }
         expect!(iter, '<')?;
-        let next = peek_or_die(iter)?;
+        let next = iter.peek_or_die()?;
         match next {
             '?' => match iter.st.doc_status {
                 DocStatus::BeforeDeclaration => parse_declaration_pi(iter, document)?,
@@ -333,14 +341,6 @@ fn state_must_be_before_declaration(iter: &Iter) -> Result<()> {
         return raise!("");
     } else {
         Ok(())
-    }
-}
-
-pub(crate) fn peek_or_die(iter: &mut Iter) -> Result<char> {
-    let opt = iter.it.peek();
-    match opt {
-        Some(c) => Ok(*c),
-        None => raise!(""),
     }
 }
 
