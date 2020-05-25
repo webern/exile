@@ -76,3 +76,13 @@ fn good_syntax_ezfile_test() {
         }
     }
 }
+
+#[test]
+fn good_syntax_doctypes_comments_pis_test() {
+    let info = xtest::load("doctypes-comments-pis");
+    let xml_str = info.read_xml_file();
+    let parse_result = exile::parse_str(xml_str.as_str());
+    if let Err(e) = parse_result {
+        panic!("expected parse_result to be Ok, got Err: {}", e);
+    }
+}

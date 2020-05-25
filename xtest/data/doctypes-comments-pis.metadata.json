@@ -1,0 +1,6 @@
+{
+  "description": "a file with doctypes, processing instructions and comments",
+  "syntax": {
+    "good": {}
+  }
+}
