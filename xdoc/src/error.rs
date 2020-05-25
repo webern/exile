@@ -62,7 +62,6 @@ macro_rules! wrap {
 
 #[macro_export]
 macro_rules! better_wrap {
-    // Base case:
     ($result:expr) => {
         match $result {
             Ok(value) => Ok(value),
