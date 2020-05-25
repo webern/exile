@@ -43,10 +43,7 @@ impl Node {
         match self {
             Node::Element(data) => data.write(writer, opts, depth),
             Node::String(s) => {
-                // TODO - escape string
-                if let Err(e) = write!(writer, "{}", s) {
-                    return wrap!(e);
-                }
+                write_element_string(s.as_str(), writer, opts, depth)?;
                 Ok(())
             }
             Node::CData(_) => {
@@ -63,4 +60,21 @@ impl Node {
             }
         }
     }
+}
+
+fn write_element_string<W, S>(s: S, writer: &mut W, opts: &WriteOpts, depth: usize) -> Result<()>
+where
+    W: Write,
+    S: AsRef<str>,
+{
+    // TODO - support additional escapes https://github.com/webern/exile/issues/44
+    for c in s.as_ref().chars() {
+        match c {
+            '<' => better_wrap!(write!(writer, "&lt;"))?,
+            '>' => better_wrap!(write!(writer, "&gt;"))?,
+            '&' => better_wrap!(write!(writer, "&amp;"))?,
+            _ => better_wrap!(write!(writer, "{}", c))?,
+        }
+    }
+    Ok(())
 }

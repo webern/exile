@@ -61,6 +61,17 @@ macro_rules! wrap {
 }
 
 #[macro_export]
+macro_rules! better_wrap {
+    // Base case:
+    ($result:expr) => {
+        match $result {
+            Ok(value) => Ok(value),
+            Err(e) => wrap!(e),
+        }
+    };
+}
+
+#[macro_export]
 macro_rules! raise {
     // Base case:
     ($msg:expr) => (Err($crate::error::XErr {
