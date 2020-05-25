@@ -98,15 +98,9 @@ fn parse_attribute_value(iter: &mut Iter) -> Result<String> {
     parse_string(iter, StringType::Attribute)
 }
 
-enum LTParse {
-    /// The parsed entity was an EndTag.
-    EndTag,
-    /// The parsed entity was an unsupported node type, i.e. something we want to skip.
-    Skip,
-    /// The parsed entity was a supported node type.
-    Some(Node),
-}
-
+// this function takes over after an element's opening tag (the parent element) has been parsed.
+// the nodes that are contained by the parent are parsed and added to the parent. this function is
+// recursive descending until an element with no children is reached.
 fn parse_children(iter: &mut Iter, parent: &mut ElementData) -> Result<()> {
     loop {
         iter.skip_whitespace()?;
@@ -128,6 +122,11 @@ fn parse_children(iter: &mut Iter, parent: &mut ElementData) -> Result<()> {
             let text = parse_text(iter)?;
             parent.nodes.push(Node::String(text));
         }
+        // some parsing functions may return with the iter pointing to the last thing that was part
+        // of their construct, while others might advance the iter to the next char *after* the
+        // thing they parsed. to deal with this we check, are we pointing to a '<' currently? if so,
+        // we do not want to advance the iter. also, if we have reached the end, we want to break
+        // out of the loop.
         if !iter.is('<') && !iter.advance() {
             break;
         }
@@ -135,6 +134,18 @@ fn parse_children(iter: &mut Iter, parent: &mut ElementData) -> Result<()> {
     Ok(())
 }
 
+// the return type for `parse_lt`. since the caller of `parse_lt` doesn't know what type of node
+// has been encountered, this enum is used to describe what was parsed.
+enum LTParse {
+    // the parsed entity was an EndTag.
+    EndTag,
+    // the parsed entity was an unsupported node type, i.e. something we want to skip.
+    Skip,
+    // the parsed entity was a supported node type.
+    Some(Node),
+}
+
+// parse the correct type of node (or end tag) when encountering a '<'
 fn parse_lt(iter: &mut Iter, parent: &mut ElementData) -> Result<LTParse> {
     let next = iter.peek_or_die()?;
     // do the most common, hottest path first
@@ -166,6 +177,8 @@ fn parse_lt(iter: &mut Iter, parent: &mut ElementData) -> Result<LTParse> {
     }
 }
 
+// takes an iter pointing at '<' where the next character is required to be '/'. parses the name of
+// the end tag and compares it to make sure it matches `parent`. if anything goes wrong, Err.
 fn parse_end_tag_name(iter: &mut Iter, parent: &ElementData) -> Result<()> {
     expect!(iter, '<')?;
     iter.advance_or_die()?;
