@@ -2,6 +2,7 @@
 #[macro_use]
 extern crate serde;
 
+use std::borrow::{Borrow, Cow};
 use std::hash::Hash;
 use std::io::Write;
 
@@ -10,8 +11,8 @@ pub use doc::{Declaration, Encoding, Version};
 pub use node::Node;
 pub use nodes::Nodes;
 pub use ord_map::OrdMap;
+pub use write_ops::{Newline, WriteOpts};
 
-use crate::doc::WriteOpts;
 use crate::error::Result;
 
 #[macro_use]
@@ -21,6 +22,7 @@ mod doc;
 mod node;
 mod nodes;
 mod ord_map;
+mod write_ops;
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash, Default)]
 #[cfg_attr(
@@ -50,14 +52,14 @@ pub struct PIData {
     derive(Serialize, Deserialize),
     serde(rename_all = "snake_case")
 )]
-pub struct ElementData {
+pub struct Element {
     pub namespace: Option<String>,
     pub name: String,
     pub attributes: OrdMap,
     pub nodes: Vec<Node>,
 }
 
-impl ElementData {
+impl Element {
     fn check(&self) -> Result<()> {
         if self.name.is_empty() {
             return raise!("Empty element name.");
@@ -78,7 +80,7 @@ impl ElementData {
     pub fn fullname(&self) -> String {
         if let Some(ns) = &self.namespace {
             if !ns.is_empty() {
-                return format!("{}:{}", ns, self.name);
+                return format!("{}:{}", ns, self.name).into();
             }
         }
         self.name.clone()
@@ -187,6 +189,7 @@ impl ElementData {
 
 #[cfg(test)]
 mod tests {
+    use std::borrow::Cow;
     use std::io::Cursor;
 
     use super::*;
@@ -194,12 +197,12 @@ mod tests {
     #[test]
     fn structs_test() {
         let mut doc = Document::new();
-        doc.root = ElementData {
+        doc.set_root(Element {
             namespace: None,
-            name: "root-element".to_string(),
+            name: "root-element".into(),
             attributes: Default::default(),
             nodes: vec![],
-        };
+        });
         let mut c = Cursor::new(Vec::new());
         let result = doc.write(&mut c);
         assert!(result.is_ok());

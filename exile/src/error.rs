@@ -468,7 +468,7 @@ fn parse_result_test_message() {
 #[test]
 fn parse_result_test_message_fmt() {
     use crate::parser::Position;
-    use xdoc::ElementData;
+    use xdoc::Element;
     let iter = crate::parser::Iter {
         it: "".chars().peekable(),
         st: ParserState {
@@ -485,7 +485,7 @@ fn parse_result_test_message_fmt() {
     let message = format!("some message {}", 6);
     let expected_file = file!().to_owned();
     let expected_line = line!() + 1;
-    let result: Result<ElementData> = parse_err!(iter, "some message {}", 6);
+    let result: Result<Element> = parse_err!(iter, "some message {}", 6);
     let e = result.err().unwrap();
     if let Error::Parse(pe) = e {
         assert_eq!(5, pe.xml_site.line);

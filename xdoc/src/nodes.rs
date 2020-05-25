@@ -12,7 +12,7 @@ use crate::node::Node;
 )]
 pub struct Nodes(VecDeque<Node>);
 
-impl Clone for Nodes {
+impl<'a> Clone for Nodes {
     fn clone(&self) -> Nodes {
         let mut result = VecDeque::new();
         for node in self.0.iter() {

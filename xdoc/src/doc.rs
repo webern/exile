@@ -1,8 +1,9 @@
+use std::borrow::Cow;
 use std::default::Default;
 use std::io::{Cursor, Write};
 
 use crate::error::Result;
-use crate::ElementData;
+use crate::{Element, WriteOpts};
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
 #[cfg_attr(
@@ -57,17 +58,29 @@ pub struct Declaration {
     serde(rename_all = "snake_case")
 )]
 pub struct Document {
-    pub declaration: Declaration,
-    pub root: ElementData,
+    declaration: Declaration,
+    root: Element,
+}
+
+impl<'a> From<&'a Element> for Cow<'a, Element> {
+    fn from(x: &'a Element) -> Cow<'a, Element> {
+        Cow::Borrowed(x)
+    }
+}
+
+impl<'a> From<Element> for Cow<'a, Element> {
+    fn from(x: Element) -> Cow<'a, Element> {
+        Cow::Owned(x)
+    }
 }
 
 impl Default for Document {
     fn default() -> Self {
         Document {
             declaration: Declaration::default(),
-            root: ElementData {
+            root: Element {
                 namespace: None,
-                name: "root".to_string(),
+                name: "root".into(),
                 attributes: Default::default(),
                 nodes: vec![],
             },
@@ -75,105 +88,26 @@ impl Default for Document {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
-pub enum Indent {
-    None,
-    Spaces(usize),
-    Tab,
-}
-
-impl Default for Indent {
-    fn default() -> Self {
-        Indent::Spaces(2)
-    }
-}
-
-#[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
-pub enum Newline {
-    None,
-    Newline,
-    Windows,
-}
-
-impl Default for Newline {
-    fn default() -> Self {
-        Newline::Newline
-    }
-}
-
-#[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash, Default)]
-pub struct WriteOpts {
-    pub indent: Indent,
-    pub newline: Newline,
-}
-
-impl WriteOpts {
-    fn newline_str(&self) -> &'static str {
-        match self.newline {
-            Newline::None => "",
-            Newline::Newline => "\n",
-            Newline::Windows => "\n\r",
-        }
-    }
-
-    fn write_repeatedly<W>(writer: &mut W, num: usize, s: &str) -> Result<()>
-    where
-        W: Write,
-    {
-        let s = std::iter::repeat(s).take(num).collect::<String>();
-        if let Err(e) = write!(writer, "{}", s) {
-            return wrap!(e);
-        }
-        Ok(())
-    }
-
-    pub(crate) fn indent<W>(&self, writer: &mut W, depth: usize) -> Result<()>
-    where
-        W: Write,
-    {
-        match self.indent {
-            Indent::None => {
-                return Ok(());
-            }
-            Indent::Spaces(n) => {
-                if let Err(e) = Self::write_repeatedly(writer, depth * n, " ") {
-                    return wrap!(e);
-                }
-            }
-            Indent::Tab => {
-                if let Err(e) = Self::write_repeatedly(writer, depth, "\t") {
-                    return wrap!(e);
-                }
-            }
-        }
-        Ok(())
-    }
-
-    pub(crate) fn newline<W>(&self, writer: &mut W) -> Result<()>
-    where
-        W: Write,
-    {
-        if let Err(e) = write!(writer, "{}", self.newline_str()) {
-            return wrap!(e);
-        }
-        Ok(())
+impl<'a> Document {
+    pub fn new() -> Document {
+        Document::default()
     }
 }
 
 impl Document {
-    pub fn new() -> Document {
-        Document::default()
-    }
-
-    pub fn from_root(root: ElementData) -> Self {
+    pub fn from_root(root: Element) -> Self {
         Document {
             declaration: Default::default(),
-            root,
+            root: root.into(),
         }
     }
 
-    pub fn root(&self) -> &ElementData {
+    pub fn root(&self) -> &Element {
         &self.root
+    }
+
+    pub fn set_root(&mut self, element_data: Element) {
+        self.root = element_data;
     }
 
     pub fn write<W>(&self, writer: &mut W) -> Result<()>
@@ -305,7 +239,7 @@ mod tests {
             assert_eq!(name, "bishop");
             // assert text data
             assert_eq!(bishop.nodes.len(), 1);
-            if let Node::String(text) = bishop.nodes.get(0).unwrap() {
+            if let Node::Text(text) = bishop.nodes.get(0).unwrap() {
                 assert_eq!(text, "punks");
             } else {
                 panic!("Expected to find a text node but it was not there.");
@@ -323,31 +257,29 @@ mod tests {
 "#;
 
     fn create_ezfile() -> Document {
-        let bones_data = ElementData {
+        let bones_data = Element {
             namespace: None,
-            name: "cat".to_string(),
+            name: "cat".into(),
             attributes: OrdMap::from(map! { "name".to_string() => "bones".to_string() }),
             nodes: Vec::default(),
         };
 
-        let bishop_data = ElementData {
+        let bishop_data = Element {
             namespace: None,
-            name: "cat".to_string(),
+            name: "cat".into(),
             attributes: OrdMap::from(map! { "name".to_string() => "bishop".to_string() }),
-            nodes: vec![Node::String("punks".to_string())],
+            nodes: vec![Node::Text("punks".to_string())],
         };
 
         let bones_element = Node::Element(bones_data);
         let bishop_element = Node::Element(bishop_data);
 
-        let cats_data = ElementData {
+        let cats_data = Element {
             namespace: None,
-            name: "cats".to_string(),
+            name: "cats".into(),
             attributes: Default::default(),
             nodes: vec![bones_element, bishop_element],
         };
-
-        // Document::from_root(Node::Element(cats_data))
 
         Document {
             declaration: Declaration {
@@ -381,15 +313,14 @@ mod tests {
             r#"<root attr="&lt;&amp;&gt;&quot;🍔&quot;''">&amp;&amp;&amp;&lt;&lt;&lt;'"🍔"'&gt;&gt;&gt;&amp;&amp;&amp;</root>{}"#,
             '\n'
         );
-        let mut doc = Document::new();
-        doc.root.name = "root".into();
-        doc.root
-            .attributes
+        let mut root = Element::default();
+        root.name = "root".into();
+        root.attributes
             .mut_map()
             .insert("attr".into(), "<&>\"🍔\"\'\'".into());
-        doc.root
-            .nodes
-            .push(Node::String("&&&<<<'\"🍔\"'>>>&&&".into()));
+        root.nodes.push(Node::Text("&&&<<<'\"🍔\"'>>>&&&".into()));
+        let mut doc = Document::from_root(root);
+
         let mut c = Cursor::new(Vec::new());
         let result = doc.write(&mut c);
         assert!(result.is_ok());
