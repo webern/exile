@@ -98,13 +98,14 @@ fn parse_attribute_value(iter: &mut Iter) -> Result<String> {
 }
 
 fn parse_children(iter: &mut Iter, parent: &mut ElementData) -> Result<()> {
-    // TODO - support comments, processing instructions and whatever else
+    // TODO(https://github.com/webern/exile/issues/8) - refactor this loop
     loop {
         iter.skip_whitespace()?;
         if iter.is('<') {
             if let Some(node) = handle_left_angle(iter, parent)? {
                 parent.nodes.push(node);
             } else {
+                // TODO(https://github.com/webern/exile/issues/8)  - receiving 'None' is not going to work
                 // we received 'None' which means that the end tag was parsed
                 return Ok(());
             }
@@ -112,6 +113,7 @@ fn parse_children(iter: &mut Iter, parent: &mut ElementData) -> Result<()> {
             let text = parse_text(iter)?;
             parent.nodes.push(Node::String(text));
             if iter.is('<') {
+                // TODO(https://github.com/webern/exile/issues/8)  - this nested call to handle_left_angle is stupid
                 if let Some(node) = handle_left_angle(iter, parent)? {
                     parent.nodes.push(node);
                 } else {
@@ -127,6 +129,7 @@ fn parse_children(iter: &mut Iter, parent: &mut ElementData) -> Result<()> {
     Ok(())
 }
 
+// TODO(https://github.com/webern/exile/issues/8)  - this function is problematic as it is ignorent of comments and pis
 fn handle_left_angle(iter: &mut Iter, parent: &mut ElementData) -> Result<Option<Node>> {
     if iter.peek_is('/') {
         let end_tag_name = parse_end_tag_name(iter)?;

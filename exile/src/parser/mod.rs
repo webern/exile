@@ -149,6 +149,7 @@ impl<'a> Iter<'a> {
         if self.is_name_start_char() {
             Ok(())
         } else {
+            // TODO(https://github.com/webern/exile/issues/8)  - this error occurs if a comment or pi is encountered
             parse_err!(self, "expected name start char, found '{}'", self.st.c)
         }
     }
