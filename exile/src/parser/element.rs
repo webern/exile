@@ -1,9 +1,9 @@
 use xdoc::{ElementData, Node, OrdMap};
 
 use crate::error::Result;
-use crate::parser::chars::{is_name_char, is_name_start_char};
+use crate::parser::chars::is_name_start_char;
 use crate::parser::string::{parse_string, StringType};
-use crate::parser::{parse_name, skip_comment, skip_processing_instruction, Iter, ParserState};
+use crate::parser::{parse_name, skip_comment, skip_processing_instruction, Iter};
 
 pub(crate) fn parse_element(iter: &mut Iter) -> Result<ElementData> {
     expect!(iter, '<')?;
@@ -128,10 +128,8 @@ fn parse_children(iter: &mut Iter, parent: &mut ElementData) -> Result<()> {
             let text = parse_text(iter)?;
             parent.nodes.push(Node::String(text));
         }
-        if !iter.is('<') {
-            if !iter.advance() {
-                break;
-            }
+        if !iter.is('<') && !iter.advance() {
+            break;
         }
     }
     Ok(())
