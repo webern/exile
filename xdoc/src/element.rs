@@ -18,21 +18,36 @@ pub struct Element {
 }
 
 impl Element {
-    fn check(&self) -> Result<()> {
-        if self.name.is_empty() {
-            return raise!("Empty element name.");
+    pub fn from_name<S: AsRef<str>>(name: S) -> Self {
+        Element {
+            namespace: None,
+            name: name.as_ref().into(),
+            attributes: Default::default(),
+            nodes: vec![],
         }
-        if let Some(ns) = &self.namespace {
-            if ns.is_empty() {
-                return raise!("Namespace should not be empty when the option is 'some'.");
+    }
+
+    /// Returns the 'child' elements of the current element. Consider the XML document:
+    /// ```xml
+    /// <r>
+    ///   <a/>
+    ///   <b/>
+    /// </r>
+    /// ```
+    /// r's `children()` function would return an iterator over 'a' and 'b'.
+    /// Text nodes, processing instructions and comments are skipped/ignored by the iterator.
+    pub fn children(&self) -> impl Iterator<Item = &Element> {
+        self.nodes.iter().filter_map(|n| {
+            if let Node::Element(element) = n {
+                return Some(element);
             }
-        }
-        for attribute_key in self.attributes.map().keys() {
-            if attribute_key.is_empty() {
-                return raise!("Empty attribute name encountered.");
-            }
-        }
-        Ok(())
+            None
+        })
+    }
+
+    /// Add an element as a child of this element.
+    pub fn add_child(&mut self, element: Element) {
+        self.nodes.push(Node::Element(element))
     }
 
     pub fn fullname(&self) -> String {
@@ -143,4 +158,36 @@ impl Element {
         }
         Ok(())
     }
+
+    fn check(&self) -> Result<()> {
+        if self.name.is_empty() {
+            return raise!("Empty element name.");
+        }
+        if let Some(ns) = &self.namespace {
+            if ns.is_empty() {
+                return raise!("Namespace should not be empty when the option is 'some'.");
+            }
+        }
+        for attribute_key in self.attributes.map().keys() {
+            if attribute_key.is_empty() {
+                return raise!("Empty attribute name encountered.");
+            }
+        }
+        Ok(())
+    }
+}
+
+#[test]
+fn test_children() {
+    let mut root = Element::from_name("root");
+    root.add_child(Element::from_name("a"));
+    root.nodes.push(Node::Text("some text".into()));
+    root.add_child(Element::from_name("b"));
+    let mut children = root.children();
+    let first_child = children.next();
+    assert_eq!("a", first_child.unwrap().name.as_str());
+    let second_child = children.next();
+    assert_eq!("b", second_child.unwrap().name.as_str());
+    let end_none = children.next();
+    assert!(end_none.is_none());
 }
