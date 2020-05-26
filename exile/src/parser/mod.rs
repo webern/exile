@@ -3,7 +3,7 @@ use std::str::Chars;
 
 use xdoc::{Declaration, Document, Encoding, PIData, Version};
 
-use crate::error::{parse_err, Error, ParseError, Result, ThrowSite, XMLSite};
+use crate::error::{display_char, parse_err, Error, ParseError, Result, ThrowSite, XMLSite};
 use crate::parser::chars::{is_name_char, is_name_start_char};
 use crate::parser::element::parse_element;
 use crate::parser::pi::parse_pi;
@@ -121,7 +121,11 @@ impl<'a> Iter<'a> {
             Err(parse_err(
                 &self.st,
                 site,
-                Some(format!("expected '{}' but found '{}'", expected, self.st.c)),
+                Some(format!(
+                    "expected '{}' but found '{}'",
+                    display_char(expected),
+                    display_char(self.st.c)
+                )),
                 Option::<Error>::None,
             ))
         }
