@@ -3,7 +3,7 @@
 fn bad_syntax_unescaped_angle_test() {
     let info = xtest::load("unescaped-angle");
     let xml_str = info.read_xml_file();
-    let parse_result = exile::parse_str(xml_str.as_str());
+    let parse_result = exile::parse(xml_str.as_str());
     assert!(parse_result.is_err());
     let err = parse_result.err().unwrap();
     match err {
@@ -20,7 +20,7 @@ fn bad_syntax_unescaped_angle_test() {
 fn good_syntax_escapes_test() {
     let info = xtest::load("escapes");
     let xml_str = info.read_xml_file();
-    let parse_result = exile::parse_str(xml_str.as_str());
+    let parse_result = exile::parse(xml_str.as_str());
     if let Err(e) = parse_result {
         panic!("expected parse_result to be Ok, got Err: {}", e);
     }
@@ -42,7 +42,7 @@ fn good_syntax_escapes_test() {
 fn bad_syntax_angle_in_attribute_value_test() {
     let info = xtest::load("angle-in-attribute-value");
     let xml_str = info.read_xml_file();
-    let parse_result = exile::parse_str(xml_str.as_str());
+    let parse_result = exile::parse(xml_str.as_str());
     assert!(parse_result.is_err());
     let err = parse_result.err().unwrap();
     match err {
@@ -59,7 +59,7 @@ fn bad_syntax_angle_in_attribute_value_test() {
 fn good_syntax_ezfile_test() {
     let info = xtest::load("ezfile");
     let xml_str = info.read_xml_file();
-    let parse_result = exile::parse_str(xml_str.as_str());
+    let parse_result = exile::parse(xml_str.as_str());
     if let Err(e) = parse_result {
         panic!("expected parse_result to be Ok, got Err: {}", e);
     }
@@ -81,7 +81,7 @@ fn good_syntax_ezfile_test() {
 fn good_syntax_doctypes_comments_pis_test() {
     let info = xtest::load("doctypes-comments-pis");
     let xml_str = info.read_xml_file();
-    let parse_result = exile::parse_str(xml_str.as_str());
+    let parse_result = exile::parse(xml_str.as_str());
     if let Err(e) = parse_result {
         panic!("expected parse_result to be Ok, got Err: {}", e);
     }

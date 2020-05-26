@@ -3,21 +3,40 @@
 Current version: 0.0.0
 
 
-The `exile` library is intended to be a useful abstraction over XML in Rust.
+`exile` is a Rust library for reading and writing XML.
 
-The goal is to read XML files into structured data, and write them back.
-Ultimately I am interested in generating types from XSD, but it's a long way between here and there.
+The goal is to provide a useful abstraction over XML and get better at writing Rust.
+The state of the library is 'pre-alpha', see the GitHub issues and milestones for work planned.
 
-## TODO
+### Example
 
-This initial list gets me to a sort of 'pre-mvp' that can handle only the simplest of XML documents.
+Using the library looks like this
 
- * [x] xdoc: create the ezfile in a test using structs
- * [x] xdoc: write assertions for the ezfile structs
- * [x] xdoc: serialize the ezfile to xml
- * [x] xdoc: assert serialized xml equals a string constant of the xml
- * [x] xdoc: serialize the ezfile to json
- * [x] xtest: add the serialized ezfile data to the metadata file as an assertion.
- * [x] exile: generate an assertion of the ezfile using build.rs
- * [x] exile: make the parser work so that the ezfile test passes
- * [x] exile: remove these dependencies Compiling snafu-derive v0.6.3, Compiling snafu v0.6.3
+```rust
+    let xml = r#"
+    <root>
+      <thing name="foo"/>
+      <thing>bar</thing>
+    </root>
+    "#;
+    let doc = exile::parse(xml).unwrap();
+    for child in doc.root().children() {
+        println!("element name: {}", child.name);
+        if let Some(attribute) = child.attributes.map().get("name") {
+            println!("name attribute: {}", attribute);
+        }
+    }
+```
+
+### Work to Do
+
+ * [ ] [v0.0.0 MVP]
+ * [ ] [v0.0.1 Interface]
+ * [ ] [v0.0.2 Conformance]
+
+[Issues not assigned to a milestone]
+
+[v0.0.0 MVP]: https://github.com/webern/exile/milestone/1
+[v0.0.1 Interface]: https://github.com/webern/exile/milestone/2
+[v0.0.2 Conformance]: https://github.com/webern/exile/milestone/2
+[Issues not assigned to a milestone]: https://github.com/webern/exile/issues?q=is%3Aissue+is%3Aopen+no%3Amilestone

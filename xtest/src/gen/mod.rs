@@ -69,7 +69,7 @@ fn write_test_file_header(f: &mut File) {
 
 fn write_bad_syntax_test(f: &mut File, character_position: u64, line: u64, column: u64) {
     writeln!(f, "let xml_str = info.read_xml_file();").unwrap();
-    writeln!(f, "let parse_result = exile::parse_str(xml_str.as_str());").unwrap();
+    writeln!(f, "let parse_result = exile::parse(xml_str.as_str());").unwrap();
     writeln!(f, "assert!(parse_result.is_err());").unwrap();
     writeln!(f, "let err = parse_result.err().unwrap();").unwrap();
     writeln!(f, "match err {{").unwrap();
@@ -96,7 +96,7 @@ fn write_bad_syntax_test(f: &mut File, character_position: u64, line: u64, colum
 
 fn write_good_syntax_test(f: &mut File, xml_file: &XmlFile) {
     writeln!(f, "let xml_str = info.read_xml_file();").unwrap();
-    writeln!(f, "let parse_result = exile::parse_str(xml_str.as_str());").unwrap();
+    writeln!(f, "let parse_result = exile::parse(xml_str.as_str());").unwrap();
     writeln!(f, "if let Err(e) = parse_result {{").unwrap();
     writeln!(
         f,
