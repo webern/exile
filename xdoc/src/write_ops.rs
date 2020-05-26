@@ -86,3 +86,45 @@ impl WriteOpts {
         Ok(())
     }
 }
+
+pub(crate) fn write_attribute_value<W, S>(s: S, writer: &mut W, _opts: &WriteOpts) -> Result<()>
+where
+    W: Write,
+    S: AsRef<str>,
+{
+    // TODO - support single quoted attributes https://github.com/webern/exile/issues/45
+    // TODO - support additional escapes https://github.com/webern/exile/issues/44
+    for c in s.as_ref().chars() {
+        match c {
+            '<' => better_wrap!(write!(writer, "&lt;"))?,
+            '>' => better_wrap!(write!(writer, "&gt;"))?,
+            '&' => better_wrap!(write!(writer, "&amp;"))?,
+            '"' => better_wrap!(write!(writer, "&quot;"))?,
+            _ => better_wrap!(write!(writer, "{}", c))?,
+        }
+    }
+    Ok(())
+}
+
+// writes a string escaping as necessary for inclusion in an element.
+pub(crate) fn write_element_string<W, S>(
+    s: S,
+    writer: &mut W,
+    _opts: &WriteOpts,
+    _depth: usize,
+) -> Result<()>
+where
+    W: Write,
+    S: AsRef<str>,
+{
+    // TODO - support additional escapes https://github.com/webern/exile/issues/44
+    for c in s.as_ref().chars() {
+        match c {
+            '<' => better_wrap!(write!(writer, "&lt;"))?,
+            '>' => better_wrap!(write!(writer, "&gt;"))?,
+            '&' => better_wrap!(write!(writer, "&amp;"))?,
+            _ => better_wrap!(write!(writer, "{}", c))?,
+        }
+    }
+    Ok(())
+}

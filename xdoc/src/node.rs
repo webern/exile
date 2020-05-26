@@ -1,6 +1,7 @@
 use std::io::Write;
 
 use crate::error::Result;
+use crate::write_ops::write_element_string;
 use crate::{Element, WriteOpts};
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
@@ -64,21 +65,4 @@ impl Node {
             }
         }
     }
-}
-
-fn write_element_string<W, S>(s: S, writer: &mut W, _opts: &WriteOpts, _depth: usize) -> Result<()>
-where
-    W: Write,
-    S: AsRef<str>,
-{
-    // TODO - support additional escapes https://github.com/webern/exile/issues/44
-    for c in s.as_ref().chars() {
-        match c {
-            '<' => better_wrap!(write!(writer, "&lt;"))?,
-            '>' => better_wrap!(write!(writer, "&gt;"))?,
-            '&' => better_wrap!(write!(writer, "&amp;"))?,
-            _ => better_wrap!(write!(writer, "{}", c))?,
-        }
-    }
-    Ok(())
 }

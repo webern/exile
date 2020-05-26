@@ -98,7 +98,7 @@ impl Document {
     pub fn from_root(root: Element) -> Self {
         Document {
             declaration: Default::default(),
-            root: root.into(),
+            root,
         }
     }
 
