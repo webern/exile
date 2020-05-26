@@ -7,7 +7,7 @@ use crate::{Element, WriteOpts};
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
-    serde(rename_all = "snake_case")
+    serde(rename_all = "lowercase")
 )]
 pub enum Node {
     /// `<element/>`
