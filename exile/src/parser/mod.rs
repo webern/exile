@@ -279,7 +279,7 @@ fn parse_document(iter: &mut Iter, document: &mut Document) -> Result<()> {
                 }
             }
             _ => {
-                document.root = parse_element(iter)?;
+                document.set_root(parse_element(iter)?);
             }
         }
 
@@ -295,7 +295,7 @@ fn parse_document(iter: &mut Iter, document: &mut Document) -> Result<()> {
 fn parse_declaration_pi(iter: &mut Iter, document: &mut Document) -> Result<()> {
     state_must_be_before_declaration(iter)?;
     let pi_data = parse_pi(iter)?;
-    document.declaration = parse_declaration(&pi_data)?;
+    document.set_declaration(parse_declaration(&pi_data)?);
     iter.st.doc_status = DocStatus::Prologue;
     Ok(())
 }

@@ -1,37 +1,42 @@
 use std::io::Write;
 
-use crate::doc::WriteOpts;
 use crate::error::Result;
+use crate::write_ops::write_element_string;
+use crate::{Element, WriteOpts};
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
-    serde(rename_all = "snake_case")
+    serde(rename_all = "lowercase")
 )]
 pub enum Node {
-    // <element>
-    Element(crate::ElementData),
+    /// `<element/>`
+    Element(Element),
 
-    // normal text data, i.e. 'text &lt;'
-    String(String),
+    /// Text data in an element, i.e. `<x>hello &lt;</x>` where the `Text` is `hello <`.
+    Text(String),
 
-    // <![CDATA[text]]>
+    // TODO - support CDATA https://github.com/webern/exile/issues/28
+    /// `<![CDATA[text]]>` - not implemented
     CData(String),
 
-    // <!-- comment -->
+    // TODO - support comments https://github.com/webern/exile/issues/22
+    /// `<!-- comment -->` - not implemented
     Comment(String),
 
-    // <?target data1 data2 data3?>'
-    ProcessingInstruction(crate::PIData),
+    // TODO - support pis https://github.com/webern/exile/issues/12
+    /// ProcessingInstruction, e.g. `<?target whatever?>` - not implemented
+    PI(crate::PIData),
 
-    // <!DOCTYPE doc> Contents are a blob
+    // TODO - support doctypes https://github.com/webern/exile/issues/22
+    /// `<!DOCTYPE doc>` - not implemented
     DocType(String),
 }
 
 impl Default for Node {
     fn default() -> Self {
-        Node::Element(crate::ElementData::default())
+        Node::Element(crate::Element::default())
     }
 }
 
@@ -42,7 +47,7 @@ impl Node {
     {
         match self {
             Node::Element(data) => data.write(writer, opts, depth),
-            Node::String(s) => {
+            Node::Text(s) => {
                 write_element_string(s.as_str(), writer, opts, depth)?;
                 Ok(())
             }
@@ -52,7 +57,7 @@ impl Node {
             Node::Comment(_) => {
                 Ok(()) /*TODO - implement*/
             }
-            Node::ProcessingInstruction(_) => {
+            Node::PI(_) => {
                 Ok(()) /*TODO - implement*/
             }
             Node::DocType(_) => {
@@ -60,21 +65,4 @@ impl Node {
             }
         }
     }
-}
-
-fn write_element_string<W, S>(s: S, writer: &mut W, _opts: &WriteOpts, _depth: usize) -> Result<()>
-where
-    W: Write,
-    S: AsRef<str>,
-{
-    // TODO - support additional escapes https://github.com/webern/exile/issues/44
-    for c in s.as_ref().chars() {
-        match c {
-            '<' => better_wrap!(write!(writer, "&lt;"))?,
-            '>' => better_wrap!(write!(writer, "&gt;"))?,
-            '&' => better_wrap!(write!(writer, "&amp;"))?,
-            _ => better_wrap!(write!(writer, "{}", c))?,
-        }
-    }
-    Ok(())
 }

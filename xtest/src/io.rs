@@ -24,7 +24,7 @@ pub fn load_all() -> Vec<XmlFile> {
             name,
             xml_path: xml_path.into(),
             metadata_path: metadata_path.clone(),
-            metadata: load_metadata(&metadata_path),
+            metadata: load_metadata(metadata_path),
         })
     }
     result
@@ -49,11 +49,11 @@ fn load_impl(test_name: &str, dir: &PathBuf) -> XmlFile {
         name: test_name.to_string(),
         xml_path: xml_file,
         metadata_path: metadata_file.clone(),
-        metadata: load_metadata(&metadata_file),
+        metadata: load_metadata(metadata_file),
     }
 }
 
-fn load_metadata(p: &PathBuf) -> Metadata {
+fn load_metadata(p: PathBuf) -> Metadata {
     let file = File::open(p).unwrap();
     let reader = BufReader::new(file);
     serde_json::from_reader(reader).unwrap()

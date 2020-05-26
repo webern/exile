@@ -21,7 +21,7 @@ This initial list gets me to a sort of 'pre-mvp' that can handle only the simple
 */
 
 pub use parser::parse_str;
-pub use xdoc::{Document, ElementData, Node};
+pub use xdoc::{Document, Element, Node};
 
 #[macro_use]
 pub mod error;
