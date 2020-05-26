@@ -86,12 +86,27 @@ pub struct XMLSite {
     pub character: char,
 }
 
+pub(crate) fn display_char(c: char) -> String {
+    match c {
+        '\n' => "\\n".into(),
+        '\t' => "\\t".into(),
+        '\r' => "\\r".into(),
+        '\u{000B}' => "\\u000B".into(),
+        '\u{000C}' => "\\u000C".into(),
+        ' ' => "%20".into(),
+        _ => format!("{}", c),
+    }
+}
+
 impl Display for XMLSite {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "position: {}, line: {}, column: {}, character: '{}'",
-            self.position, self.line, self.column, self.character
+            self.position,
+            self.line,
+            self.column,
+            display_char(self.character)
         )
     }
 }
