@@ -222,7 +222,6 @@ where
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// This macro is used internally to obtain the current file and line (in the sourcecode).
-#[macro_export]
 macro_rules! throw_site {
     () => {
         crate::error::ThrowSite {
@@ -235,7 +234,6 @@ macro_rules! throw_site {
 /// Creates a ParseError object.
 /// parser_state: required as the first argument
 /// message: optional, can be a string or a format
-#[macro_export]
 macro_rules! create_parser_error {
     // required: first argument must be the ParserState object
     ($parser_state:expr) => {
@@ -267,7 +265,6 @@ macro_rules! create_parser_error {
 
 /// This macro is used internally to create an `Err(crate::error::Error)`.
 /// The `iter` is always required as the first argument, the second+ arguments are for format!()
-#[macro_export]
 macro_rules! raise {
     () => {
         Err(crate::error::Error::Other(crate::error::OtherError{
@@ -294,7 +291,6 @@ macro_rules! raise {
 
 /// This macro is used internally to wrap a foreign Result type into a `crate::error::Result`.
 /// The first argument is always a `Result`, and the second+ arguments are for format!()
-#[macro_export]
 macro_rules! wrap {
     ($e:expr) => {
         match $e {
@@ -335,7 +331,6 @@ macro_rules! wrap {
 }
 
 /// Creates a ParseError object, requires an 'Iter' and the expected 'char'.
-#[macro_export]
 macro_rules! expect {
     ($iter:expr, $c:expr) => {
         $iter.expect($c, throw_site!())
@@ -345,7 +340,6 @@ macro_rules! expect {
 /// Creates a Result populated by a ParseError
 /// iter: required as the first argument, `Iter`
 /// message: optional, can be a string or a format
-#[macro_export]
 macro_rules! parse_err {
     // required: first argument must be the ParserState object
     ($iter:expr) => { Err(create_parser_error!(&$iter.st)) };

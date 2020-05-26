@@ -4,14 +4,18 @@ use std::collections::BTreeMap;
 use std::hash::{Hash, Hasher};
 
 // TODO - extract key and value types
+/// OrdMap implements some conveniences like Clone an PartialEq for maps so that we can compare
+/// XML Documents (and do other things).
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct OrdMap(BTreeMap<String, String>);
 
 impl OrdMap {
+    /// Create a new, empty OrdMap
     pub fn new() -> Self {
         OrdMap(BTreeMap::new())
     }
 
+    /// Construct a new OrdMap from a BTreeMap
     pub fn from(inner: BTreeMap<String, String>) -> Self {
         OrdMap(inner)
     }
@@ -54,10 +58,12 @@ impl PartialEq for OrdMap {
 impl Eq for OrdMap {}
 
 impl OrdMap {
+    /// Return the inner BTreeMap as immutable.
     pub fn map(&self) -> &BTreeMap<String, String> {
         &self.0
     }
 
+    /// Return the inner BTreeMap as mutable.
     pub fn mut_map(&mut self) -> &mut BTreeMap<String, String> {
         &mut self.0
     }
