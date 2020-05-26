@@ -1,3 +1,5 @@
+#![warn(missing_docs)]
+
 #[cfg(feature = "serde")]
 #[macro_use]
 extern crate serde;
