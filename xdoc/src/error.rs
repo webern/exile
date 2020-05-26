@@ -1,13 +1,19 @@
 use std::error::Error;
 use std::fmt;
 
+/// The `Result` type for this library.
 pub type Result<T> = std::result::Result<T, XErr>;
 
+/// A generic error type for this library.
 #[derive(Debug)]
 pub struct XErr {
+    /// The error message.
     pub message: String,
+    /// The sourcecode file where the error was raised.
     pub file: String,
+    /// The sourcecode line where the error was raised.
     pub line: u64,
+    /// The underlying error that is being wrapped.
     pub source: Option<Box<dyn Error>>,
 }
 
@@ -37,7 +43,6 @@ impl Error for XErr {
     }
 }
 
-#[macro_export]
 macro_rules! wrap {
     // Base case:
     ($err:expr) => (Err($crate::error::XErr {
@@ -60,7 +65,6 @@ macro_rules! wrap {
     }));
 }
 
-#[macro_export]
 macro_rules! better_wrap {
     ($result:expr) => {
         match $result {
@@ -70,7 +74,7 @@ macro_rules! better_wrap {
     };
 }
 
-#[macro_export]
+// a convenience macro for creating a Result::Err
 macro_rules! raise {
     // Base case:
     ($msg:expr) => (Err($crate::error::XErr {

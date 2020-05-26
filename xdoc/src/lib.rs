@@ -1,3 +1,13 @@
+/*!
+
+`xdoc` presents the primitives on an XML Document. For example `Element` and `Attribute`.
+It is written in support of the `exile` crate, but kept separate from that crate so that it can also
+be used when generating `exile`'s tests.
+
+*/
+
+#![warn(missing_docs)]
+
 #[cfg(feature = "serde")]
 #[macro_use]
 extern crate serde;
@@ -8,33 +18,22 @@ pub use doc::Document;
 pub use doc::{Declaration, Encoding, Version};
 pub use element::Element;
 pub use node::Node;
-pub use nodes::Nodes;
 pub use ord_map::OrdMap;
 pub use write_ops::{Newline, WriteOpts};
 
 pub use crate::error::Result;
 
 #[macro_use]
+/// The public error type for this library.
 pub mod error;
 
 mod doc;
 mod element;
 mod node;
-mod nodes;
 mod ord_map;
 mod write_ops;
 
-#[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash, Default)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(rename_all = "snake_case")
-)]
-pub struct Name {
-    pub namespace: Option<String>,
-    pub name: String,
-}
-
+/// Represents a Processing Instruction (PI) in an XML document.
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash, Default)]
 #[cfg_attr(
     feature = "serde",
@@ -42,7 +41,9 @@ pub struct Name {
     serde(rename_all = "snake_case")
 )]
 pub struct PIData {
+    /// The processing instruction target.
     pub target: String,
+    /// The processing instructions.
     pub instructions: OrdMap,
 }
 

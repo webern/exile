@@ -10,14 +10,20 @@ use crate::{Node, OrdMap, WriteOpts};
     derive(Serialize, Deserialize),
     serde(rename_all = "snake_case")
 )]
+/// Represents an Element in an XML Document.
 pub struct Element {
+    /// The namespace of this element. e.g. in `foo:bar`, `foo` is the namespace.
     pub namespace: Option<String>,
+    /// The name of this element. e.g. in `foo:bar`, `bar` is the name.
     pub name: String,
+    /// Attributes of this element.
     pub attributes: OrdMap,
+    /// Children of this element.
     pub nodes: Vec<Node>,
 }
 
 impl Element {
+    /// Create a new element using the given name.
     pub fn from_name<S: AsRef<str>>(name: S) -> Self {
         Element {
             namespace: None,
@@ -50,6 +56,7 @@ impl Element {
         self.nodes.push(Node::Element(element))
     }
 
+    /// The fullname of the element (including both the namespace and the name).
     pub fn fullname(&self) -> String {
         if let Some(ns) = &self.namespace {
             if !ns.is_empty() {
@@ -59,6 +66,7 @@ impl Element {
         self.name.clone()
     }
 
+    /// Write the element to the `Write` object.
     pub fn write<W>(&self, writer: &mut W, opts: &WriteOpts, depth: usize) -> Result<()>
     where
         W: Write,

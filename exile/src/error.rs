@@ -17,7 +17,9 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// The error type for this library.
 #[derive(Debug)]
 pub enum Error {
+    /// A syntax error encountered when parsing an XML document.
     Parse(ParseError),
+    /// Any other error not related to the syntax of the XML document.
     Other(OtherError),
 }
 
@@ -114,9 +116,13 @@ impl Display for XMLSite {
 /// Represents an error that occurred during parsing because the XML document is not well-formed.
 #[derive(Debug, Default)]
 pub struct ParseError {
+    /// The location in this library's sourcecode where the error was thrown.
     pub throw_site: ThrowSite,
+    /// The location in the XML file where the syntax error was encountered.
     pub xml_site: XMLSite,
+    /// An optional error message.
     pub message: Option<String>,
+    /// An optional underlying error (i.e. an optional wrapped error)
     pub source: Option<Box<dyn std::error::Error>>,
 }
 
@@ -141,8 +147,11 @@ impl Display for ParseError {
 /// Represents any error that is not related to the syntax of the XML file.
 #[derive(Debug, Default)]
 pub struct OtherError {
+    /// The location in this library's sourcecode where the error was thrown.
     pub throw_site: ThrowSite,
+    /// An optional error message.
     pub message: Option<String>,
+    /// An optional underlying error that is being wrapped.
     pub source: Option<Box<dyn std::error::Error>>,
 }
 
@@ -212,7 +221,7 @@ where
 // internal macros
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#[macro_export]
+/// This macro is used internally to obtain the current file and line (in the sourcecode).
 macro_rules! throw_site {
     () => {
         crate::error::ThrowSite {
@@ -225,7 +234,6 @@ macro_rules! throw_site {
 /// Creates a ParseError object.
 /// parser_state: required as the first argument
 /// message: optional, can be a string or a format
-#[macro_export]
 macro_rules! create_parser_error {
     // required: first argument must be the ParserState object
     ($parser_state:expr) => {
@@ -255,7 +263,8 @@ macro_rules! create_parser_error {
     };
 }
 
-#[macro_export]
+/// This macro is used internally to create an `Err(crate::error::Error)`.
+/// The `iter` is always required as the first argument, the second+ arguments are for format!()
 macro_rules! raise {
     () => {
         Err(crate::error::Error::Other(crate::error::OtherError{
@@ -280,7 +289,8 @@ macro_rules! raise {
     };
 }
 
-#[macro_export]
+/// This macro is used internally to wrap a foreign Result type into a `crate::error::Result`.
+/// The first argument is always a `Result`, and the second+ arguments are for format!()
 macro_rules! wrap {
     ($e:expr) => {
         match $e {
@@ -321,7 +331,6 @@ macro_rules! wrap {
 }
 
 /// Creates a ParseError object, requires an 'Iter' and the expected 'char'.
-#[macro_export]
 macro_rules! expect {
     ($iter:expr, $c:expr) => {
         $iter.expect($c, throw_site!())
@@ -331,7 +340,6 @@ macro_rules! expect {
 /// Creates a Result populated by a ParseError
 /// iter: required as the first argument, `Iter`
 /// message: optional, can be a string or a format
-#[macro_export]
 macro_rules! parse_err {
     // required: first argument must be the ParserState object
     ($iter:expr) => { Err(create_parser_error!(&$iter.st)) };

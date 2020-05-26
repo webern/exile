@@ -11,9 +11,13 @@ use crate::{Element, WriteOpts};
     derive(Serialize, Deserialize),
     serde(rename_all = "snake_case")
 )]
+/// Represents the XML Version being used.
 pub enum Version {
+    /// The XML Version is 1.0 and is not shown.
     None,
+    /// The XML Version is 1.0 and is shown.
     One,
+    /// The XML Version is 1.1 and is shown.
     OneDotOne,
 }
 
@@ -29,8 +33,11 @@ impl Default for Version {
     derive(Serialize, Deserialize),
     serde(rename_all = "snake_case")
 )]
+/// The encoding of the XML Document, currently only UTF-8 is supported.
 pub enum Encoding {
+    /// The encoding is UTF-8, but the encoding is not shown in the declaration.
     None,
+    /// The encoding is UTF-8 and is shown in the declaration.
     Utf8,
 }
 
@@ -46,8 +53,11 @@ impl Default for Encoding {
     derive(Serialize, Deserialize),
     serde(rename_all = "snake_case")
 )]
+/// The XML declaration at the start of the XML Document.
 pub struct Declaration {
+    /// The version of the XML Document.
     pub version: Version,
+    /// The encoding of the XML Document.
     pub encoding: Encoding,
 }
 
@@ -57,6 +67,7 @@ pub struct Declaration {
     derive(Serialize, Deserialize),
     serde(rename_all = "snake_case")
 )]
+/// Represents an XML Document.
 pub struct Document {
     declaration: Declaration,
     root: Element,
@@ -89,12 +100,14 @@ impl Default for Document {
 }
 
 impl<'a> Document {
+    /// Create a new default document.
     pub fn new() -> Document {
         Document::default()
     }
 }
 
 impl Document {
+    /// Construct a new `Document` using the given `Element` as the root.
     pub fn from_root(root: Element) -> Self {
         Document {
             declaration: Default::default(),
@@ -102,22 +115,27 @@ impl Document {
         }
     }
 
+    /// Get the root `Element`.
     pub fn root(&self) -> &Element {
         &self.root
     }
 
+    /// Set the root `Element`.
     pub fn set_root(&mut self, element_data: Element) {
         self.root = element_data;
     }
 
+    /// Get the `Declaration` object.
     pub fn declaration(&self) -> &Declaration {
         &self.declaration
     }
 
+    /// Set the `Declaration` object for the `Document`.
     pub fn set_declaration(&mut self, declaration: Declaration) {
         self.declaration = declaration;
     }
 
+    /// Write the `Document` to the `Write` object.
     pub fn write<W>(&self, writer: &mut W) -> Result<()>
     where
         W: Write,
@@ -125,6 +143,7 @@ impl Document {
         self.write_opts(writer, &WriteOpts::default())
     }
 
+    /// Write the `Document` to the `Write` object using the given options.
     pub fn write_opts<W>(&self, writer: &mut W, opts: &WriteOpts) -> Result<()>
     where
         W: Write,
@@ -177,6 +196,7 @@ impl Document {
         Ok(())
     }
 
+    /// Write the `Document` to a `String` using the given options.
     pub fn to_string_opts(&self, opts: &WriteOpts) -> Result<String> {
         let mut c = Cursor::new(Vec::new());
         if let Err(e) = self.write_opts(&mut c, &opts) {
@@ -200,7 +220,8 @@ impl ToString for Document {
     }
 }
 
-#[macro_export]
+// a macro for creating a btree map, kind of like vec!
+#[allow(unused_macros)]
 macro_rules! map (
     { $($key:expr => $value:expr),+ } => {
         {

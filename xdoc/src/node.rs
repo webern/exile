@@ -10,6 +10,7 @@ use crate::{Element, WriteOpts};
     derive(Serialize, Deserialize),
     serde(rename_all = "lowercase")
 )]
+/// Represents a Node in an XML Document. The Document consists of a recursive nesting of these.
 pub enum Node {
     /// `<element/>`
     Element(Element),
@@ -41,6 +42,7 @@ impl Default for Node {
 }
 
 impl Node {
+    /// Serialize the XML Document to a `Write` stream.
     pub fn write<W>(&self, writer: &mut W, opts: &WriteOpts, depth: usize) -> Result<()>
     where
         W: Write,

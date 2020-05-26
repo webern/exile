@@ -212,8 +212,8 @@ impl<'a> Iter<'a> {
     }
 }
 
-pub fn parse_str(s: &str) -> Result<Document> {
-    let mut iter = Iter::new(s)?;
+pub(crate) fn document_from_string(s: &str) -> crate::error::Result<Document> {
+    let mut iter = crate::parser::Iter::new(s)?;
     let mut document = Document::new();
     loop {
         parse_document(&mut iter, &mut document)?;

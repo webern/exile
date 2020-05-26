@@ -2,10 +2,14 @@ use std::io::Write;
 
 use crate::error::Result;
 
+/// The type of newline character to use when writing the XML Document
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
 pub enum Newline {
+    /// No newline character.
     None,
+    /// The unix/linux newline character `\n`.
     Newline,
+    /// The Windows newline sequence `\n\r`.
     Windows,
 }
 
@@ -28,9 +32,12 @@ impl Default for Indent {
     }
 }
 
+/// Options for controlling how the XML Document is written when serialized.
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash, Default)]
 pub struct WriteOpts {
+    /// The type of indenting to use when writing the document, i.e. tabs, 2 spaces, 4 spaces.
     pub indent: Indent,
+    /// The type of newline to use when writing the document.
     pub newline: Newline,
 }
 
