@@ -1,6 +1,6 @@
 # exile
 
-Current version: 0.0.0
+Current version: 0.0.1
 
 `exile` is a Rust library for reading and writing XML.
 

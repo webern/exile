@@ -1,13 +1,14 @@
 [package]
 name = "xdoc"
 description = "XML"
-version = "0.0.0"
+version = "0.0.1"
 authors = ["Matthew James Briggs <matthew.james.briggs@gmail.com>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
 keywords = ["xml"]
 categories = ["encoding", "parsing"]
 repository = "https://github.com/webern/exile/"
+readme = "README.md"
 
 [features]
 default = []
@@ -16,3 +17,6 @@ default = []
 # TODO - include multiple serde dependencies in a single xdoc feature, e.g. 'json'
 serde = { version = "1.0.106", optional = true, features = ["derive"] }
 serde_json = { version = "1.0.48", optional = true }
+
+[build-dependencies]
+cargo-readme = "3.2.0"
