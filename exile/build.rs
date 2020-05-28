@@ -12,7 +12,7 @@ fn main() {
 
 fn generate_readme() {
     // Check for environment variable "SKIP_README". If it is set, skip README generation.
-    if env::var_os("SKIP_README").is_some() {
+    if !env::var_os("EXILE_GENERATE_README").is_some() {
         return;
     }
 
@@ -41,7 +41,9 @@ fn generate_readme() {
         .join("README.md")
         .canonicalize()
         .unwrap();
-    std::fs::copy(&this_readme_path, &top_readme_path).unwrap();
+    if env::var_os("EXILE_GENERATE_TOP_README").is_some() {
+        std::fs::copy(&this_readme_path, &top_readme_path).unwrap();
+    }
 }
 
 fn generate_tests() {
