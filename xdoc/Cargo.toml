@@ -1,12 +1,15 @@
 [package]
 name = "xdoc"
+description = "XML"
 version = "0.0.0"
 authors = ["Matthew James Briggs <matthew.james.briggs@gmail.com>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
+keywords = ["xml"]
+categories = ["encoding", "parsing"]
+repository = "https://github.com/webern/exile/"
 
 [features]
-# serde is a feature that enables XML structs to be serialized to json.
 default = []
 
 [dependencies]

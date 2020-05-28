@@ -1,8 +1,9 @@
 /*!
 
-`xdoc` presents the primitives on an XML Document. For example `Element` and `Attribute`.
-It is written in support of the `exile` crate, but kept separate from that crate so that it can also
-be used when generating `exile`'s tests.
+`xdoc` presents the primitives on an XML Document.
+For example `Element` and `Attribute` are structs in this library.
+It is written in support of the `exile` crate, but kept separate from that crate due to dev-time
+compilation dependencies.
 
 */
 
