@@ -1,5 +1,5 @@
 {
-  "description": "unescaped angle bracket inside element text: TODO the position of the failure is too late right now, should actually be 4:49 I think",
+  "description": "unescaped angle bracket inside element text",
   "syntax": {
     "bad": {
       "character_position": 95,

@@ -1,0 +1,74 @@
+{
+  "description": "cd_catalog example from https://www.w3schools.com/xml/xml_examples.asp",
+  "syntax": {
+    "good": {}
+  },
+  "expected": {
+    "declaration": {
+      "version": "one",
+      "encoding": "utf8"
+    },
+    "root": {
+      "namespace": null,
+      "name": "score-partwise",
+      "attributes": {
+        "version": "3.0"
+      },
+      "nodes": [
+        {
+          "element": {
+            "namespace": null,
+            "name": "part-list",
+            "attributes": {},
+            "nodes": [
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "score-part",
+                  "attributes": {
+                    "id": "P1"
+                  },
+                  "nodes": [
+                    {
+                      "element": {
+                        "namespace": null,
+                        "name": "part-name",
+                        "attributes": {},
+                        "nodes": [
+                          {
+                            "text": "No Name"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "element": {
+            "namespace": null,
+            "name": "part",
+            "attributes": {
+              "id": "P1"
+            },
+            "nodes": [
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "measure",
+                  "attributes": {
+                    "number": "1"
+                  },
+                  "nodes": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

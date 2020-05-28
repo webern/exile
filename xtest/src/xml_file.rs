@@ -10,11 +10,19 @@ pub struct XmlFile {
     pub xml_path: PathBuf,
     pub metadata: Metadata,
     pub metadata_path: PathBuf,
+    pub expected_write: Option<PathBuf>,
 }
 
 impl XmlFile {
     pub fn read_xml_file(&self) -> String {
         read_to_string(&self.xml_path).unwrap()
+    }
+
+    pub fn read_expected_write(&self) -> Option<String> {
+        if let Some(p) = &self.expected_write {
+            return Some(read_to_string(p).unwrap());
+        }
+        None
     }
 }
 

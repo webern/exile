@@ -66,6 +66,34 @@ impl Element {
         self.name.clone()
     }
 
+    /// Does this element have any sub elements. For example, if the element is empty or contains
+    /// only text and/or pis and/or comments, then false. if the element has elements, then true.
+    pub fn has_children(&self) -> bool {
+        if self.nodes.is_empty() || self.is_text() {
+            return false;
+        }
+        for node in &self.nodes {
+            if let Node::Element(_) = node {
+                return true;
+            }
+        }
+        false
+    }
+
+    /// Returns true if there is exactly one sub node, and that sub node is either text or cdata.
+    pub fn is_text(&self) -> bool {
+        if self.nodes.len() == 1 {
+            if let Some(node) = self.nodes.first() {
+                match node {
+                    Node::Text(_) => return true,
+                    Node::CData(_) => return true,
+                    _ => return false,
+                }
+            }
+        }
+        false
+    }
+
     /// Write the element to the `Write` object.
     pub fn write<W>(&self, writer: &mut W, opts: &WriteOpts, depth: usize) -> Result<()>
     where
@@ -73,13 +101,6 @@ impl Element {
     {
         if let Err(e) = self.check() {
             return wrap!(e);
-        }
-        // Somewhat hacky, but if it's the root element then the caller needs to decide whether or
-        // not a newline precededs the element. For all other elements a newline should be OK.
-        if depth != 0 {
-            if let Err(e) = opts.newline(writer) {
-                return wrap!(e);
-            }
         }
         if let Err(e) = opts.indent(writer, depth) {
             return wrap!(e);
@@ -137,14 +158,23 @@ impl Element {
         //     return wrap!(e);
         // }
 
-        for node in self.nodes.iter() {
+        for (index, node) in self.nodes.iter().enumerate() {
+            if index == 0 && !node.is_text() {
+                opts.newline(writer)?;
+            }
             if let Err(e) = node.write(writer, opts, depth + 1) {
                 // TODO - this may explode with recursive wrapping
                 return wrap!(e);
             }
+            if !node.is_text() {
+                opts.newline(writer)?;
+            }
         }
 
         // Closing Tag
+        if !self.is_text() {
+            opts.indent(writer, depth)?;
+        }
         if let Err(e) = write!(writer, "</") {
             return wrap!(e);
         }
@@ -161,9 +191,9 @@ impl Element {
         if let Err(e) = write!(writer, ">") {
             return wrap!(e);
         }
-        if let Err(e) = opts.newline(writer) {
-            return wrap!(e);
-        }
+        // if let Err(e) = opts.newline(writer) {
+        //     return wrap!(e);
+        // }
         Ok(())
     }
 

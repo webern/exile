@@ -67,4 +67,13 @@ impl Node {
             }
         }
     }
+
+    /// Returns true if this node is either a Node::Text or a Node::CData.
+    pub fn is_text(&self) -> bool {
+        match self {
+            Node::Text(_) => true,
+            Node::CData(_) => true,
+            _ => false,
+        }
+    }
 }
