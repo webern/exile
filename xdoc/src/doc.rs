@@ -282,8 +282,7 @@ mod tests {
 <cats>
   <cat name="bones"/>
   <cat name="bishop">punks</cat>
-</cats>
-"#;
+</cats>"#;
 
     fn create_ezfile() -> Document {
         let bones_data = Element {
@@ -338,10 +337,7 @@ mod tests {
 
     #[test]
     fn test_escapes() {
-        let expected = format!(
-            r#"<root attr="&lt;&amp;&gt;&quot;🍔&quot;''">&amp;&amp;&amp;&lt;&lt;&lt;'"🍔"'&gt;&gt;&gt;&amp;&amp;&amp;</root>{}"#,
-            '\n'
-        );
+        let expected = r#"<root attr="&lt;&amp;&gt;&quot;🍔&quot;''">&amp;&amp;&amp;&lt;&lt;&lt;'"🍔"'&gt;&gt;&gt;&amp;&amp;&amp;</root>"#;
         let mut root = Element::default();
         root.name = "root".into();
         root.attributes

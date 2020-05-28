@@ -30,9 +30,18 @@ fn generate_readme() {
         true,  // indent headings
     )
     .unwrap();
-
+    let this_readme_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("README.md")
+        .canonicalize()
+        .unwrap();
     let mut readme = File::create("README.md").unwrap();
     readme.write_all(content.as_bytes()).unwrap();
+    let top_readme_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("..")
+        .join("README.md")
+        .canonicalize()
+        .unwrap();
+    std::fs::copy(&this_readme_path, &top_readme_path).unwrap();
 }
 
 fn generate_tests() {

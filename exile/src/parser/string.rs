@@ -301,7 +301,7 @@ fn test_parse_codepoint_hex_ok() {
     use crate::parser::Iter;
     let mut iter = Iter::new("_x1f499;").unwrap();
     let c = parse_codepoint(&mut iter).unwrap();
-    assert_eq!(c, '💙');
+    assert_eq!('💙', c);
 }
 
 #[test]
@@ -310,7 +310,7 @@ fn test_parse_codepoint_decimal_ok() {
     use crate::parser::Iter;
     let mut iter = Iter::new("_128153;").unwrap();
     let c = parse_codepoint(&mut iter).unwrap();
-    assert_eq!(c, '💙');
+    assert_eq!('💙', c);
 }
 
 #[test]

@@ -73,22 +73,15 @@ fn write_bad_syntax_test(f: &mut File, character_position: u64, line: u64, colum
     writeln!(f, "assert!(parse_result.is_err());").unwrap();
     writeln!(f, "let err = parse_result.err().unwrap();").unwrap();
     writeln!(f, "match err {{").unwrap();
-    /*
-           exile::error::Error::Parse(pe) => {
-           assert_eq!(pe.xml_site.position, 51);
-           assert_eq!(pe.xml_site.line, 2);
-           assert_eq!(pe.xml_site.column, 12);
-       }
-    */
     writeln!(f, "exile::error::Error::Parse(parse_error) => {{").unwrap();
     writeln!(
         f,
-        "assert_eq!(parse_error.xml_site.position, {});",
+        "assert_eq!({}, parse_error.xml_site.position);",
         character_position
     )
     .unwrap();
-    writeln!(f, "assert_eq!(parse_error.xml_site.line, {});", line).unwrap();
-    writeln!(f, "assert_eq!(parse_error.xml_site.column, {});", column).unwrap();
+    writeln!(f, "assert_eq!({}, parse_error.xml_site.line);", line).unwrap();
+    writeln!(f, "assert_eq!({}, parse_error.xml_site.column);", column).unwrap();
     writeln!(f, "}}").unwrap();
     writeln!(f, "_ => panic!(\"Error was expected to be of type exile::error::Error::Parse, but was not.\")").unwrap();
     writeln!(f, "}}").unwrap();
@@ -105,9 +98,13 @@ fn write_good_syntax_test(f: &mut File, xml_file: &XmlFile) {
     .unwrap();
     writeln!(f, "}}").unwrap();
     if xml_file.metadata.expected.is_some() {
-        writeln!(f, "let actual = parse_result.unwrap();").unwrap();
-        writeln!(f, "let expected = &info.metadata.expected.unwrap();").unwrap();
-        writeln!(f, "let equal = expected == &actual;").unwrap();
+        writeln!(f, "let actual = parse_result.as_ref().unwrap();").unwrap();
+        writeln!(
+            f,
+            "let expected = info.metadata.expected.as_ref().unwrap();"
+        )
+        .unwrap();
+        writeln!(f, "let equal = expected == actual;").unwrap();
         writeln!(f, "if !equal {{").unwrap();
         // We prefer to assert that the strings are not equal for the visual aid when debugging.
         writeln!(f, "let expected_str = expected.to_string();").unwrap();
@@ -118,5 +115,14 @@ fn write_good_syntax_test(f: &mut File, xml_file: &XmlFile) {
         writeln!(f, "assert!(equal);").unwrap();
         writeln!(f, "}}").unwrap();
         writeln!(f, "}}").unwrap();
+        // now serialize and check that it matches the expected.xml file (if there is one)
+        if xml_file.expected_write.is_some() {
+            writeln!(
+                f,
+                "let expected_serialization = info.read_expected_write().unwrap();"
+            )
+            .unwrap();
+            writeln!(f, "assert_eq!(expected_serialization, actual.to_string());").unwrap();
+        }
     }
 }

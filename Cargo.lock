@@ -70,6 +70,8 @@ name = "exile"
 version = "0.0.0"
 dependencies = [
  "cargo-readme",
+ "serde_json",
+ "serde_plain",
  "xdoc",
  "xtest",
 ]

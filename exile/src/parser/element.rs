@@ -16,7 +16,6 @@ pub(crate) fn parse_element(iter: &mut Iter) -> Result<Element> {
 
     // check and return early if it is an empty, self-closing tag
     if iter.is('/') {
-        //println!("It is a self-closing tag with no attributes, i.e. an 'empty' element.");
         iter.advance_or_die()?;
         expect!(iter, '>')?;
         return Ok(element);
@@ -29,7 +28,6 @@ pub(crate) fn parse_element(iter: &mut Iter) -> Result<Element> {
 
     // check and return early if it is an empty, self-closing tag that had attributes
     if iter.is('/') {
-        //println!("It is a self-closing tag with no attributes, i.e. an 'empty' element.");
         iter.advance_or_die()?;
         expect!(iter, '>')?;
         return Ok(element);
@@ -40,7 +38,8 @@ pub(crate) fn parse_element(iter: &mut Iter) -> Result<Element> {
     iter.advance_or_die()?;
     parse_children(iter, &mut element)?;
     // TODO - what validation should be done here? why is the iter being advanced?
-    while iter.advance() {}
+    // while iter.advance() {}
+    expect!(iter, '>')?;
     Ok(element)
 }
 

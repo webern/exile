@@ -1,0 +1,2125 @@
+{
+  "description": "cd_catalog example from https://www.w3schools.com/xml/xml_examples.asp",
+  "syntax": {
+    "good": {}
+  },
+  "expected": {
+    "declaration": {
+      "version": "one",
+      "encoding": "utf8"
+    },
+    "root": {
+      "namespace": null,
+      "name": "CATALOG",
+      "attributes": {},
+      "nodes": [
+        {
+          "element": {
+            "namespace": null,
+            "name": "CD",
+            "attributes": {},
+            "nodes": [
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "TITLE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Empire Burlesque"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "ARTIST",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Bob Dylan"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COUNTRY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "USA"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COMPANY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Columbia"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "PRICE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "10.90"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "YEAR",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "1985"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "element": {
+            "namespace": null,
+            "name": "CD",
+            "attributes": {},
+            "nodes": [
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "TITLE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Hide your heart"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "ARTIST",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Bonnie Tyler"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COUNTRY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "UK"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COMPANY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "CBS Records"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "PRICE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "9.90"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "YEAR",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "1988"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "element": {
+            "namespace": null,
+            "name": "CD",
+            "attributes": {},
+            "nodes": [
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "TITLE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Greatest Hits"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "ARTIST",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Dolly Parton"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COUNTRY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "USA"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COMPANY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "RCA"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "PRICE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "9.90"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "YEAR",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "1982"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "element": {
+            "namespace": null,
+            "name": "CD",
+            "attributes": {},
+            "nodes": [
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "TITLE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Still got the blues"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "ARTIST",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Gary Moore"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COUNTRY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "UK"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COMPANY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Virgin records"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "PRICE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "10.20"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "YEAR",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "1990"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "element": {
+            "namespace": null,
+            "name": "CD",
+            "attributes": {},
+            "nodes": [
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "TITLE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Eros"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "ARTIST",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Eros Ramazzotti"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COUNTRY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "EU"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COMPANY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "BMG"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "PRICE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "9.90"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "YEAR",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "1997"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "element": {
+            "namespace": null,
+            "name": "CD",
+            "attributes": {},
+            "nodes": [
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "TITLE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "One night only"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "ARTIST",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Bee Gees"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COUNTRY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "UK"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COMPANY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Polydor"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "PRICE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "10.90"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "YEAR",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "1998"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "element": {
+            "namespace": null,
+            "name": "CD",
+            "attributes": {},
+            "nodes": [
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "TITLE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Sylvias Mother"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "ARTIST",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Dr.Hook"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COUNTRY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "UK"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COMPANY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "CBS"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "PRICE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "8.10"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "YEAR",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "1973"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "element": {
+            "namespace": null,
+            "name": "CD",
+            "attributes": {},
+            "nodes": [
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "TITLE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Maggie May"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "ARTIST",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Rod Stewart"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COUNTRY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "UK"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COMPANY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Pickwick"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "PRICE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "8.50"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "YEAR",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "1990"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "element": {
+            "namespace": null,
+            "name": "CD",
+            "attributes": {},
+            "nodes": [
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "TITLE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Romanza"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "ARTIST",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Andrea Bocelli"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COUNTRY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "EU"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COMPANY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Polydor"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "PRICE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "10.80"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "YEAR",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "1996"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "element": {
+            "namespace": null,
+            "name": "CD",
+            "attributes": {},
+            "nodes": [
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "TITLE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "When a man loves a woman"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "ARTIST",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Percy Sledge"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COUNTRY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "USA"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COMPANY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Atlantic"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "PRICE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "8.70"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "YEAR",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "1987"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "element": {
+            "namespace": null,
+            "name": "CD",
+            "attributes": {},
+            "nodes": [
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "TITLE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Black angel"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "ARTIST",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Savage Rose"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COUNTRY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "EU"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COMPANY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Mega"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "PRICE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "10.90"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "YEAR",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "1995"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "element": {
+            "namespace": null,
+            "name": "CD",
+            "attributes": {},
+            "nodes": [
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "TITLE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "1999 Grammy Nominees"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "ARTIST",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Many"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COUNTRY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "USA"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COMPANY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Grammy"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "PRICE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "10.20"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "YEAR",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "1999"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "element": {
+            "namespace": null,
+            "name": "CD",
+            "attributes": {},
+            "nodes": [
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "TITLE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "For the good times"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "ARTIST",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Kenny Rogers"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COUNTRY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "UK"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COMPANY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Mucik Master"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "PRICE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "8.70"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "YEAR",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "1995"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "element": {
+            "namespace": null,
+            "name": "CD",
+            "attributes": {},
+            "nodes": [
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "TITLE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Big Willie style"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "ARTIST",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Will Smith"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COUNTRY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "USA"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COMPANY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Columbia"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "PRICE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "9.90"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "YEAR",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "1997"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "element": {
+            "namespace": null,
+            "name": "CD",
+            "attributes": {},
+            "nodes": [
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "TITLE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Tupelo Honey"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "ARTIST",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Van Morrison"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COUNTRY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "UK"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COMPANY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Polydor"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "PRICE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "8.20"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "YEAR",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "1971"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "element": {
+            "namespace": null,
+            "name": "CD",
+            "attributes": {},
+            "nodes": [
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "TITLE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Soulsville"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "ARTIST",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Jorn Hoel"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COUNTRY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Norway"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COMPANY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "WEA"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "PRICE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "7.90"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "YEAR",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "1996"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "element": {
+            "namespace": null,
+            "name": "CD",
+            "attributes": {},
+            "nodes": [
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "TITLE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "The very best of"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "ARTIST",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Cat Stevens"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COUNTRY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "UK"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COMPANY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Island"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "PRICE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "8.90"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "YEAR",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "1990"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "element": {
+            "namespace": null,
+            "name": "CD",
+            "attributes": {},
+            "nodes": [
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "TITLE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Stop"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "ARTIST",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Sam Brown"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COUNTRY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "UK"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COMPANY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "A and M"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "PRICE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "8.90"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "YEAR",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "1988"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "element": {
+            "namespace": null,
+            "name": "CD",
+            "attributes": {},
+            "nodes": [
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "TITLE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Bridge of Spies"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "ARTIST",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "T'Pau"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COUNTRY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "UK"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COMPANY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Siren"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "PRICE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "7.90"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "YEAR",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "1987"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "element": {
+            "namespace": null,
+            "name": "CD",
+            "attributes": {},
+            "nodes": [
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "TITLE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Private Dancer"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "ARTIST",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Tina Turner"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COUNTRY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "UK"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COMPANY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Capitol"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "PRICE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "8.90"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "YEAR",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "1983"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "element": {
+            "namespace": null,
+            "name": "CD",
+            "attributes": {},
+            "nodes": [
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "TITLE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Midt om natten"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "ARTIST",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Kim Larsen"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COUNTRY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "EU"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COMPANY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Medley"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "PRICE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "7.80"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "YEAR",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "1983"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "element": {
+            "namespace": null,
+            "name": "CD",
+            "attributes": {},
+            "nodes": [
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "TITLE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Pavarotti Gala Concert"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "ARTIST",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Luciano Pavarotti"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COUNTRY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "UK"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COMPANY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "DECCA"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "PRICE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "9.90"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "YEAR",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "1991"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "element": {
+            "namespace": null,
+            "name": "CD",
+            "attributes": {},
+            "nodes": [
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "TITLE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "The dock of the bay"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "ARTIST",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Otis Redding"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COUNTRY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "USA"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COMPANY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Stax Records"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "PRICE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "7.90"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "YEAR",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "1968"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "element": {
+            "namespace": null,
+            "name": "CD",
+            "attributes": {},
+            "nodes": [
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "TITLE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Picture book"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "ARTIST",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Simply Red"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COUNTRY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "EU"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COMPANY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Elektra"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "PRICE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "7.20"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "YEAR",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "1985"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "element": {
+            "namespace": null,
+            "name": "CD",
+            "attributes": {},
+            "nodes": [
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "TITLE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Red"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "ARTIST",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "The Communards"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COUNTRY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "UK"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COMPANY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "London"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "PRICE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "7.80"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "YEAR",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "1987"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "element": {
+            "namespace": null,
+            "name": "CD",
+            "attributes": {},
+            "nodes": [
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "TITLE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Unchain my heart"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "ARTIST",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "Joe Cocker"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COUNTRY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "USA"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "COMPANY",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "EMI"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "PRICE",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "8.20"
+                    }
+                  ]
+                }
+              },
+              {
+                "element": {
+                  "namespace": null,
+                  "name": "YEAR",
+                  "attributes": {},
+                  "nodes": [
+                    {
+                      "text": "1987"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

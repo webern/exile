@@ -8,9 +8,9 @@ fn bad_syntax_unescaped_angle_test() {
     let err = parse_result.err().unwrap();
     match err {
         exile::error::Error::Parse(parse_error) => {
-            assert_eq!(parse_error.xml_site.position, 95);
-            assert_eq!(parse_error.xml_site.line, 4);
-            assert_eq!(parse_error.xml_site.column, 39);
+            assert_eq!(95, parse_error.xml_site.position);
+            assert_eq!(4, parse_error.xml_site.line);
+            assert_eq!(39, parse_error.xml_site.column);
         }
         _ => panic!("Error was expected to be of type exile::error::Error::Parse, but was not."),
     }
@@ -24,9 +24,9 @@ fn good_syntax_escapes_test() {
     if let Err(e) = parse_result {
         panic!("expected parse_result to be Ok, got Err: {}", e);
     }
-    let actual = parse_result.unwrap();
-    let expected = &info.metadata.expected.unwrap();
-    let equal = expected == &actual;
+    let actual = parse_result.as_ref().unwrap();
+    let expected = info.metadata.expected.as_ref().unwrap();
+    let equal = expected == actual;
     if !equal {
         let expected_str = expected.to_string();
         let actual_str = actual.to_string();
@@ -36,6 +36,32 @@ fn good_syntax_escapes_test() {
             assert!(equal);
         }
     }
+    let expected_serialization = info.read_expected_write().unwrap();
+    assert_eq!(expected_serialization, actual.to_string());
+}
+
+#[test]
+fn good_syntax_cd_catalog_test() {
+    let info = xtest::load("cd_catalog");
+    let xml_str = info.read_xml_file();
+    let parse_result = exile::parse(xml_str.as_str());
+    if let Err(e) = parse_result {
+        panic!("expected parse_result to be Ok, got Err: {}", e);
+    }
+    let actual = parse_result.as_ref().unwrap();
+    let expected = info.metadata.expected.as_ref().unwrap();
+    let equal = expected == actual;
+    if !equal {
+        let expected_str = expected.to_string();
+        let actual_str = actual.to_string();
+        if expected_str != actual_str {
+            assert_eq!(expected_str, actual_str);
+        } else {
+            assert!(equal);
+        }
+    }
+    let expected_serialization = info.read_expected_write().unwrap();
+    assert_eq!(expected_serialization, actual.to_string());
 }
 
 #[test]
@@ -47,9 +73,9 @@ fn bad_syntax_angle_in_attribute_value_test() {
     let err = parse_result.err().unwrap();
     match err {
         exile::error::Error::Parse(parse_error) => {
-            assert_eq!(parse_error.xml_site.position, 51);
-            assert_eq!(parse_error.xml_site.line, 2);
-            assert_eq!(parse_error.xml_site.column, 12);
+            assert_eq!(51, parse_error.xml_site.position);
+            assert_eq!(2, parse_error.xml_site.line);
+            assert_eq!(12, parse_error.xml_site.column);
         }
         _ => panic!("Error was expected to be of type exile::error::Error::Parse, but was not."),
     }
@@ -63,9 +89,9 @@ fn good_syntax_ezfile_test() {
     if let Err(e) = parse_result {
         panic!("expected parse_result to be Ok, got Err: {}", e);
     }
-    let actual = parse_result.unwrap();
-    let expected = &info.metadata.expected.unwrap();
-    let equal = expected == &actual;
+    let actual = parse_result.as_ref().unwrap();
+    let expected = info.metadata.expected.as_ref().unwrap();
+    let equal = expected == actual;
     if !equal {
         let expected_str = expected.to_string();
         let actual_str = actual.to_string();
@@ -75,6 +101,8 @@ fn good_syntax_ezfile_test() {
             assert!(equal);
         }
     }
+    let expected_serialization = info.read_expected_write().unwrap();
+    assert_eq!(expected_serialization, actual.to_string());
 }
 
 #[test]
@@ -85,4 +113,28 @@ fn good_syntax_doctypes_comments_pis_test() {
     if let Err(e) = parse_result {
         panic!("expected parse_result to be Ok, got Err: {}", e);
     }
+}
+
+#[test]
+fn good_syntax_simple_musicxml_test() {
+    let info = xtest::load("simple_musicxml");
+    let xml_str = info.read_xml_file();
+    let parse_result = exile::parse(xml_str.as_str());
+    if let Err(e) = parse_result {
+        panic!("expected parse_result to be Ok, got Err: {}", e);
+    }
+    let actual = parse_result.as_ref().unwrap();
+    let expected = info.metadata.expected.as_ref().unwrap();
+    let equal = expected == actual;
+    if !equal {
+        let expected_str = expected.to_string();
+        let actual_str = actual.to_string();
+        if expected_str != actual_str {
+            assert_eq!(expected_str, actual_str);
+        } else {
+            assert!(equal);
+        }
+    }
+    let expected_serialization = info.read_expected_write().unwrap();
+    assert_eq!(expected_serialization, actual.to_string());
 }
