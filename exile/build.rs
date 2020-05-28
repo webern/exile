@@ -12,7 +12,7 @@ fn main() {
 
 fn generate_readme() {
     // Check for environment variable "SKIP_README". If it is set, skip README generation.
-    if !env::var_os("EXILE_GENERATE_README").is_some() {
+    if env::var_os("EXILE_GENERATE_README").is_none() {
         return;
     }
 
