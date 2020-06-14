@@ -1,4 +1,6 @@
 /*!
+![build](https://github.com/webern/exile/workflows/exile%20ci/badge.svg)
+
 `exile` is a Rust library for reading and writing XML.
 
 The goal is to provide a useful abstraction over XML with DOM-like structs.
