@@ -264,7 +264,6 @@ macro_rules! create_parser_error {
 }
 
 /// This macro is used internally to create an `Err(crate::error::Error)`.
-/// The `iter` is always required as the first argument, the second+ arguments are for format!()
 macro_rules! raise {
     () => {
         Err(crate::error::Error::Other(crate::error::OtherError{
