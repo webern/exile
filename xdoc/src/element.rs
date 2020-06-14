@@ -51,6 +51,17 @@ impl Element {
         })
     }
 
+    /// Find the first occurrance specific child element (does not recurse to lower levels of children).
+    pub fn child<S: AsRef<str>>(&self, name: S) -> Option<&Element> {
+        let name = name.as_ref();
+        for child in self.children() {
+            if child.name.as_str() == name {
+                return Some(child);
+            }
+        }
+        None
+    }
+
     /// Add an element as a child of this element.
     pub fn add_child(&mut self, element: Element) {
         self.nodes.push(Node::Element(element))
@@ -92,6 +103,18 @@ impl Element {
             }
         }
         false
+    }
+
+    pub fn text(&self) -> Option<String> {
+        for node in &self.nodes {
+            match node {
+                Node::Text(s) => Some(s.clone()),
+                Node::CData(s) => Some(s.clone()),
+                Node::Element(_) => None,
+                _ => continue,
+            };
+        }
+        None
     }
 
     /// Write the element to the `Write` object.
