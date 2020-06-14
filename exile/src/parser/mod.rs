@@ -1,7 +1,7 @@
 use std::iter::Peekable;
 use std::str::Chars;
 
-use xdoc::{Declaration, Document, Encoding, PIData, Version};
+use xdoc::{Declaration, Document, Encoding, Version, PI};
 
 use crate::error::{display_char, parse_err, Error, ParseError, Result, ThrowSite, XMLSite};
 use crate::parser::chars::{is_name_char, is_name_start_char};
@@ -304,7 +304,7 @@ fn parse_declaration_pi(iter: &mut Iter, document: &mut Document) -> Result<()> 
     Ok(())
 }
 
-fn parse_declaration(pi_data: &PIData) -> Result<Declaration> {
+fn parse_declaration(pi_data: &PI) -> Result<Declaration> {
     let mut declaration = Declaration::default();
     if pi_data.target != "xml" {
         return raise!("pi_data.target != xml");

@@ -28,7 +28,7 @@ pub enum Node {
 
     // TODO - support pis https://github.com/webern/exile/issues/12
     /// ProcessingInstruction, e.g. `<?target whatever?>` - not implemented
-    PI(crate::PIData),
+    PI(crate::PI),
 
     // TODO - support doctypes https://github.com/webern/exile/issues/22
     /// `<!DOCTYPE doc>` - not implemented

@@ -1,4 +1,4 @@
-use xdoc::PIData;
+use xdoc::PI;
 
 use crate::error::Result;
 use crate::parser::Iter;
@@ -26,7 +26,7 @@ struct PIProcessor {
     status: PIStatus,
     key_buffer: String,
     value_buffer: String,
-    pi_data: PIData,
+    pi_data: PI,
 }
 
 impl PIProcessor {
@@ -35,7 +35,7 @@ impl PIProcessor {
             status: PIStatus::BeforeTarget,
             key_buffer: "".to_string(),
             value_buffer: "".to_string(),
-            pi_data: PIData::default(),
+            pi_data: PI::default(),
         }
     }
 
@@ -60,7 +60,7 @@ impl PIProcessor {
     }
 }
 
-pub(crate) fn parse_pi(iter: &mut Iter) -> Result<PIData> {
+pub(crate) fn parse_pi(iter: &mut Iter) -> Result<PI> {
     expect!(iter, '<')?;
     iter.advance_or_die()?;
     expect!(iter, '?')?;

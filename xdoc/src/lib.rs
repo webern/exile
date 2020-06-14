@@ -41,7 +41,7 @@ mod write_ops;
     derive(Serialize, Deserialize),
     serde(rename_all = "snake_case")
 )]
-pub struct PIData {
+pub struct PI {
     /// The processing instruction target.
     pub target: String,
     /// The processing instructions.
