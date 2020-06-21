@@ -344,7 +344,7 @@ fn parse_as_map<'a, S: AsRef<str>>(data: &'a [S]) -> HashMap<&'a str, &'a str> {
     let mut result = HashMap::new();
     for item in data {
         let s = item.as_ref();
-        let split = s.split("=").collect::<Vec<&str>>();
+        let split = s.split('=').collect::<Vec<&str>>();
         match split.len() {
             0 => continue,
             1 => { result.insert(*split.first().unwrap(), ""); }

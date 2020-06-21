@@ -15,8 +15,8 @@ use crate::error::Result;
 ///
 /// Processing Instructions
 ///
-/// `[16]   	PI	   ::=   	'<?' PITarget (S (Char* - (Char* '?>' Char*)))? '?>'`
-/// `[17]   	PITarget	   ::=   	Name - (('X' | 'x') ('M' | 'm') ('L' | 'l'))`
+/// `[16] PI       ::= '<?' PITarget (S (Char* - (Char* '?>' Char*)))? '?>'`
+/// `[17] PITarget ::= Name - (('X' | 'x') ('M' | 'm') ('L' | 'l'))`
 ///
 /// > PIs are not part of the document's character data, but must be passed through to the
 /// > application. The PI begins with a target (PITarget) used to identify the application to which

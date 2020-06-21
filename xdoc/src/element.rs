@@ -111,9 +111,9 @@ impl Element {
     pub fn text(&self) -> Option<String> {
         for node in &self.nodes {
             match node {
-                Node::Text(s) => Some(s.clone()),
-                Node::CData(s) => Some(s.clone()),
-                Node::Element(_) => None,
+                Node::Text(s) => return Some(s.clone()),
+                Node::CData(s) => return Some(s.clone()),
+                Node::Element(_) => return None,
                 _ => continue,
             };
         }
@@ -169,10 +169,8 @@ impl Element {
             } else {
                 return Ok(());
             }
-        } else {
-            if let Err(e) = write!(writer, ">") {
-                return wrap!(e);
-            }
+        } else if let Err(e) = write!(writer, ">") {
+            return wrap!(e);
         }
 
         for (index, node) in self.nodes.iter().enumerate() {
