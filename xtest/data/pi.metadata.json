@@ -8,12 +8,24 @@
       "version": "one",
       "encoding": "utf8"
     },
+    "pi": {
+      "target": "a",
+      "instructions": [
+        "b"
+      ]
+    },
     "root": {
       "namespace": null,
-      "name": "cats",
+      "name": "c",
       "attributes": {},
       "nodes": [
         {
+          "pi": {
+            "target": "d",
+            "instructions": [
+              "e"
+            ]
+          },
           "element": {
             "namespace": null,
             "name": "cat",

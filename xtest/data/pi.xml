@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?before root?>
-<root>
-    <?before d?>
-    <d/>
-    <?after d?>
-</root>
-<?after root?>
+<?a b?>
+<c>
+    <?d e?>
+    <f/>
+    <?g h?>
+</c>
+<?i j?>
