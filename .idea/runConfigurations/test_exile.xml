@@ -3,7 +3,6 @@
     <option name="channel" value="DEFAULT" />
     <option name="command" value="test --package exile" />
     <option name="allFeatures" value="false" />
-    <option name="nocapture" value="true" />
     <option name="emulateTerminal" value="false" />
     <option name="backtrace" value="SHORT" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />

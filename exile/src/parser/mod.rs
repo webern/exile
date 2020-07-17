@@ -2,9 +2,9 @@ use std::collections::HashMap;
 use std::iter::Peekable;
 use std::str::Chars;
 
-use xdoc::{Declaration, Document, Encoding, PI, Version};
+use xdoc::{Declaration, Document, Encoding, Version, PI};
 
-use crate::error::{display_char, Error, parse_err, ParseError, Result, ThrowSite, XMLSite};
+use crate::error::{display_char, parse_err, Error, ParseError, Result, ThrowSite, XMLSite};
 use crate::parser::chars::{is_name_char, is_name_start_char};
 use crate::parser::element::parse_element;
 use crate::parser::pi::parse_pi;
@@ -347,8 +347,12 @@ fn parse_as_map<'a, S: AsRef<str>>(data: &'a [S]) -> HashMap<&'a str, &'a str> {
         let split = s.split('=').collect::<Vec<&str>>();
         match split.len() {
             0 => continue,
-            1 => { result.insert(*split.first().unwrap(), ""); }
-            _ => { result.insert(*split.first().unwrap(), *split.get(1).unwrap()); }
+            1 => {
+                result.insert(*split.first().unwrap(), "");
+            }
+            _ => {
+                result.insert(*split.first().unwrap(), *split.get(1).unwrap());
+            }
         }
     }
     result

@@ -1,0 +1,43 @@
+{
+  "description": "a file with processing instructions",
+  "syntax": {
+    "good": {}
+  },
+  "expected": {
+    "declaration": {
+      "version": "one",
+      "encoding": "utf8"
+    },
+    "root": {
+      "namespace": null,
+      "name": "cats",
+      "attributes": {},
+      "nodes": [
+        {
+          "element": {
+            "namespace": null,
+            "name": "cat",
+            "attributes": {
+              "name": "bones"
+            },
+            "nodes": []
+          }
+        },
+        {
+          "element": {
+            "namespace": null,
+            "name": "cat",
+            "attributes": {
+              "name": "bishop"
+            },
+            "nodes": [
+              {
+                "text": "punks"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

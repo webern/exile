@@ -45,10 +45,11 @@ impl PIProcessor {
         if self.key_buffer.is_empty() {
             return raise!("Empty key - this is a bug and should have been detected sooner.");
         }
-        self
-            .pi_data
-            .instructions
-            .push(format!("{}={}", self.key_buffer.clone(), self.value_buffer.clone()));
+        self.pi_data.instructions.push(format!(
+            "{}={}",
+            self.key_buffer.clone(),
+            self.value_buffer.clone()
+        ));
         self.key_buffer.clear();
         self.value_buffer.clear();
         Ok(())

@@ -82,6 +82,28 @@ fn bad_syntax_angle_in_attribute_value_test() {
 }
 
 #[test]
+fn good_syntax_pi_test() {
+    let info = xtest::load("pi");
+    let xml_str = info.read_xml_file();
+    let parse_result = exile::parse(xml_str.as_str());
+    if let Err(e) = parse_result {
+        panic!("expected parse_result to be Ok, got Err: {}", e);
+    }
+    let actual = parse_result.as_ref().unwrap();
+    let expected = info.metadata.expected.as_ref().unwrap();
+    let equal = expected == actual;
+    if !equal {
+        let expected_str = expected.to_string();
+        let actual_str = actual.to_string();
+        if expected_str != actual_str {
+            assert_eq!(expected_str, actual_str);
+        } else {
+            assert!(equal);
+        }
+    }
+}
+
+#[test]
 fn good_syntax_ezfile_test() {
     let info = xtest::load("ezfile");
     let xml_str = info.read_xml_file();
