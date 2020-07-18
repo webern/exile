@@ -58,8 +58,8 @@ impl Node {
             Node::Comment(_) => {
                 Ok(()) /*TODO - implement*/
             }
-            Node::PI(_) => {
-                Ok(()) /*TODO - implement*/
+            Node::PI(pi) => {
+                pi.write(writer, opts, depth)
             }
             Node::DocType(_) => {
                 Ok(()) /*TODO - implement*/
