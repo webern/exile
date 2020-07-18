@@ -9,7 +9,6 @@ fn main() {
     sir_watch_alot();
     generate_readme();
     generate_tests();
-    panic!("it ran");
 }
 
 fn generate_readme() {
