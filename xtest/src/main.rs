@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use xdoc::{Declaration, Document, Element, Encoding, Misc, Node, PI, Version};
 use xtest::{Metadata, Syntax};
@@ -54,4 +54,27 @@ fn main() {
     //
     // println!("{}", serde_json::to_string_pretty(&x).unwrap());
     println!("{}", doc.to_string());
+
+    print_path_and_children(&PathBuf::from("./"));
+}
+
+fn print_dir(p: &Path) {
+    if !p.is_dir() {
+        panic!("{} is not a dir", p.display());
+    }
+    let paths = std::fs::read_dir(p).unwrap();
+
+    for path in paths {
+        print_path_and_children(&path.unwrap().path());
+    }
+}
+
+fn print_path_and_children(p: &Path) {
+    if (p.is_file()) {
+        println!("{}", p.canonicalize().unwrap().display());
+    } else if (p.is_dir()) {
+        print_dir(p)
+    } else {
+        panic!("unknown path type {}", p.display());
+    }
 }

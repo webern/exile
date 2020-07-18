@@ -3,10 +3,11 @@
 use std::env;
 use std::fs::File;
 use std::io::Write;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 fn main() {
-    println!("cargo:rerun-if-changed=../xtest/data");
+    println!("cargo:rerun-if-changed=../xtest");
+    sir_watch_alot();
     generate_readme();
     generate_tests();
 }
@@ -30,7 +31,7 @@ fn generate_readme() {
         false, // add license
         true,  // indent headings
     )
-    .unwrap();
+        .unwrap();
     let this_readme_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("README.md")
         .canonicalize()
@@ -61,4 +62,45 @@ fn integ_test_dir() -> PathBuf {
         .canonicalize()
         .unwrap();
     mycrate_dir.join("tests")
+}
+
+fn xtest_test_dir() -> PathBuf {
+    let mut mycrate_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .canonicalize()
+        .unwrap();
+    mycrate_dir.pop();
+    mycrate_dir.join("xtest").canonicalize().unwrap()
+}
+
+// path walking helpers for watching files
+
+fn list_dir(p: &Path) -> Vec<String> {
+    if !p.is_dir() {
+        panic!("{} is not a dir", p.display());
+    }
+    let mut vec = Vec::new();
+    let paths = std::fs::read_dir(p).unwrap();
+    for path in paths {
+        vec.append(&mut list_files_recursively(&path.unwrap().path()));
+    }
+    vec
+}
+
+fn list_files_recursively(p: &Path) -> Vec<String> {
+    let mut vec = Vec::new();
+    if (p.is_file()) {
+        vec.push(p.canonicalize().unwrap().to_str().unwrap().to_owned());
+    } else if (p.is_dir()) {
+        vec.append(&mut list_dir(p));
+    } else {
+        panic!("unknown path type {}", p.display());
+    }
+    vec
+}
+
+fn sir_watch_alot() {
+    let mut vec = list_files_recursively(&xtest_test_dir());
+    for file in &vec {
+        println!("cargo:rerun-if-changed={}", file);
+    }
 }
