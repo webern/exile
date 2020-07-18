@@ -240,7 +240,7 @@ impl Document {
         if let Err(e) = self.root().write(writer, opts, 0) {
             return wrap!(e);
         }
-        for (i, misc) in self.epilog_misc().enumerate() {
+        for misc in self.epilog_misc() {
             if let Err(e) = opts.newline(writer) {
                 return wrap!(e);
             }
