@@ -70,9 +70,9 @@ fn print_dir(p: &Path) {
 }
 
 fn print_path_and_children(p: &Path) {
-    if (p.is_file()) {
+    if p.is_file() {
         println!("{}", p.canonicalize().unwrap().display());
-    } else if (p.is_dir()) {
+    } else if p.is_dir() {
         print_dir(p)
     } else {
         panic!("unknown path type {}", p.display());
