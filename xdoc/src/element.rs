@@ -4,7 +4,7 @@ use crate::{Node, OrdMap, WriteOpts};
 use crate::error::Result;
 use crate::write_ops::write_attribute_value;
 
-#[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash, Default)]
+#[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
 #[cfg_attr(
 feature = "serde",
 derive(Serialize, Deserialize),
@@ -20,6 +20,17 @@ pub struct Element {
     pub attributes: OrdMap,
     /// Children of this element.
     pub nodes: Vec<Node>,
+}
+
+impl Default for Element {
+    fn default() -> Self {
+        Self {
+            namespace: None,
+            name: "element".to_string(),
+            attributes: Default::default(),
+            nodes: vec![],
+        }
+    }
 }
 
 impl Element {

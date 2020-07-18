@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use xdoc::{Declaration, Document, Element, Encoding, Node, PI, Version};
+use xdoc::{Declaration, Document, Element, Encoding, Misc, Node, PI, Version};
 use xtest::{Metadata, Syntax};
 
 fn main() {
@@ -21,26 +21,24 @@ fn main() {
 
     let mut doc = Document::new();
     doc.set_declaration(Declaration { version: Version::OneDotOne, encoding: Encoding::Utf8 });
-    // TODO - add <?a b?>
+    doc.push_prolog_misc(Misc::PI(PI { target: "a".to_owned(), instructions: vec!["b".to_owned()] }));
     let root = Element {
         namespace: None,
         name: "c".to_owned(),
         attributes: Default::default(),
         nodes: vec![
-            Node::PI(PI { target: "d".to_owned(), instructions: vec!["e".to_owned()] }),
+            Node::Misc(Misc::PI(PI { target: "d".to_owned(), instructions: vec!["e".to_owned()] })),
             Node::Element(Element {
                 namespace: None,
                 name: "f".to_owned(),
                 attributes: Default::default(),
                 nodes: vec![],
             }),
-            Node::PI(PI { target: "d".to_owned(), instructions: vec!["e".to_owned()] }),
+            Node::Misc(Misc::PI(PI { target: "g".to_owned(), instructions: vec!["h".to_owned()] })),
         ],
     };
-    // TODO - add <?i j?>
-
+    doc.push_epilog_misc(Misc::PI(PI { target: "i".to_owned(), instructions: vec!["j".to_owned()] }));
     doc.set_root(root);
-
     let the_test = Metadata {
         description: "a simple file with processing instructions".to_owned(),
         syntax: Default::default(),

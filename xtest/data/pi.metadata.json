@@ -1,55 +1,67 @@
 {
-  "description": "a file with processing instructions",
+  "description": "a simple file with processing instructions",
   "syntax": {
     "good": {}
   },
   "expected": {
     "declaration": {
-      "version": "one",
+      "version": "one_dot_one",
       "encoding": "utf8"
     },
-    "pi": {
-      "target": "a",
-      "instructions": [
-        "b"
-      ]
-    },
+    "prolog_misc": [
+      {
+        "pi": {
+          "target": "a",
+          "instructions": [
+            "b"
+          ]
+        }
+      }
+    ],
     "root": {
       "namespace": null,
       "name": "c",
       "attributes": {},
       "nodes": [
         {
-          "pi": {
-            "target": "d",
-            "instructions": [
-              "e"
-            ]
-          },
-          "element": {
-            "namespace": null,
-            "name": "cat",
-            "attributes": {
-              "name": "bones"
-            },
-            "nodes": []
+          "misc": {
+            "pi": {
+              "target": "d",
+              "instructions": [
+                "e"
+              ]
+            }
           }
         },
         {
           "element": {
             "namespace": null,
-            "name": "cat",
-            "attributes": {
-              "name": "bishop"
-            },
-            "nodes": [
-              {
-                "text": "punks"
-              }
-            ]
+            "name": "f",
+            "attributes": {},
+            "nodes": []
+          }
+        },
+        {
+          "misc": {
+            "pi": {
+              "target": "g",
+              "instructions": [
+                "h"
+              ]
+            }
           }
         }
       ]
-    }
+    },
+    "epilog_misc": [
+      {
+        "pi": {
+          "target": "i",
+          "instructions": [
+            "j"
+          ]
+        }
+      }
+    ]
   }
 }

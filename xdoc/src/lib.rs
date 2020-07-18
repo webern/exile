@@ -17,7 +17,7 @@ pub use chars::{contains_whitespace, is_whitespace};
 pub use doc::{Declaration, Encoding, Version};
 pub use doc::Document;
 pub use element::Element;
-pub use node::Node;
+pub use node::{Misc, Node};
 pub use ord_map::OrdMap;
 pub use pi::PI;
 pub use write_ops::{Newline, WriteOpts};

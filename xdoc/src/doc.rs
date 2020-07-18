@@ -2,7 +2,7 @@ use std::borrow::Cow;
 use std::default::Default;
 use std::io::{Cursor, Write};
 
-use crate::{Element, WriteOpts};
+use crate::{Element, Misc, WriteOpts};
 use crate::error::Result;
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
@@ -70,7 +70,17 @@ serde(rename_all = "snake_case")
 /// Represents an XML Document.
 pub struct Document {
     declaration: Declaration,
+    // TODO - add doctype support https://github.com/webern/exile/issues/22
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    doctypedecl: Option<()>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
+    prolog_misc: Vec<Misc>,
     root: Element,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
+    epilog_misc: Vec<Misc>,
 }
 
 impl<'a> From<&'a Element> for Cow<'a, Element> {
@@ -89,12 +99,10 @@ impl Default for Document {
     fn default() -> Self {
         Document {
             declaration: Declaration::default(),
-            root: Element {
-                namespace: None,
-                name: "root".into(),
-                attributes: Default::default(),
-                nodes: vec![],
-            },
+            doctypedecl: None,
+            prolog_misc: Vec::new(),
+            root: Element::default(),
+            epilog_misc: Vec::new(),
         }
     }
 }
@@ -111,7 +119,10 @@ impl Document {
     pub fn from_root(root: Element) -> Self {
         Document {
             declaration: Default::default(),
+            doctypedecl: None,
+            prolog_misc: Vec::new(),
             root,
+            epilog_misc: Vec::new(),
         }
     }
 
@@ -133,6 +144,36 @@ impl Document {
     /// Set the `Declaration` object for the `Document`.
     pub fn set_declaration(&mut self, declaration: Declaration) {
         self.declaration = declaration;
+    }
+
+    /// Add a `Misc` before the root element.
+    pub fn push_prolog_misc(&mut self, misc: Misc) {
+        self.prolog_misc.push(misc)
+    }
+
+    /// Clear all `Misc` entries before the root element.
+    pub fn clear_prolog_misc(&mut self) {
+        self.prolog_misc.clear()
+    }
+
+    /// Access the `Misc` entries after the root element.
+    pub fn epilog_misc(&self) -> std::slice::Iter<'_, Misc> {
+        self.epilog_misc.iter()
+    }
+
+    /// Add a `Misc` after the root element.
+    pub fn push_epilog_misc(&mut self, misc: Misc) {
+        self.epilog_misc.push(misc)
+    }
+
+    /// Clear all `Misc` entries after the root element.
+    pub fn clear_epilog_misc(&mut self) {
+        self.epilog_misc.clear()
+    }
+
+    /// Access the `Misc` entries before the root element.
+    pub fn prolog_misc(&self) -> std::slice::Iter<'_, Misc> {
+        self.prolog_misc.iter()
     }
 
     /// Write the `Document` to the `Write` object.
@@ -188,9 +229,24 @@ impl Document {
                 return wrap!(e);
             }
         }
-
+        for misc in self.prolog_misc() {
+            if let Err(e) = misc.write(writer, opts, 0) {
+                return wrap!(e);
+            }
+            if let Err(e) = opts.newline(writer) {
+                return wrap!(e);
+            }
+        }
         if let Err(e) = self.root().write(writer, opts, 0) {
             return wrap!(e);
+        }
+        for (i, misc) in self.epilog_misc().enumerate() {
+            if let Err(e) = opts.newline(writer) {
+                return wrap!(e);
+            }
+            if let Err(e) = misc.write(writer, opts, 0) {
+                return wrap!(e);
+            }
         }
 
         Ok(())
@@ -314,7 +370,10 @@ mod tests {
                 version: Version::One,
                 encoding: Encoding::Utf8,
             },
+            doctypedecl: None,
+            prolog_misc: vec![],
             root: cats_data,
+            epilog_misc: vec![],
         }
     }
 
