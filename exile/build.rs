@@ -6,6 +6,7 @@ use std::io::Write;
 use std::path::PathBuf;
 
 fn main() {
+    println!("cargo:rerun-if-changed=../xtest/data");
     generate_readme();
     generate_tests();
 }
