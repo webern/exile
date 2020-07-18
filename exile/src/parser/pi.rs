@@ -56,7 +56,7 @@ impl PIProcessor {
     }
 }
 
-pub(crate) fn parse_pi(iter: &mut Iter) -> Result<PI> {
+pub(crate) fn parse_pi(iter: &mut Iter<'_>) -> Result<PI> {
     expect!(iter, '<')?;
     iter.advance_or_die()?;
     expect!(iter, '?')?;
@@ -73,7 +73,7 @@ pub(crate) fn parse_pi(iter: &mut Iter) -> Result<PI> {
     Ok(processor.pi_data)
 }
 
-fn take_processing_instruction_char(iter: &mut Iter, processor: &mut PIProcessor) -> Result<()> {
+fn take_processing_instruction_char(iter: &mut Iter<'_>, processor: &mut PIProcessor) -> Result<()> {
     match processor.status {
         PIStatus::BeforeTarget => {
             if !is_name_start_char(iter.st.c) {

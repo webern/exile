@@ -258,7 +258,7 @@ impl Default for DocStatus {
     }
 }
 
-fn parse_document(iter: &mut Iter, document: &mut Document) -> Result<()> {
+fn parse_document(iter: &mut Iter<'_>, document: &mut Document) -> Result<()> {
     loop {
         if iter.st.c.is_ascii_whitespace() {
             if !iter.advance() {
@@ -297,7 +297,7 @@ fn parse_document(iter: &mut Iter, document: &mut Document) -> Result<()> {
 
 // takes the iter pointing to '<' and already expected to be '<?xml ...'. parses this and places
 // the values found into the mutable document parameter
-fn parse_declaration_pi(iter: &mut Iter, document: &mut Document) -> Result<()> {
+fn parse_declaration_pi(iter: &mut Iter<'_>, document: &mut Document) -> Result<()> {
     state_must_be_before_declaration(iter)?;
     let pi_data = parse_pi(iter)?;
     document.set_declaration(parse_declaration(&pi_data)?);
@@ -358,7 +358,7 @@ fn parse_as_map<'a, S: AsRef<str>>(data: &'a [S]) -> HashMap<&'a str, &'a str> {
     result
 }
 
-fn state_must_be_before_declaration(iter: &Iter) -> Result<()> {
+fn state_must_be_before_declaration(iter: &Iter<'_>) -> Result<()> {
     if iter.st.doc_status != DocStatus::BeforeDeclaration {
         return raise!("");
     } else {
@@ -366,7 +366,7 @@ fn state_must_be_before_declaration(iter: &Iter) -> Result<()> {
     }
 }
 
-fn parse_name(iter: &mut Iter) -> Result<String> {
+fn parse_name(iter: &mut Iter<'_>) -> Result<String> {
     iter.expect_name_start_char()?;
     let mut name = String::default();
     name.push(iter.st.c);
@@ -387,7 +387,7 @@ fn parse_name(iter: &mut Iter) -> Result<String> {
 // takes the iter after a '<' and when it is pointing at a '!'. returns when '-->' is encountered.
 // will not work if the node being parsed is a DOCTYPE, you must already know it to be a comment.
 // TODO - support comments https://github.com/webern/exile/issues/27
-pub(crate) fn skip_comment(iter: &mut Iter) -> Result<()> {
+pub(crate) fn skip_comment(iter: &mut Iter<'_>) -> Result<()> {
     expect!(iter, '!')?;
     iter.advance_or_die()?;
     expect!(iter, '-')?;
@@ -411,7 +411,7 @@ pub(crate) fn skip_comment(iter: &mut Iter) -> Result<()> {
 // takes the iter after a '<' and when it is pointing at a '!'. returns when '>' is encountered.
 // will not work if the node being parsed is a comment, you must already know it to be a DOCTYPE
 // TODO - support doctypes https://github.com/webern/exile/issues/22
-pub(crate) fn skip_doctype(iter: &mut Iter) -> Result<()> {
+pub(crate) fn skip_doctype(iter: &mut Iter<'_>) -> Result<()> {
     expect!(iter, '!')?;
     while !iter.is('>') {
         if iter.is('[') {
@@ -425,7 +425,7 @@ pub(crate) fn skip_doctype(iter: &mut Iter) -> Result<()> {
 // takes the iter when it is inside if a <!DOCTYPE construct and has encountered the '[' char.
 // ignores everything and returns the iter when it is pointing to the first encountered ']'
 // TODO - support doctypes https://github.com/webern/exile/issues/22
-pub(crate) fn skip_nested_doctype_stuff(iter: &mut Iter) -> Result<()> {
+pub(crate) fn skip_nested_doctype_stuff(iter: &mut Iter<'_>) -> Result<()> {
     expect!(iter, '[')?;
     iter.advance_or_die()?;
     while !iter.is(']') {
@@ -437,7 +437,7 @@ pub(crate) fn skip_nested_doctype_stuff(iter: &mut Iter) -> Result<()> {
 // takes the iter pointing to the lt of a processing instruction, skips the contents and returns
 // iter pointing to the closing gt.
 // TODO - support processing instructions https://github.com/webern/exile/issues/12
-pub(crate) fn skip_processing_instruction(iter: &mut Iter) -> Result<()> {
+pub(crate) fn skip_processing_instruction(iter: &mut Iter<'_>) -> Result<()> {
     expect!(iter, '<')?;
     iter.advance_or_die()?;
     expect!(iter, '?')?;
