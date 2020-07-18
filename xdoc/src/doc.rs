@@ -2,14 +2,14 @@ use std::borrow::Cow;
 use std::default::Default;
 use std::io::{Cursor, Write};
 
-use crate::error::Result;
 use crate::{Element, WriteOpts};
+use crate::error::Result;
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
 #[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(rename_all = "snake_case")
+feature = "serde",
+derive(Serialize, Deserialize),
+serde(rename_all = "snake_case")
 )]
 /// Represents the XML Version being used.
 pub enum Version {
@@ -29,9 +29,9 @@ impl Default for Version {
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
 #[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(rename_all = "snake_case")
+feature = "serde",
+derive(Serialize, Deserialize),
+serde(rename_all = "snake_case")
 )]
 /// The encoding of the XML Document, currently only UTF-8 is supported.
 pub enum Encoding {
@@ -49,9 +49,9 @@ impl Default for Encoding {
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash, Default)]
 #[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(rename_all = "snake_case")
+feature = "serde",
+derive(Serialize, Deserialize),
+serde(rename_all = "snake_case")
 )]
 /// The XML declaration at the start of the XML Document.
 pub struct Declaration {
@@ -63,9 +63,9 @@ pub struct Declaration {
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
 #[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(rename_all = "snake_case")
+feature = "serde",
+derive(Serialize, Deserialize),
+serde(rename_all = "snake_case")
 )]
 /// Represents an XML Document.
 pub struct Document {
@@ -137,16 +137,16 @@ impl Document {
 
     /// Write the `Document` to the `Write` object.
     pub fn write<W>(&self, writer: &mut W) -> Result<()>
-    where
-        W: Write,
+        where
+            W: Write,
     {
         self.write_opts(writer, &WriteOpts::default())
     }
 
     /// Write the `Document` to the `Write` object using the given options.
     pub fn write_opts<W>(&self, writer: &mut W, opts: &WriteOpts) -> Result<()>
-    where
-        W: Write,
+        where
+            W: Write,
     {
         if self.declaration.encoding != Encoding::None || self.declaration.version != Version::None
         {
@@ -238,8 +238,8 @@ macro_rules! map (
 mod tests {
     use std::io::Cursor;
 
-    use crate::doc::{Declaration, Encoding, Version};
     use crate::*;
+    use crate::doc::{Declaration, Encoding, Version};
 
     fn assert_ezfile(doc: &Document) {
         let root = doc.root();

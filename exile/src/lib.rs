@@ -76,7 +76,8 @@ structures and serialize them back.
 
 */
 
-#![warn(missing_docs)]
+#![deny(rust_2018_idioms)]
+#![deny(missing_docs)]
 
 pub use xdoc::{Document, Element, Node};
 
