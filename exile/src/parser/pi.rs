@@ -73,7 +73,10 @@ pub(crate) fn parse_pi(iter: &mut Iter<'_>) -> Result<PI> {
     Ok(processor.pi_data)
 }
 
-fn take_processing_instruction_char(iter: &mut Iter<'_>, processor: &mut PIProcessor) -> Result<()> {
+fn take_processing_instruction_char(
+    iter: &mut Iter<'_>,
+    processor: &mut PIProcessor,
+) -> Result<()> {
     match processor.status {
         PIStatus::BeforeTarget => {
             if !is_name_start_char(iter.st.c) {
