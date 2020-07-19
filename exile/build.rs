@@ -31,17 +31,12 @@ fn generate_readme() {
         true,  // indent headings
     )
     .unwrap();
-    let this_readme_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("README.md")
-        .canonicalize()
-        .unwrap();
+    let this_readme_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("README.md");
     let mut readme = File::create("README.md").unwrap();
     readme.write_all(content.as_bytes()).unwrap();
     let top_readme_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("..")
-        .join("README.md")
-        .canonicalize()
-        .unwrap();
+        .join("README.md");
     if env::var_os("EXILE_GENERATE_TOP_README").is_some() {
         std::fs::copy(&this_readme_path, &top_readme_path).unwrap();
     }
@@ -59,24 +54,18 @@ fn generate_tests() {
 }
 
 fn integ_test_dir() -> PathBuf {
-    let mycrate_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .canonicalize()
-        .unwrap();
+    let mycrate_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     mycrate_dir.join("tests")
 }
 
 fn xtest_test_dir() -> PathBuf {
-    let mut mycrate_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .canonicalize()
-        .unwrap();
+    let mut mycrate_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     mycrate_dir.pop();
-    mycrate_dir.join("xtest").canonicalize().unwrap()
+    mycrate_dir.join("xtest")
 }
 
 fn exile_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .canonicalize()
-        .unwrap()
 }
 
 // path walking helpers for watching files
