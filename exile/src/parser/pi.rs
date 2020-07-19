@@ -24,22 +24,8 @@ impl Default for PIStatus {
 #[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd, Default)]
 struct PIProcessor {
     status: PIStatus,
-    instruction_buffer: String,
     target: String,
     instructions: Vec<String>,
-}
-
-impl PIProcessor {
-    /// Takes the current strings from `instruction_buffer`and adds it to the `instructions`. Clears
-    /// these the buffer to begin processing the next instruction.
-    fn take_buffer(&mut self) -> Result<()> {
-        if self.instruction_buffer.is_empty() {
-            return raise!("Empty buffer - this is a bug and should have been detected sooner.");
-        }
-        self.instructions.push(self.instruction_buffer.clone());
-        self.instruction_buffer.clear();
-        Ok(())
-    }
 }
 
 /// The iter should be pointing to the opening `<` of a processing instruction.
@@ -104,58 +90,6 @@ fn take_processing_instruction_char(
                 }
             }
         }
-        // PIStatus::InsideInstruction => {
-        //     if is_name_char(iter.st.c) {
-        //         processor.instruction_buffer.push(iter.st.c);
-        //     } else if iter.st.c.is_ascii_whitespace() {
-        //         processor.status = PIStatus::AfterInstruction;
-        //     } else {
-        //         return parse_err!(iter);
-        //     }
-        // }
-        // PIStatus::AfterTarget => {
-        //     if iter.st.c == '=' {
-        //         processor.status = PIStatus::Equals;
-        //     } else if !iter.st.c.is_ascii_whitespace() {
-        //         return parse_err!(iter);
-        //     }
-        // }
-        // PIStatus::Equals | PIStatus::AfterEquals => {
-        //     if iter.st.c == '"' {
-        //         processor.status = PIStatus::ValOpenQuote;
-        //     } else if iter.st.c.is_ascii_whitespace() {
-        //         processor.status = PIStatus::AfterEquals;
-        //     } else {
-        //         return parse_err!(iter);
-        //     }
-        // }
-        // PIStatus::ValOpenQuote | PIStatus::InsideVal => {
-        //     if iter.st.c == '"' {
-        //         processor.take_buffer()?;
-        //         processor.status = PIStatus::ValCloseQuote;
-        //     } else {
-        //         // TODO - handle escape sequences
-        //         processor.value_buffer.push(iter.st.c);
-        //         processor.status = PIStatus::InsideVal;
-        //     }
-        // }
-        // PIStatus::ValCloseQuote => {
-        //     if iter.st.c.is_ascii_whitespace() {
-        //         processor.status = PIStatus::AfterVal;
-        //     } else if iter.st.c == '?' {
-        //         processor.status = PIStatus::QuestionMark;
-        //     } else {
-        //         return parse_err!(iter);
-        //     }
-        // }
-        // PIStatus::AfterInstruction => {
-        //     if iter.st.c == '?' {
-        //         processor.status = PIStatus::QuestionMark;
-        //     } else if !iter.st.c.is_ascii_whitespace() {
-        //         processor.instruction_buffer.push(iter.st.c);
-        //         processor.status = PIStatus::InsideInstruction;
-        //     }
-        // }
         PIStatus::QuestionMark => {
             if iter.st.c == '>' {
                 processor.status = PIStatus::Close;
