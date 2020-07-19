@@ -16,8 +16,8 @@ The public concepts in `xdoc` are re-exported by `exile`.
 extern crate serde;
 
 pub use chars::{contains_whitespace, is_whitespace};
-pub use doc::{Declaration, Encoding, Version};
 pub use doc::Document;
+pub use doc::{Declaration, Encoding, Version};
 pub use element::Element;
 pub use node::{Misc, Node};
 pub use ord_map::OrdMap;
