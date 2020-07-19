@@ -31,17 +31,12 @@ fn generate_readme() {
         true,  // indent headings
     )
     .unwrap();
-    let this_readme_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("README.md")
-        .canonicalize()
-        .unwrap();
+    let this_readme_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("README.md");
     let mut readme = File::create("README.md").unwrap();
     readme.write_all(content.as_bytes()).unwrap();
     let top_readme_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("..")
-        .join("README.md")
-        .canonicalize()
-        .unwrap();
+        .join("README.md");
     if env::var_os("EXILE_GENERATE_TOP_README").is_some() {
         std::fs::copy(&this_readme_path, &top_readme_path).unwrap();
     }
@@ -59,24 +54,18 @@ fn generate_tests() {
 }
 
 fn integ_test_dir() -> PathBuf {
-    let mycrate_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .canonicalize()
-        .unwrap();
+    let mycrate_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     mycrate_dir.join("tests")
 }
 
 fn xtest_test_dir() -> PathBuf {
-    let mut mycrate_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .canonicalize()
-        .unwrap();
+    let mut mycrate_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     mycrate_dir.pop();
-    mycrate_dir.join("xtest").canonicalize().unwrap()
+    mycrate_dir.join("xtest")
 }
 
 fn exile_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .canonicalize()
-        .unwrap()
 }
 
 // path walking helpers for watching files
@@ -110,23 +99,23 @@ fn list_files_recursively(p: &Path) -> Vec<String> {
     vec
 }
 
+fn lib_rs() -> PathBuf {
+    exile_dir().join("src").join("lib.rs")
+}
+
+fn readme_template() -> PathBuf {
+    exile_dir().join("readme.template")
+}
+
 fn sir_watch_alot() {
-    let mut vec = list_files_recursively(&xtest_test_dir());
-    vec.push(
-        exile_dir()
-            .join("src")
-            .join("lib.rs")
-            .to_str()
-            .unwrap()
-            .to_owned(),
-    );
-    vec.push(
-        exile_dir()
-            .join("readme.template")
-            .to_str()
-            .unwrap()
-            .to_owned(),
-    );
+    let tests = xtest_test_dir();
+    if !tests.is_dir() {
+        // The tests aren't there, so there's nothing to watch, or to do.
+        return;
+    }
+    let mut vec = list_files_recursively(&tests);
+    vec.push(lib_rs().to_str().unwrap().to_owned());
+    vec.push(readme_template().to_str().unwrap().to_owned());
     for file in &vec {
         println!("cargo:rerun-if-changed={}", file);
     }

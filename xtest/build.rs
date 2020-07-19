@@ -1,4 +1,4 @@
-// Automatically generate README.md and xml parse tests.
+// Automatically generate README.md
 
 use std::env;
 use std::fs::File;
@@ -10,6 +10,9 @@ fn main() {
 }
 
 fn generate_readme() {
+    println!("cargo:rerun-if-env-changed=XTEST_GENERATE_README");
+    println!("cargo:rerun-if-changed=readme.template");
+    println!("cargo:rerun-if-changed=src/lib.rs");
     // Check for environment variable "SKIP_README". If it is set, skip README generation.
     if env::var_os("XTEST_GENERATE_README").is_none() {
         return;

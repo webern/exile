@@ -63,15 +63,15 @@ Development is setup as a cargo workspace with three crates.
 Current status is 'pre-mvp'. v0.0.0 will be able to parse basic XML documents into DOM-like
 structures and serialize them back.
 
- * [x] [v0.0.0 MVP]
- * [ ] [v0.0.1 Conformance]
- * [ ] [v0.0.2 Interface]
+ * [x] [MVP]
+ * [ ] [Conformance]
+ * [ ] [Interface]
 
 [Issues not assigned to a milestone]
 
-[v0.0.0 MVP]: https://github.com/webern/exile/milestone/1
-[v0.0.1 Conformance]: https://github.com/webern/exile/milestone/3
-[v0.0.2 Interface]: https://github.com/webern/exile/milestone/2
+[MVP]: https://github.com/webern/exile/milestone/1
+[Conformance]: https://github.com/webern/exile/milestone/3
+[Interface]: https://github.com/webern/exile/milestone/2
 [Issues not assigned to a milestone]: https://github.com/webern/exile/issues?q=is%3Aissue+is%3Aopen+no%3Amilestone
 
 */

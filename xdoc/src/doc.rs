@@ -71,15 +71,15 @@ pub struct Declaration {
 pub struct Document {
     declaration: Declaration,
     // TODO - add doctype support https://github.com/webern/exile/issues/22
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(default)]
+    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(feature = "serde", serde(default))]
     doctypedecl: Option<()>,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    #[serde(default)]
+    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Vec::is_empty"))]
+    #[cfg_attr(feature = "serde", serde(default))]
     prolog_misc: Vec<Misc>,
     root: Element,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    #[serde(default)]
+    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Vec::is_empty"))]
+    #[cfg_attr(feature = "serde", serde(default))]
     epilog_misc: Vec<Misc>,
 }
 
