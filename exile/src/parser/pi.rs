@@ -1,4 +1,4 @@
-use xdoc::{is_whitespace, PI};
+use xdoc::PI;
 
 use crate::error::Result;
 use crate::parser::Iter;
