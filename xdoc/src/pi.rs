@@ -2,8 +2,8 @@ use core::fmt;
 use std::fmt::{Display, Formatter};
 use std::io::{Cursor, Write};
 
-use crate::{contains_whitespace, WriteOpts};
 use crate::error::Result;
+use crate::{contains_whitespace, WriteOpts};
 
 /// Represents a Processing Instruction (PI) in an XML document.
 ///
@@ -27,9 +27,9 @@ use crate::error::Result;
 ///
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash, Default)]
 #[cfg_attr(
-feature = "serde",
-derive(Serialize, Deserialize),
-serde(rename_all = "snake_case")
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(rename_all = "snake_case")
 )]
 pub struct PI {
     /// The processing instruction target.
@@ -41,8 +41,8 @@ pub struct PI {
 impl PI {
     /// Write the processing instruction to the `Write` object.
     pub fn write<W>(&self, writer: &mut W, opts: &WriteOpts, depth: usize) -> Result<()>
-        where
-            W: Write,
+    where
+        W: Write,
     {
         self.check()?;
         opts.indent(writer, depth)?;
@@ -85,13 +85,12 @@ impl Display for PI {
         }
         let data = c.into_inner();
         let data_str = match std::str::from_utf8(data.as_slice()) {
-            Ok(s) => { s }
-            Err(_) => { "<?error?>" }
+            Ok(s) => s,
+            Err(_) => "<?error?>",
         };
         write!(f, "{}", data_str)
     }
 }
-
 
 #[test]
 fn pi_test_simple() {

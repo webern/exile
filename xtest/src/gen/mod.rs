@@ -90,7 +90,7 @@ fn write_bad_syntax_test(f: &mut File, character_position: u64, line: u64, colum
         "assert_eq!({}, parse_error.xml_site.position);",
         character_position
     )
-        .unwrap();
+    .unwrap();
     writeln!(f, "assert_eq!({}, parse_error.xml_site.line);", line).unwrap();
     writeln!(f, "assert_eq!({}, parse_error.xml_site.column);", column).unwrap();
     writeln!(f, "}}").unwrap();
@@ -106,7 +106,7 @@ fn write_good_syntax_test(f: &mut File, xml_file: &XmlFile) {
         f,
         "panic!(\"expected parse_result to be Ok, got Err: {{}}\", e);"
     )
-        .unwrap();
+    .unwrap();
     writeln!(f, "}}").unwrap();
     if xml_file.metadata.expected.is_some() {
         writeln!(f, "let got_doc = parse_result.as_ref().unwrap();").unwrap();
@@ -114,7 +114,7 @@ fn write_good_syntax_test(f: &mut File, xml_file: &XmlFile) {
             f,
             "let want_doc = info.metadata.expected.as_ref().unwrap();"
         )
-            .unwrap();
+        .unwrap();
         writeln!(f, "let equal = want_doc == got_doc;").unwrap();
         writeln!(f, "if !equal {{").unwrap();
         // We prefer to assert that the strings are not equal for the visual aid when debugging.
@@ -132,7 +132,7 @@ fn write_good_syntax_test(f: &mut File, xml_file: &XmlFile) {
                 f,
                 "let wanted_serialization = info.read_expected_write().unwrap();"
             )
-                .unwrap();
+            .unwrap();
             writeln!(f, "assert_eq!(got_doc.to_string(), wanted_serialization);").unwrap();
         }
     }

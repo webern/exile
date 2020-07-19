@@ -30,9 +30,7 @@ pub fn load_all() -> Vec<XmlFile> {
             expected_write,
         })
     }
-    result.sort_by(|a, b| {
-        a.name.as_str().cmp(b.name.as_str())
-    });
+    result.sort_by(|a, b| a.name.as_str().cmp(b.name.as_str()));
     result
 }
 

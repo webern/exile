@@ -1,14 +1,14 @@
 use std::io::Write;
 
-use crate::{Node, OrdMap, WriteOpts};
 use crate::error::Result;
 use crate::write_ops::write_attribute_value;
+use crate::{Node, OrdMap, WriteOpts};
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
 #[cfg_attr(
-feature = "serde",
-derive(Serialize, Deserialize),
-serde(rename_all = "snake_case")
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(rename_all = "snake_case")
 )]
 /// Represents an Element in an XML Document.
 pub struct Element {
@@ -53,7 +53,7 @@ impl Element {
     /// ```
     /// r's `children()` function would return an iterator over 'a' and 'b'.
     /// Text nodes, processing instructions and comments are skipped/ignored by the iterator.
-    pub fn children(&self) -> impl Iterator<Item=&Element> {
+    pub fn children(&self) -> impl Iterator<Item = &Element> {
         self.nodes.iter().filter_map(|n| {
             if let Node::Element(element) = n {
                 return Some(element);
@@ -133,8 +133,8 @@ impl Element {
 
     /// Write the element to the `Write` object.
     pub fn write<W>(&self, writer: &mut W, opts: &WriteOpts, depth: usize) -> Result<()>
-        where
-            W: Write,
+    where
+        W: Write,
     {
         if let Err(e) = self.check() {
             return wrap!(e);

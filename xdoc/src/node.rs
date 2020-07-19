@@ -1,14 +1,14 @@
 use std::io::Write;
 
-use crate::{Element, WriteOpts};
 use crate::error::Result;
 use crate::write_ops::write_element_string;
+use crate::{Element, WriteOpts};
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
 #[cfg_attr(
-feature = "serde",
-derive(Serialize, Deserialize),
-serde(rename_all = "lowercase")
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(rename_all = "lowercase")
 )]
 /// Represents a Node in an XML Document. The Document consists of a recursive nesting of these.
 pub enum Node {
@@ -39,8 +39,8 @@ impl Default for Node {
 impl Node {
     /// Serialize the XML Document to a `Write` stream.
     pub fn write<W>(&self, writer: &mut W, opts: &WriteOpts, depth: usize) -> Result<()>
-        where
-            W: Write,
+    where
+        W: Write,
     {
         match self {
             Node::Element(data) => data.write(writer, opts, depth),
@@ -70,9 +70,9 @@ impl Node {
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
 #[cfg_attr(
-feature = "serde",
-derive(Serialize, Deserialize),
-serde(rename_all = "lowercase")
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(rename_all = "lowercase")
 )]
 // TODO - support Whitespace https://github.com/webern/exile/issues/55
 /// Represents a "Misc" entry, which is a Processing Instruction (PI), Comment, or Whitespace
@@ -93,13 +93,13 @@ impl Default for Misc {
 impl Misc {
     /// Serialize the XML Document to a `Write` stream.
     pub fn write<W>(&self, writer: &mut W, opts: &WriteOpts, depth: usize) -> Result<()>
-        where
-            W: Write,
+    where
+        W: Write,
     {
         match self {
             // TODO - implement comments https://github.com/webern/exile/issues/27
             Misc::Comment(_) => unimplemented!(),
-            Misc::PI(pi) => pi.write(writer, opts, depth)
+            Misc::PI(pi) => pi.write(writer, opts, depth),
         }
     }
 }

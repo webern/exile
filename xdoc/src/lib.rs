@@ -14,8 +14,8 @@ compilation dependencies.
 extern crate serde;
 
 pub use chars::{contains_whitespace, is_whitespace};
-pub use doc::{Declaration, Encoding, Version};
 pub use doc::Document;
+pub use doc::{Declaration, Encoding, Version};
 pub use element::Element;
 pub use node::{Misc, Node};
 pub use ord_map::OrdMap;
@@ -28,13 +28,13 @@ pub use crate::error::Result;
 #[macro_use]
 pub mod error;
 
+mod chars;
 mod doc;
 mod element;
 mod node;
 mod ord_map;
-mod write_ops;
 mod pi;
-mod chars;
+mod write_ops;
 
 #[cfg(test)]
 mod tests {
