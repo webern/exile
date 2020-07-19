@@ -299,6 +299,7 @@ fn parse_document(iter: &mut Iter<'_>, document: &mut Document) -> Result<()> {
             }
             _ => {
                 document.set_root(parse_element(iter)?);
+                iter.st.doc_status = DocStatus::Epilog;
             }
         }
 

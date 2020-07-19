@@ -1,9 +1,10 @@
-use xdoc::{Element, Node, OrdMap};
+use xdoc::{Element, Misc, Node, OrdMap};
 
 use crate::error::Result;
+use crate::parser::{Iter, parse_name, skip_comment, skip_processing_instruction};
 use crate::parser::chars::is_name_start_char;
+use crate::parser::pi::parse_pi;
 use crate::parser::string::{parse_string, StringType};
-use crate::parser::{parse_name, skip_comment, skip_processing_instruction, Iter};
 
 pub(crate) fn parse_element(iter: &mut Iter<'_>) -> Result<Element> {
     expect!(iter, '<')?;
@@ -158,8 +159,8 @@ fn parse_lt(iter: &mut Iter<'_>, parent: &mut Element) -> Result<LTParse> {
             Ok(LTParse::EndTag)
         }
         '?' => {
-            skip_processing_instruction(iter)?;
-            Ok(LTParse::Skip)
+            let pi = parse_pi(iter)?;
+            Ok(LTParse::Some(Node::Misc(Misc::PI(pi))))
         }
         '!' => {
             // skip comment expects the iter to be advanced passed lt
