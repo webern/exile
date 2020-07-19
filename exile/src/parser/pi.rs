@@ -102,12 +102,14 @@ fn take_processing_instruction_char(
     Ok(())
 }
 
+fn is_pi_close(iter: &mut Iter<'_>) -> Result<bool> {
+    Ok(iter.is('?') && iter.peek_or_die()? == '>')
+}
+
 fn parse_pi_string(iter: &mut Iter<'_>) -> Result<String> {
     let mut buf = String::new();
     loop {
-        if iter.is_whitespace() {
-            return Ok(buf);
-        } else if iter.is('?') && iter.peek_or_die()? == '>' {
+        if iter.is_whitespace() || is_pi_close(iter)? {
             return Ok(buf);
         } else {
             buf.push(iter.st.c);
