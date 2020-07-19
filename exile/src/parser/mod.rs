@@ -4,7 +4,7 @@ use std::str::Chars;
 
 use xdoc::{Declaration, Document, Encoding, Misc, Version};
 
-use crate::error::{display_char, Error, parse_err, ParseError, Result, ThrowSite, XMLSite};
+use crate::error::{display_char, parse_err, Error, ParseError, Result, ThrowSite, XMLSite};
 use crate::parser::chars::{is_name_char, is_name_start_char};
 use crate::parser::element::parse_element;
 use crate::parser::pi::{parse_pi, parse_pi_logic};
