@@ -1,10 +1,12 @@
 /*!
 ![build](https://github.com/webern/exile/workflows/exile%20ci/badge.svg)
 
-`xdoc` presents the primitives on an XML Document.
-For example `Element` and `Attribute` are structs in this library.
+`xdoc` presents the primitives on an XML DOM.
+For example `Element` and `Attribute` are concepts in this library.
 It is written in support of the `exile` crate, but kept separate from that crate due to dev-time
 compilation dependencies.
+Specifically, the `xtest` crate uses `xdoc` to generate tests for `exile`.
+The public concepts in `xdoc` are re-exported by `exile`.
 */
 
 #![warn(missing_docs)]
@@ -14,8 +16,8 @@ compilation dependencies.
 extern crate serde;
 
 pub use chars::{contains_whitespace, is_whitespace};
-pub use doc::Document;
 pub use doc::{Declaration, Encoding, Version};
+pub use doc::Document;
 pub use element::Element;
 pub use node::{Misc, Node};
 pub use ord_map::OrdMap;
