@@ -2,12 +2,12 @@ use std::collections::HashMap;
 use std::iter::Peekable;
 use std::str::Chars;
 
-use xdoc::{Declaration, Document, Encoding, Version, PI};
+use xdoc::{Declaration, Document, Encoding, Misc, PI, Version};
 
-use crate::error::{display_char, parse_err, Error, ParseError, Result, ThrowSite, XMLSite};
+use crate::error::{display_char, Error, parse_err, ParseError, Result, ThrowSite, XMLSite};
 use crate::parser::chars::{is_name_char, is_name_start_char};
 use crate::parser::element::parse_element;
-use crate::parser::pi::parse_pi;
+use crate::parser::pi::{parse_pi, parse_pi_logic};
 
 mod chars;
 mod element;
@@ -246,15 +246,15 @@ impl Default for TagStatus {
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy, Eq, PartialOrd, PartialEq, Hash)]
 pub(crate) enum DocStatus {
-    BeforeDeclaration,
-    Prologue,
+    Declaration,
+    Prolog,
     Root,
-    Trailing,
+    Epilog,
 }
 
 impl Default for DocStatus {
     fn default() -> Self {
-        DocStatus::BeforeDeclaration
+        DocStatus::Declaration
     }
 }
 
@@ -270,9 +270,20 @@ fn parse_document(iter: &mut Iter<'_>, document: &mut Document) -> Result<()> {
         let next = iter.peek_or_die()?;
         match next {
             '?' => match iter.st.doc_status {
-                DocStatus::BeforeDeclaration => parse_declaration_pi(iter, document)?,
-                DocStatus::Prologue | DocStatus::Root | DocStatus::Trailing => {
-                    skip_processing_instruction(iter)?
+                DocStatus::Declaration => {
+                    parse_declaration_pi(iter, document)?;
+                    iter.st.doc_status = DocStatus::Prolog
+                }
+                DocStatus::Prolog => {
+                    let pi = parse_pi(iter)?;
+                    document.push_prolog_misc(Misc::PI(pi));
+                }
+                DocStatus::Epilog => {
+                    let pi = parse_pi(iter)?;
+                    document.push_epilog_misc(Misc::PI(pi));
+                }
+                DocStatus::Root => {
+                    return raise!("the parser state is inconsistent, should not be {:?}", DocStatus::Root);
                 }
             },
             '!' => {
@@ -299,21 +310,20 @@ fn parse_document(iter: &mut Iter<'_>, document: &mut Document) -> Result<()> {
 // the values found into the mutable document parameter
 fn parse_declaration_pi(iter: &mut Iter<'_>, document: &mut Document) -> Result<()> {
     state_must_be_before_declaration(iter)?;
-    let pi_data = parse_pi(iter)?;
-    document.set_declaration(parse_declaration(&pi_data)?);
-    iter.st.doc_status = DocStatus::Prologue;
+    let (target, instructions) = parse_pi_logic(iter)?;
+    document.set_declaration(parse_declaration(&target, &instructions)?);
     Ok(())
 }
 
-fn parse_declaration(pi_data: &PI) -> Result<Declaration> {
+fn parse_declaration(target: &str, instructions: &Vec<String>) -> Result<Declaration> {
     let mut declaration = Declaration::default();
-    if pi_data.target != "xml" {
+    if target != "xml" {
         return raise!("pi_data.target != xml");
     }
-    if pi_data.instructions.len() > 2 {
+    if instructions.len() > 2 {
         return raise!("");
     }
-    let map = parse_as_map(&pi_data.instructions);
+    let map = parse_as_map(instructions);
     if let Some(&val) = map.get("version") {
         match val {
             "1.0" => {
@@ -359,7 +369,7 @@ fn parse_as_map<'a, S: AsRef<str>>(data: &'a [S]) -> HashMap<&'a str, &'a str> {
 }
 
 fn state_must_be_before_declaration(iter: &Iter<'_>) -> Result<()> {
-    if iter.st.doc_status != DocStatus::BeforeDeclaration {
+    if iter.st.doc_status != DocStatus::Declaration {
         return raise!("");
     } else {
         Ok(())

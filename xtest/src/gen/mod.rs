@@ -109,19 +109,19 @@ fn write_good_syntax_test(f: &mut File, xml_file: &XmlFile) {
         .unwrap();
     writeln!(f, "}}").unwrap();
     if xml_file.metadata.expected.is_some() {
-        writeln!(f, "let actual = parse_result.as_ref().unwrap();").unwrap();
+        writeln!(f, "let got_doc = parse_result.as_ref().unwrap();").unwrap();
         writeln!(
             f,
             "let expected = info.metadata.expected.as_ref().unwrap();"
         )
             .unwrap();
-        writeln!(f, "let equal = expected == actual;").unwrap();
+        writeln!(f, "let equal = expected == got_doc;").unwrap();
         writeln!(f, "if !equal {{").unwrap();
         // We prefer to assert that the strings are not equal for the visual aid when debugging.
         writeln!(f, "let expected_str = expected.to_string();").unwrap();
-        writeln!(f, "let actual_str = actual.to_string();").unwrap();
-        writeln!(f, "if expected_str != actual_str {{").unwrap();
-        writeln!(f, "assert_eq!(expected_str, actual_str);").unwrap();
+        writeln!(f, "let got = got_doc.to_string();").unwrap();
+        writeln!(f, "if expected_str != got {{").unwrap();
+        writeln!(f, "assert_eq!(expected_str, got);").unwrap();
         writeln!(f, "}} else {{").unwrap();
         writeln!(f, "assert!(equal);").unwrap();
         writeln!(f, "}}").unwrap();
