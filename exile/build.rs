@@ -110,23 +110,23 @@ fn list_files_recursively(p: &Path) -> Vec<String> {
     vec
 }
 
+fn lib_rs() -> PathBuf {
+    exile_dir().join("src").join("lib.rs")
+}
+
+fn readme_template() -> PathBuf {
+    exile_dir().join("readme.template")
+}
+
 fn sir_watch_alot() {
-    let mut vec = list_files_recursively(&xtest_test_dir());
-    vec.push(
-        exile_dir()
-            .join("src")
-            .join("lib.rs")
-            .to_str()
-            .unwrap()
-            .to_owned(),
-    );
-    vec.push(
-        exile_dir()
-            .join("readme.template")
-            .to_str()
-            .unwrap()
-            .to_owned(),
-    );
+    let tests = xtest_test_dir();
+    if !tests.is_dir() {
+        // The tests aren't there, so there's nothing to watch, or to do.
+        return;
+    }
+    let mut vec = list_files_recursively(&tests);
+    vec.push(lib_rs().to_str().unwrap().to_owned());
+    vec.push(readme_template().to_str().unwrap().to_owned());
     for file in &vec {
         println!("cargo:rerun-if-changed={}", file);
     }
