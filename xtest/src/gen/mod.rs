@@ -112,16 +112,16 @@ fn write_good_syntax_test(f: &mut File, xml_file: &XmlFile) {
         writeln!(f, "let got_doc = parse_result.as_ref().unwrap();").unwrap();
         writeln!(
             f,
-            "let expected = info.metadata.expected.as_ref().unwrap();"
+            "let want_doc = info.metadata.expected.as_ref().unwrap();"
         )
             .unwrap();
-        writeln!(f, "let equal = expected == got_doc;").unwrap();
+        writeln!(f, "let equal = want_doc == got_doc;").unwrap();
         writeln!(f, "if !equal {{").unwrap();
         // We prefer to assert that the strings are not equal for the visual aid when debugging.
-        writeln!(f, "let expected_str = expected.to_string();").unwrap();
+        writeln!(f, "let want = want_doc.to_string();").unwrap();
         writeln!(f, "let got = got_doc.to_string();").unwrap();
-        writeln!(f, "if expected_str != got {{").unwrap();
-        writeln!(f, "assert_eq!(expected_str, got);").unwrap();
+        writeln!(f, "if want != got {{").unwrap();
+        writeln!(f, "assert_eq!(got, want);").unwrap();
         writeln!(f, "}} else {{").unwrap();
         writeln!(f, "assert!(equal);").unwrap();
         writeln!(f, "}}").unwrap();
@@ -130,10 +130,10 @@ fn write_good_syntax_test(f: &mut File, xml_file: &XmlFile) {
         if xml_file.expected_write.is_some() {
             writeln!(
                 f,
-                "let expected_serialization = info.read_expected_write().unwrap();"
+                "let wanted_serialization = info.read_expected_write().unwrap();"
             )
                 .unwrap();
-            writeln!(f, "assert_eq!(expected_serialization, actual.to_string());").unwrap();
+            writeln!(f, "assert_eq!(got_doc.to_string(), wanted_serialization);").unwrap();
         }
     }
 }

@@ -59,10 +59,12 @@ pub(crate) fn parse_pi_logic(iter: &mut Iter<'_>) -> Result<(String, Vec<String>
     Ok((processor.target, processor.instructions))
 }
 
-
 pub(crate) fn parse_pi(iter: &mut Iter<'_>) -> Result<PI> {
     let (target, instructions) = parse_pi_logic(iter)?;
-    Ok(PI { target, instructions })
+    Ok(PI {
+        target,
+        instructions,
+    })
 }
 
 fn take_processing_instruction_char(
@@ -92,6 +94,7 @@ fn take_processing_instruction_char(
                 processor.status = PIStatus::QuestionMark;
             } else if !iter.is_whitespace() {
                 let instruction = parse_pi_string(iter)?;
+                processor.instructions.push(instruction);
                 if iter.is('?') {
                     processor.status = PIStatus::QuestionMark;
                 } else if !iter.is_whitespace() {
@@ -190,11 +193,31 @@ fn parse_pi_string_test() {
         iter: char,
     }
     let test_cases = vec![
-        TestCase { input: "bloop bleep", want: "bloop", iter: ' ' },
-        TestCase { input: "bloop?bleep", want: "bloop?bleep", iter: 'p' },
-        TestCase { input: "bloop?>bleep", want: "bloop", iter: '?' },
-        TestCase { input: "beer🍺🍺🍺 🍺🍺?>", want: "beer🍺🍺🍺", iter: ' ' },
-        TestCase { input: "beer🍺🍺🍺🍺🍺", want: "beer🍺🍺🍺🍺🍺", iter: '🍺' },
+        TestCase {
+            input: "bloop bleep",
+            want: "bloop",
+            iter: ' ',
+        },
+        TestCase {
+            input: "bloop?bleep",
+            want: "bloop?bleep",
+            iter: 'p',
+        },
+        TestCase {
+            input: "bloop?>bleep",
+            want: "bloop",
+            iter: '?',
+        },
+        TestCase {
+            input: "beer🍺🍺🍺 🍺🍺?>",
+            want: "beer🍺🍺🍺",
+            iter: ' ',
+        },
+        TestCase {
+            input: "beer🍺🍺🍺🍺🍺",
+            want: "beer🍺🍺🍺🍺🍺",
+            iter: '🍺',
+        },
     ];
     for test_case in &test_cases {
         let mut iter = Iter::new(test_case.input).unwrap();
@@ -207,6 +230,10 @@ fn parse_pi_string_test() {
             got.as_str(),
             test_case.want
         );
-        assert_eq!(iter.st.c, test_case.iter, "expected iter to be pointing at '{}', got '{}'", test_case.iter, iter.st.c);
+        assert_eq!(
+            iter.st.c, test_case.iter,
+            "expected iter to be pointing at '{}', got '{}'",
+            test_case.iter, iter.st.c
+        );
     }
 }

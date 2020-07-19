@@ -283,7 +283,10 @@ fn parse_document(iter: &mut Iter<'_>, document: &mut Document) -> Result<()> {
                     document.push_epilog_misc(Misc::PI(pi));
                 }
                 DocStatus::Root => {
-                    return raise!("the parser state is inconsistent, should not be {:?}", DocStatus::Root);
+                    return raise!(
+                        "the parser state is inconsistent, should not be {:?}",
+                        DocStatus::Root
+                    );
                 }
             },
             '!' => {
@@ -326,10 +329,10 @@ fn parse_declaration(target: &str, instructions: &Vec<String>) -> Result<Declara
     let map = parse_as_map(instructions);
     if let Some(&val) = map.get("version") {
         match val {
-            "1.0" => {
+            "\"1.0\"" => {
                 declaration.version = Version::One;
             }
-            "1.1" => {
+            "\"1.1\"" => {
                 declaration.version = Version::OneDotOne;
             }
             _ => {
@@ -339,7 +342,7 @@ fn parse_declaration(target: &str, instructions: &Vec<String>) -> Result<Declara
     }
     if let Some(&val) = map.get("encoding") {
         match val {
-            "UTF-8" => {
+            "\"UTF-8\"" => {
                 declaration.encoding = Encoding::Utf8;
             }
             _ => {
