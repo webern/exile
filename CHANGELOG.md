@@ -8,6 +8,14 @@ Currently we are using v0.0.x where every version can and will contain breaking 
 
 ## [Unreleased]
 
+## [v0.0.1] - 2020-07-18
+### Added
+- Support for processing instructions [#56]
+- Readme improvements [#54]
+
+[#56]: https://github.com/webern/exile/pull/56
+[#54]: https://github.com/webern/exile/pull/54
+
 ## [v0.0.0] - 2020-05-27
 ### Added
 - Additional serialization tests, updated readme and changelog [#52]
@@ -20,14 +28,6 @@ Currently we are using v0.0.x where every version can and will contain breaking 
 - Parser basics [30175b0]
 - Basic XML Serialization [dd000e2]
 
-[Unreleased]: https://github.com/webern/exile/compare/v0.0.0...HEAD
-<!-- [0.0.1] is here to serve as an example for when i need it -->
-[v0.0.1]: https://github.com/webern/exile/compare/v0.0.0...v0.0.1
-[v0.0.0]: https://github.com/webern/exile/releases/tag/v0.0.0
-[30175b0]: https://github.com/webern/exile/compare/dd000e2..30175b0
-[dd000e2]: https://github.com/webern/exile/tree/dd000e2
-
-<!-- pull request links -->
 [#34]: https://github.com/webern/exile/pull/34
 [#37]: https://github.com/webern/exile/pull/37
 [#39]: https://github.com/webern/exile/pull/39
@@ -35,3 +35,10 @@ Currently we are using v0.0.x where every version can and will contain breaking 
 [#48]: https://github.com/webern/exile/pull/48
 [#49]: https://github.com/webern/exile/pull/49
 [#52]: https://github.com/webern/exile/pull/52
+
+<!-- version diff links -->
+[Unreleased]: https://github.com/webern/exile/compare/v0.0.1...HEAD
+[v0.0.1]: https://github.com/webern/exile/compare/v0.0.0...v0.0.1
+[v0.0.0]: https://github.com/webern/exile/releases/tag/v0.0.0
+[30175b0]: https://github.com/webern/exile/compare/dd000e2..30175b0
+[dd000e2]: https://github.com/webern/exile/tree/dd000e2
