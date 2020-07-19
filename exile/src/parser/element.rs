@@ -1,11 +1,12 @@
-use xdoc::{Element, Node, OrdMap};
+use xdoc::{Element, Misc, Node, OrdMap};
 
 use crate::error::Result;
 use crate::parser::chars::is_name_start_char;
+use crate::parser::pi::parse_pi;
 use crate::parser::string::{parse_string, StringType};
-use crate::parser::{parse_name, skip_comment, skip_processing_instruction, Iter};
+use crate::parser::{parse_name, skip_comment, Iter};
 
-pub(crate) fn parse_element(iter: &mut Iter) -> Result<Element> {
+pub(crate) fn parse_element(iter: &mut Iter<'_>) -> Result<Element> {
     expect!(iter, '<')?;
     iter.advance_or_die()?;
     let name = parse_name(iter)?;
@@ -65,7 +66,7 @@ fn make_named_element(input: &str) -> Result<Element> {
     })
 }
 
-fn parse_attributes(iter: &mut Iter) -> Result<OrdMap> {
+fn parse_attributes(iter: &mut Iter<'_>) -> Result<OrdMap> {
     let mut attributes = OrdMap::new();
     loop {
         iter.skip_whitespace()?;
@@ -93,14 +94,14 @@ fn parse_attributes(iter: &mut Iter) -> Result<OrdMap> {
     Ok(attributes)
 }
 
-fn parse_attribute_value(iter: &mut Iter) -> Result<String> {
+fn parse_attribute_value(iter: &mut Iter<'_>) -> Result<String> {
     parse_string(iter, StringType::Attribute)
 }
 
 // this function takes over after an element's opening tag (the parent element) has been parsed.
 // the nodes that are contained by the parent are parsed and added to the parent. this function is
 // recursive descending until an element with no children is reached.
-fn parse_children(iter: &mut Iter, parent: &mut Element) -> Result<()> {
+fn parse_children(iter: &mut Iter<'_>, parent: &mut Element) -> Result<()> {
     loop {
         iter.skip_whitespace()?;
         if iter.is('<') {
@@ -145,7 +146,7 @@ enum LTParse {
 }
 
 // parse the correct type of node (or end tag) when encountering a '<'
-fn parse_lt(iter: &mut Iter, parent: &mut Element) -> Result<LTParse> {
+fn parse_lt(iter: &mut Iter<'_>, parent: &mut Element) -> Result<LTParse> {
     let next = iter.peek_or_die()?;
     // do the most common, hottest path first
     if is_name_start_char(next) {
@@ -158,8 +159,8 @@ fn parse_lt(iter: &mut Iter, parent: &mut Element) -> Result<LTParse> {
             Ok(LTParse::EndTag)
         }
         '?' => {
-            skip_processing_instruction(iter)?;
-            Ok(LTParse::Skip)
+            let pi = parse_pi(iter)?;
+            Ok(LTParse::Some(Node::Misc(Misc::PI(pi))))
         }
         '!' => {
             // skip comment expects the iter to be advanced passed lt
@@ -178,7 +179,7 @@ fn parse_lt(iter: &mut Iter, parent: &mut Element) -> Result<LTParse> {
 
 // takes an iter pointing at '<' where the next character is required to be '/'. parses the name of
 // the end tag and compares it to make sure it matches `parent`. if anything goes wrong, Err.
-fn parse_end_tag_name(iter: &mut Iter, parent: &Element) -> Result<()> {
+fn parse_end_tag_name(iter: &mut Iter<'_>, parent: &Element) -> Result<()> {
     expect!(iter, '<')?;
     iter.advance_or_die()?;
     expect!(iter, '/')?;
@@ -210,6 +211,6 @@ fn parse_end_tag_name(iter: &mut Iter, parent: &Element) -> Result<()> {
     Ok(())
 }
 
-fn parse_text(iter: &mut Iter) -> Result<String> {
+fn parse_text(iter: &mut Iter<'_>) -> Result<String> {
     parse_string(iter, StringType::Element)
 }

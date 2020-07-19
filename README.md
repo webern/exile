@@ -2,6 +2,8 @@
 
 Current version: 0.0.1
 
+![build](https://github.com/webern/exile/workflows/exile%20ci/badge.svg)
+
 `exile` is a Rust library for reading and writing XML.
 
 The goal is to provide a useful abstraction over XML with DOM-like structs.
@@ -65,12 +67,12 @@ Current status is 'pre-mvp'. v0.0.0 will be able to parse basic XML documents in
 structures and serialize them back.
 
  * [x] [v0.0.0 MVP]
- * [ ] [v0.0.1 Interface]
- * [ ] [v0.0.2 Conformance]
+ * [ ] [v0.0.1 Conformance]
+ * [ ] [v0.0.2 Interface]
 
 [Issues not assigned to a milestone]
 
 [v0.0.0 MVP]: https://github.com/webern/exile/milestone/1
-[v0.0.1 Interface]: https://github.com/webern/exile/milestone/2
-[v0.0.2 Conformance]: https://github.com/webern/exile/milestone/2
+[v0.0.1 Conformance]: https://github.com/webern/exile/milestone/3
+[v0.0.2 Interface]: https://github.com/webern/exile/milestone/2
 [Issues not assigned to a milestone]: https://github.com/webern/exile/issues?q=is%3Aissue+is%3Aopen+no%3Amilestone

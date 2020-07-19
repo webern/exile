@@ -35,7 +35,14 @@ fn finish_test(f: &mut File) {
 }
 
 fn start_test_and_load_metadata(f: &mut File, xml_file: &XmlFile) {
-    f.write_all(b"#[test]").unwrap();
+    let mut s = String::new();
+    if !xml_file.metadata.description.is_empty() {
+        s.push_str(&format!("/// {}", xml_file.metadata.description.as_str()));
+    } else {
+        s.push_str(&format!("/// {}", xml_file.name.as_str()));
+    }
+    writeln!(f, "#[test]").unwrap();
+    writeln!(f, "{}", s).unwrap();
     let test_fn = testname(xml_file);
     writeln!(f, "{}", test_fn).unwrap();
     writeln!(f, "    let info = xtest::load(\"{}\");", xml_file.name).unwrap();
@@ -49,17 +56,21 @@ fn testname(xml_file: &XmlFile) -> String {
 }
 
 fn good_syntax_testname(xml_file: &XmlFile) -> String {
-    format!(
+    let mut s = String::default();
+    s.push_str(&format!(
         "fn good_syntax_{}_test() {{\n",
         xml_file.name.replace("-", "_")
-    )
+    ));
+    s
 }
 
 fn bad_syntax_testname(xml_file: &XmlFile) -> String {
-    format!(
+    let mut s = String::default();
+    s.push_str(&format!(
         "fn bad_syntax_{}_test() {{\n",
         xml_file.name.replace("-", "_")
-    )
+    ));
+    s
 }
 
 fn write_test_file_header(f: &mut File) {
@@ -98,19 +109,19 @@ fn write_good_syntax_test(f: &mut File, xml_file: &XmlFile) {
     .unwrap();
     writeln!(f, "}}").unwrap();
     if xml_file.metadata.expected.is_some() {
-        writeln!(f, "let actual = parse_result.as_ref().unwrap();").unwrap();
+        writeln!(f, "let got_doc = parse_result.as_ref().unwrap();").unwrap();
         writeln!(
             f,
-            "let expected = info.metadata.expected.as_ref().unwrap();"
+            "let want_doc = info.metadata.expected.as_ref().unwrap();"
         )
         .unwrap();
-        writeln!(f, "let equal = expected == actual;").unwrap();
+        writeln!(f, "let equal = want_doc == got_doc;").unwrap();
         writeln!(f, "if !equal {{").unwrap();
         // We prefer to assert that the strings are not equal for the visual aid when debugging.
-        writeln!(f, "let expected_str = expected.to_string();").unwrap();
-        writeln!(f, "let actual_str = actual.to_string();").unwrap();
-        writeln!(f, "if expected_str != actual_str {{").unwrap();
-        writeln!(f, "assert_eq!(expected_str, actual_str);").unwrap();
+        writeln!(f, "let want = want_doc.to_string();").unwrap();
+        writeln!(f, "let got = got_doc.to_string();").unwrap();
+        writeln!(f, "if want != got {{").unwrap();
+        writeln!(f, "assert_eq!(got, want);").unwrap();
         writeln!(f, "}} else {{").unwrap();
         writeln!(f, "assert!(equal);").unwrap();
         writeln!(f, "}}").unwrap();
@@ -119,10 +130,10 @@ fn write_good_syntax_test(f: &mut File, xml_file: &XmlFile) {
         if xml_file.expected_write.is_some() {
             writeln!(
                 f,
-                "let expected_serialization = info.read_expected_write().unwrap();"
+                "let wanted_serialization = info.read_expected_write().unwrap();"
             )
             .unwrap();
-            writeln!(f, "assert_eq!(expected_serialization, actual.to_string());").unwrap();
+            writeln!(f, "assert_eq!(got_doc.to_string(), wanted_serialization);").unwrap();
         }
     }
 }

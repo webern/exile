@@ -22,13 +22,8 @@ pub enum Node {
     /// `<![CDATA[text]]>` - not implemented
     CData(String),
 
-    // TODO - support comments https://github.com/webern/exile/issues/22
-    /// `<!-- comment -->` - not implemented
-    Comment(String),
-
-    // TODO - support pis https://github.com/webern/exile/issues/12
-    /// ProcessingInstruction, e.g. `<?target whatever?>` - not implemented
-    PI(crate::PIData),
+    /// Represents comments, processing instructions and whitespace.
+    Misc(Misc),
 
     // TODO - support doctypes https://github.com/webern/exile/issues/22
     /// `<!DOCTYPE doc>` - not implemented
@@ -56,12 +51,7 @@ impl Node {
             Node::CData(_) => {
                 Ok(()) /*TODO - implement*/
             }
-            Node::Comment(_) => {
-                Ok(()) /*TODO - implement*/
-            }
-            Node::PI(_) => {
-                Ok(()) /*TODO - implement*/
-            }
+            Node::Misc(m) => m.write(writer, opts, depth),
             Node::DocType(_) => {
                 Ok(()) /*TODO - implement*/
             }
@@ -74,6 +64,42 @@ impl Node {
             Node::Text(_) => true,
             Node::CData(_) => true,
             _ => false,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(rename_all = "lowercase")
+)]
+// TODO - support Whitespace https://github.com/webern/exile/issues/55
+/// Represents a "Misc" entry, which is a Processing Instruction (PI), Comment, or Whitespace
+pub enum Misc {
+    // TODO - support comments https://github.com/webern/exile/issues/22
+    /// `<!-- comment -->` - not implemented
+    Comment(String),
+    /// ProcessingInstruction, e.g. `<?target whatever?>` - not implemented
+    PI(crate::PI),
+}
+
+impl Default for Misc {
+    fn default() -> Self {
+        Misc::Comment("".to_owned())
+    }
+}
+
+impl Misc {
+    /// Serialize the XML Document to a `Write` stream.
+    pub fn write<W>(&self, writer: &mut W, opts: &WriteOpts, depth: usize) -> Result<()>
+    where
+        W: Write,
+    {
+        match self {
+            // TODO - implement comments https://github.com/webern/exile/issues/27
+            Misc::Comment(_) => unimplemented!(),
+            Misc::PI(pi) => pi.write(writer, opts, depth),
         }
     }
 }

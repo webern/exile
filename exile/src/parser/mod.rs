@@ -1,12 +1,13 @@
+use std::collections::HashMap;
 use std::iter::Peekable;
 use std::str::Chars;
 
-use xdoc::{Declaration, Document, Encoding, PIData, Version};
+use xdoc::{Declaration, Document, Encoding, Misc, Version};
 
 use crate::error::{display_char, parse_err, Error, ParseError, Result, ThrowSite, XMLSite};
 use crate::parser::chars::{is_name_char, is_name_start_char};
 use crate::parser::element::parse_element;
-use crate::parser::pi::parse_pi;
+use crate::parser::pi::{parse_pi, parse_pi_logic};
 
 mod chars;
 mod element;
@@ -245,19 +246,19 @@ impl Default for TagStatus {
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy, Eq, PartialOrd, PartialEq, Hash)]
 pub(crate) enum DocStatus {
-    BeforeDeclaration,
-    Prologue,
+    Declaration,
+    Prolog,
     Root,
-    Trailing,
+    Epilog,
 }
 
 impl Default for DocStatus {
     fn default() -> Self {
-        DocStatus::BeforeDeclaration
+        DocStatus::Declaration
     }
 }
 
-fn parse_document(iter: &mut Iter, document: &mut Document) -> Result<()> {
+fn parse_document(iter: &mut Iter<'_>, document: &mut Document) -> Result<()> {
     loop {
         if iter.st.c.is_ascii_whitespace() {
             if !iter.advance() {
@@ -269,9 +270,23 @@ fn parse_document(iter: &mut Iter, document: &mut Document) -> Result<()> {
         let next = iter.peek_or_die()?;
         match next {
             '?' => match iter.st.doc_status {
-                DocStatus::BeforeDeclaration => parse_declaration_pi(iter, document)?,
-                DocStatus::Prologue | DocStatus::Root | DocStatus::Trailing => {
-                    skip_processing_instruction(iter)?
+                DocStatus::Declaration => {
+                    parse_declaration_pi(iter, document)?;
+                    iter.st.doc_status = DocStatus::Prolog
+                }
+                DocStatus::Prolog => {
+                    let pi = parse_pi(iter)?;
+                    document.push_prolog_misc(Misc::PI(pi));
+                }
+                DocStatus::Epilog => {
+                    let pi = parse_pi(iter)?;
+                    document.push_epilog_misc(Misc::PI(pi));
+                }
+                DocStatus::Root => {
+                    return raise!(
+                        "the parser state is inconsistent, should not be {:?}",
+                        DocStatus::Root
+                    );
                 }
             },
             '!' => {
@@ -284,6 +299,7 @@ fn parse_document(iter: &mut Iter, document: &mut Document) -> Result<()> {
             }
             _ => {
                 document.set_root(parse_element(iter)?);
+                iter.st.doc_status = DocStatus::Epilog;
             }
         }
 
@@ -296,28 +312,28 @@ fn parse_document(iter: &mut Iter, document: &mut Document) -> Result<()> {
 
 // takes the iter pointing to '<' and already expected to be '<?xml ...'. parses this and places
 // the values found into the mutable document parameter
-fn parse_declaration_pi(iter: &mut Iter, document: &mut Document) -> Result<()> {
+fn parse_declaration_pi(iter: &mut Iter<'_>, document: &mut Document) -> Result<()> {
     state_must_be_before_declaration(iter)?;
-    let pi_data = parse_pi(iter)?;
-    document.set_declaration(parse_declaration(&pi_data)?);
-    iter.st.doc_status = DocStatus::Prologue;
+    let (target, instructions) = parse_pi_logic(iter)?;
+    document.set_declaration(parse_declaration(&target, &instructions)?);
     Ok(())
 }
 
-fn parse_declaration(pi_data: &PIData) -> Result<Declaration> {
+fn parse_declaration(target: &str, instructions: &[String]) -> Result<Declaration> {
     let mut declaration = Declaration::default();
-    if pi_data.target != "xml" {
+    if target != "xml" {
         return raise!("pi_data.target != xml");
     }
-    if pi_data.instructions.map().len() > 2 {
+    if instructions.len() > 2 {
         return raise!("");
     }
-    if let Some(val) = pi_data.instructions.map().get("version") {
-        match val.as_str() {
-            "1.0" => {
+    let map = parse_as_map(instructions);
+    if let Some(&val) = map.get("version") {
+        match val {
+            "\"1.0\"" => {
                 declaration.version = Version::One;
             }
-            "1.1" => {
+            "\"1.1\"" => {
                 declaration.version = Version::OneDotOne;
             }
             _ => {
@@ -325,9 +341,9 @@ fn parse_declaration(pi_data: &PIData) -> Result<Declaration> {
             }
         }
     }
-    if let Some(val) = pi_data.instructions.map().get("encoding") {
-        match val.as_str() {
-            "UTF-8" => {
+    if let Some(&val) = map.get("encoding") {
+        match val {
+            "\"UTF-8\"" => {
                 declaration.encoding = Encoding::Utf8;
             }
             _ => {
@@ -338,15 +354,33 @@ fn parse_declaration(pi_data: &PIData) -> Result<Declaration> {
     Ok(declaration)
 }
 
-fn state_must_be_before_declaration(iter: &Iter) -> Result<()> {
-    if iter.st.doc_status != DocStatus::BeforeDeclaration {
+fn parse_as_map<'a, S: AsRef<str>>(data: &'a [S]) -> HashMap<&'a str, &'a str> {
+    let mut result = HashMap::new();
+    for item in data {
+        let s = item.as_ref();
+        let split = s.split('=').collect::<Vec<&str>>();
+        match split.len() {
+            0 => continue,
+            1 => {
+                result.insert(*split.first().unwrap(), "");
+            }
+            _ => {
+                result.insert(*split.first().unwrap(), *split.get(1).unwrap());
+            }
+        }
+    }
+    result
+}
+
+fn state_must_be_before_declaration(iter: &Iter<'_>) -> Result<()> {
+    if iter.st.doc_status != DocStatus::Declaration {
         return raise!("");
     } else {
         Ok(())
     }
 }
 
-fn parse_name(iter: &mut Iter) -> Result<String> {
+fn parse_name(iter: &mut Iter<'_>) -> Result<String> {
     iter.expect_name_start_char()?;
     let mut name = String::default();
     name.push(iter.st.c);
@@ -367,7 +401,7 @@ fn parse_name(iter: &mut Iter) -> Result<String> {
 // takes the iter after a '<' and when it is pointing at a '!'. returns when '-->' is encountered.
 // will not work if the node being parsed is a DOCTYPE, you must already know it to be a comment.
 // TODO - support comments https://github.com/webern/exile/issues/27
-pub(crate) fn skip_comment(iter: &mut Iter) -> Result<()> {
+pub(crate) fn skip_comment(iter: &mut Iter<'_>) -> Result<()> {
     expect!(iter, '!')?;
     iter.advance_or_die()?;
     expect!(iter, '-')?;
@@ -391,7 +425,7 @@ pub(crate) fn skip_comment(iter: &mut Iter) -> Result<()> {
 // takes the iter after a '<' and when it is pointing at a '!'. returns when '>' is encountered.
 // will not work if the node being parsed is a comment, you must already know it to be a DOCTYPE
 // TODO - support doctypes https://github.com/webern/exile/issues/22
-pub(crate) fn skip_doctype(iter: &mut Iter) -> Result<()> {
+pub(crate) fn skip_doctype(iter: &mut Iter<'_>) -> Result<()> {
     expect!(iter, '!')?;
     while !iter.is('>') {
         if iter.is('[') {
@@ -405,28 +439,12 @@ pub(crate) fn skip_doctype(iter: &mut Iter) -> Result<()> {
 // takes the iter when it is inside if a <!DOCTYPE construct and has encountered the '[' char.
 // ignores everything and returns the iter when it is pointing to the first encountered ']'
 // TODO - support doctypes https://github.com/webern/exile/issues/22
-pub(crate) fn skip_nested_doctype_stuff(iter: &mut Iter) -> Result<()> {
+pub(crate) fn skip_nested_doctype_stuff(iter: &mut Iter<'_>) -> Result<()> {
     expect!(iter, '[')?;
     iter.advance_or_die()?;
     while !iter.is(']') {
         iter.advance_or_die()?;
     }
-    Ok(())
-}
-
-// takes the iter pointing to the lt of a processing instruction, skips the contents and returns
-// iter pointing to the closing gt.
-// TODO - support processing instructions https://github.com/webern/exile/issues/12
-pub(crate) fn skip_processing_instruction(iter: &mut Iter) -> Result<()> {
-    expect!(iter, '<')?;
-    iter.advance_or_die()?;
-    expect!(iter, '?')?;
-    iter.advance_or_die()?;
-    while !iter.is('?') {
-        iter.advance_or_die()?;
-    }
-    iter.advance_or_die()?;
-    expect!(iter, '>')?;
     Ok(())
 }
 

@@ -11,7 +11,7 @@ pub(crate) enum StringType {
     // CDATA,
 }
 
-pub(crate) fn parse_string(iter: &mut Iter, string_type: StringType) -> Result<String> {
+pub(crate) fn parse_string(iter: &mut Iter<'_>, string_type: StringType) -> Result<String> {
     let mut result = String::new();
     while !is_end_char(iter, string_type) {
         if iter.st.c == '&' {
@@ -33,7 +33,7 @@ pub(crate) fn parse_string(iter: &mut Iter, string_type: StringType) -> Result<S
     Ok(result)
 }
 
-fn is_forbidden(iter: &Iter, string_type: StringType) -> bool {
+fn is_forbidden(iter: &Iter<'_>, string_type: StringType) -> bool {
     // &, < and > are illegal (as well as " or ' in attributes).
     match iter.st.c {
         '&' | '<' | '>' => true,
@@ -51,11 +51,11 @@ fn end_char(string_type: StringType) -> char {
     }
 }
 
-fn is_end_char(iter: &Iter, string_type: StringType) -> bool {
+fn is_end_char(iter: &Iter<'_>, string_type: StringType) -> bool {
     iter.is(end_char(string_type))
 }
 
-fn parse_escape(iter: &mut Iter) -> Result<char> {
+fn parse_escape(iter: &mut Iter<'_>) -> Result<char> {
     iter.advance_or_die()?;
     match iter.st.c {
         'a' => parse_amp_or_apos(iter),
@@ -67,7 +67,7 @@ fn parse_escape(iter: &mut Iter) -> Result<char> {
     }
 }
 
-fn parse_amp_or_apos(iter: &mut Iter) -> Result<char> {
+fn parse_amp_or_apos(iter: &mut Iter<'_>) -> Result<char> {
     iter.advance_or_die()?;
     if iter.is('m') {
         parse_amp(iter)
@@ -78,7 +78,7 @@ fn parse_amp_or_apos(iter: &mut Iter) -> Result<char> {
     }
 }
 
-fn parse_amp(iter: &mut Iter) -> Result<char> {
+fn parse_amp(iter: &mut Iter<'_>) -> Result<char> {
     iter.advance_or_die()?;
     expect!(iter, 'p')?;
     iter.advance_or_die()?;
@@ -86,7 +86,7 @@ fn parse_amp(iter: &mut Iter) -> Result<char> {
     Ok('&')
 }
 
-fn parse_apos(iter: &mut Iter) -> Result<char> {
+fn parse_apos(iter: &mut Iter<'_>) -> Result<char> {
     iter.advance_or_die()?;
     expect!(iter, 'o')?;
     iter.advance_or_die()?;
@@ -96,7 +96,7 @@ fn parse_apos(iter: &mut Iter) -> Result<char> {
     Ok('\'')
 }
 
-fn parse_gt(iter: &mut Iter) -> Result<char> {
+fn parse_gt(iter: &mut Iter<'_>) -> Result<char> {
     iter.advance_or_die()?;
     expect!(iter, 't')?;
     iter.advance_or_die()?;
@@ -104,7 +104,7 @@ fn parse_gt(iter: &mut Iter) -> Result<char> {
     Ok('>')
 }
 
-fn parse_lt(iter: &mut Iter) -> Result<char> {
+fn parse_lt(iter: &mut Iter<'_>) -> Result<char> {
     iter.advance_or_die()?;
     expect!(iter, 't')?;
     iter.advance_or_die()?;
@@ -112,7 +112,7 @@ fn parse_lt(iter: &mut Iter) -> Result<char> {
     Ok('<')
 }
 
-fn parse_quot(iter: &mut Iter) -> Result<char> {
+fn parse_quot(iter: &mut Iter<'_>) -> Result<char> {
     iter.advance_or_die()?;
     expect!(iter, 'u')?;
     iter.advance_or_die()?;
@@ -124,7 +124,7 @@ fn parse_quot(iter: &mut Iter) -> Result<char> {
     Ok('"')
 }
 
-fn parse_codepoint(iter: &mut Iter) -> Result<char> {
+fn parse_codepoint(iter: &mut Iter<'_>) -> Result<char> {
     if iter.peek_is('x') {
         parse_hexidecimal_codepoint(iter)
     } else {
@@ -132,7 +132,7 @@ fn parse_codepoint(iter: &mut Iter) -> Result<char> {
     }
 }
 
-fn parse_hexidecimal_codepoint(iter: &mut Iter) -> Result<char> {
+fn parse_hexidecimal_codepoint(iter: &mut Iter<'_>) -> Result<char> {
     iter.advance_or_die()?;
     expect!(iter, 'x')?;
     iter.advance_or_die()?;
@@ -152,7 +152,7 @@ fn parse_hexidecimal_codepoint(iter: &mut Iter) -> Result<char> {
     }
 }
 
-fn parse_decimal_codepoint(iter: &mut Iter) -> Result<char> {
+fn parse_decimal_codepoint(iter: &mut Iter<'_>) -> Result<char> {
     iter.advance_or_die()?;
     let mut data = String::new();
     while !iter.is(';') {

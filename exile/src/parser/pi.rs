@@ -1,71 +1,40 @@
-use xdoc::PIData;
+use xdoc::PI;
 
 use crate::error::Result;
 use crate::parser::Iter;
 
 use super::chars::{is_name_char, is_name_start_char};
 
-#[derive(PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Ord, PartialOrd)]
 enum PIStatus {
     BeforeTarget,
     InsideTarget,
     AfterTarget,
-    InsideKey,
-    AfterKey,
-    Equals,
-    AfterEquals,
-    ValOpenQuote,
-    InsideVal,
-    ValCloseQuote,
-    AfterVal,
+    AfterInstruction,
     QuestionMark,
     Close,
 }
 
+impl Default for PIStatus {
+    fn default() -> Self {
+        PIStatus::BeforeTarget
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd, Default)]
 struct PIProcessor {
     status: PIStatus,
-    key_buffer: String,
-    value_buffer: String,
-    pi_data: PIData,
+    target: String,
+    instructions: Vec<String>,
 }
 
-impl PIProcessor {
-    fn new() -> Self {
-        Self {
-            status: PIStatus::BeforeTarget,
-            key_buffer: "".to_string(),
-            value_buffer: "".to_string(),
-            pi_data: PIData::default(),
-        }
-    }
-
-    /// Takes the current strings from `key_buffer` and `value_buffer` and adds them to the
-    /// `instructions`. Clears these buffers to begin processing the next key/value pair.
-    fn take_buffers(&mut self) -> Result<()> {
-        if self.key_buffer.is_empty() {
-            return raise!("Empty key - this is a bug and should have been detected sooner.");
-        }
-        if self
-            .pi_data
-            .instructions
-            .mut_map()
-            .insert(self.key_buffer.clone(), self.value_buffer.clone())
-            .is_some()
-        {
-            return raise!("duplicate key '{}'", self.key_buffer.clone());
-        }
-        self.key_buffer.clear();
-        self.value_buffer.clear();
-        Ok(())
-    }
-}
-
-pub(crate) fn parse_pi(iter: &mut Iter) -> Result<PIData> {
+/// The iter should be pointing to the opening `<` of a processing instruction.
+pub(crate) fn parse_pi_logic(iter: &mut Iter<'_>) -> Result<(String, Vec<String>)> {
     expect!(iter, '<')?;
     iter.advance_or_die()?;
     expect!(iter, '?')?;
     iter.advance_or_die()?;
-    let mut processor = PIProcessor::new();
+    let mut processor = PIProcessor::default();
     loop {
         take_processing_instruction_char(iter, &mut processor)?;
         if processor.status == PIStatus::Close {
@@ -73,17 +42,27 @@ pub(crate) fn parse_pi(iter: &mut Iter) -> Result<PIData> {
         }
         iter.advance_or_die()?;
     }
-
-    Ok(processor.pi_data)
+    Ok((processor.target, processor.instructions))
 }
 
-fn take_processing_instruction_char(iter: &mut Iter, processor: &mut PIProcessor) -> Result<()> {
+pub(crate) fn parse_pi(iter: &mut Iter<'_>) -> Result<PI> {
+    let (target, instructions) = parse_pi_logic(iter)?;
+    Ok(PI {
+        target,
+        instructions,
+    })
+}
+
+fn take_processing_instruction_char(
+    iter: &mut Iter<'_>,
+    processor: &mut PIProcessor,
+) -> Result<()> {
     match processor.status {
         PIStatus::BeforeTarget => {
             if !is_name_start_char(iter.st.c) {
                 return parse_err!(iter);
             } else {
-                processor.pi_data.target.push(iter.st.c);
+                processor.target.push(iter.st.c);
                 processor.status = PIStatus::InsideTarget;
             }
         }
@@ -93,74 +72,22 @@ fn take_processing_instruction_char(iter: &mut Iter, processor: &mut PIProcessor
             } else if !is_name_char(iter.st.c) {
                 return parse_err!(iter);
             } else {
-                processor.pi_data.target.push(iter.st.c);
+                processor.target.push(iter.st.c);
             }
         }
-        PIStatus::AfterTarget => {
-            if is_name_start_char(iter.st.c) {
-                processor.key_buffer.push(iter.st.c);
-                processor.status = PIStatus::InsideKey;
-            } else if !iter.st.c.is_ascii_whitespace() {
-                return parse_err!(iter);
-            }
-        }
-        PIStatus::InsideKey => {
-            if is_name_char(iter.st.c) {
-                processor.key_buffer.push(iter.st.c);
-                processor.status = PIStatus::InsideKey;
-            } else if iter.st.c == '=' {
-                processor.status = PIStatus::Equals;
-            } else if iter.st.c.is_ascii_whitespace() {
-                processor.status = PIStatus::AfterKey;
-            } else {
-                return parse_err!(iter);
-            }
-        }
-        PIStatus::AfterKey => {
-            if iter.st.c == '=' {
-                processor.status = PIStatus::Equals;
-            } else if !iter.st.c.is_ascii_whitespace() {
-                return parse_err!(iter);
-            }
-        }
-        PIStatus::Equals | PIStatus::AfterEquals => {
-            if iter.st.c == '"' {
-                processor.status = PIStatus::ValOpenQuote;
-            } else if iter.st.c.is_ascii_whitespace() {
-                processor.status = PIStatus::AfterEquals;
-            } else {
-                return parse_err!(iter);
-            }
-        }
-        PIStatus::ValOpenQuote | PIStatus::InsideVal => {
-            if iter.st.c == '"' {
-                processor.take_buffers()?;
-                processor.status = PIStatus::ValCloseQuote;
-            } else {
-                // TODO - handle escape sequences
-                processor.value_buffer.push(iter.st.c);
-                processor.status = PIStatus::InsideVal;
-            }
-        }
-        PIStatus::ValCloseQuote => {
-            if iter.st.c.is_ascii_whitespace() {
-                processor.status = PIStatus::AfterVal;
-            } else if iter.st.c == '?' {
+        PIStatus::AfterTarget | PIStatus::AfterInstruction => {
+            if iter.st.c == '?' {
                 processor.status = PIStatus::QuestionMark;
-            } else {
-                return parse_err!(iter);
-            }
-        }
-        PIStatus::AfterVal => {
-            if iter.st.c.is_ascii_whitespace() {
-                processor.status = PIStatus::AfterVal;
-            } else if iter.st.c == '?' {
-                processor.status = PIStatus::QuestionMark;
-            } else if is_name_start_char(iter.st.c) {
-                processor.key_buffer.push(iter.st.c);
-                processor.status = PIStatus::InsideKey;
-            } else {
-                return parse_err!(iter);
+            } else if !iter.is_whitespace() {
+                let instruction = parse_pi_string(iter)?;
+                processor.instructions.push(instruction);
+                if iter.is('?') {
+                    processor.status = PIStatus::QuestionMark;
+                } else if !iter.is_whitespace() {
+                    return parse_err!(iter);
+                } else {
+                    processor.status = PIStatus::AfterInstruction;
+                }
             }
         }
         PIStatus::QuestionMark => {
@@ -173,4 +100,76 @@ fn take_processing_instruction_char(iter: &mut Iter, processor: &mut PIProcessor
         PIStatus::Close => { /* done */ }
     }
     Ok(())
+}
+
+fn is_pi_close(iter: &mut Iter<'_>) -> Result<bool> {
+    Ok(iter.is('?') && iter.peek_or_die()? == '>')
+}
+
+fn parse_pi_string(iter: &mut Iter<'_>) -> Result<String> {
+    let mut buf = String::new();
+    loop {
+        if iter.is_whitespace() || is_pi_close(iter)? {
+            return Ok(buf);
+        } else {
+            buf.push(iter.st.c);
+        }
+        if !iter.advance() {
+            break;
+        }
+    }
+    Ok(buf)
+}
+
+#[test]
+fn parse_pi_string_test() {
+    struct TestCase {
+        input: &'static str,
+        want: &'static str,
+        iter: char,
+    }
+    let test_cases = vec![
+        TestCase {
+            input: "bloop bleep",
+            want: "bloop",
+            iter: ' ',
+        },
+        TestCase {
+            input: "bloop?bleep",
+            want: "bloop?bleep",
+            iter: 'p',
+        },
+        TestCase {
+            input: "bloop?>bleep",
+            want: "bloop",
+            iter: '?',
+        },
+        TestCase {
+            input: "beer🍺🍺🍺 🍺🍺?>",
+            want: "beer🍺🍺🍺",
+            iter: ' ',
+        },
+        TestCase {
+            input: "beer🍺🍺🍺🍺🍺",
+            want: "beer🍺🍺🍺🍺🍺",
+            iter: '🍺',
+        },
+    ];
+    for test_case in &test_cases {
+        let mut iter = Iter::new(test_case.input).unwrap();
+        let got = parse_pi_string(&mut iter).unwrap();
+        assert_eq!(
+            got.as_str(),
+            test_case.want,
+            "parse_pi_string(\"{}\") returned '{}', expected '{}'",
+            test_case.input,
+            got.as_str(),
+            test_case.want
+        );
+        assert_eq!(
+            iter.st.c, test_case.iter,
+            "expected iter to be pointing at '{}', got '{}'",
+            test_case.iter, iter.st.c
+        );
+    }
 }
