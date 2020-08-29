@@ -8,6 +8,7 @@ use crate::error::{display_char, parse_err, Error, ParseError, Result, ThrowSite
 use crate::parser::chars::{is_name_char, is_name_start_char};
 use crate::parser::element::parse_element;
 use crate::parser::pi::{parse_pi, parse_pi_logic};
+use std::path::Path;
 
 mod chars;
 mod element;
@@ -213,8 +214,8 @@ impl<'a> Iter<'a> {
     }
 }
 
-pub(crate) fn document_from_string(s: &str) -> crate::error::Result<Document> {
-    let mut iter = crate::parser::Iter::new(s)?;
+pub(crate) fn document_from_string<S: AsRef<str>>(s: S) -> crate::error::Result<Document> {
+    let mut iter = crate::parser::Iter::new(s.as_ref())?;
     let mut document = Document::new();
     loop {
         parse_document(&mut iter, &mut document)?;
@@ -223,6 +224,15 @@ pub(crate) fn document_from_string(s: &str) -> crate::error::Result<Document> {
         }
     }
     Ok(document)
+}
+
+pub(crate) fn document_from_file<P: AsRef<Path>>(path: P) -> crate::error::Result<Document> {
+    let s = wrap!(
+        std::fs::read_to_string(path.as_ref()),
+        "Unable to read file '{}'",
+        path.as_ref().display()
+    )?;
+    document_from_string(s)
 }
 
 // TODO - disallow dead code
@@ -327,13 +337,13 @@ fn parse_declaration(target: &str, instructions: &[String]) -> Result<Declaratio
     if instructions.len() > 2 {
         return raise!("");
     }
-    let map = parse_as_map(instructions);
+    let map = parse_as_map(instructions)?;
     if let Some(&val) = map.get("version") {
         match val {
-            "\"1.0\"" => {
+            "1.0" => {
                 declaration.version = Version::One;
             }
-            "\"1.1\"" => {
+            "1.1" => {
                 declaration.version = Version::OneDotOne;
             }
             _ => {
@@ -343,7 +353,7 @@ fn parse_declaration(target: &str, instructions: &[String]) -> Result<Declaratio
     }
     if let Some(&val) = map.get("encoding") {
         match val {
-            "\"UTF-8\"" => {
+            "UTF-8" => {
                 declaration.encoding = Encoding::Utf8;
             }
             _ => {
@@ -354,7 +364,9 @@ fn parse_declaration(target: &str, instructions: &[String]) -> Result<Declaratio
     Ok(declaration)
 }
 
-fn parse_as_map<'a, S: AsRef<str>>(data: &'a [S]) -> HashMap<&'a str, &'a str> {
+/// Splits each string on '=', then for the value on the right, expects it to be a quoted string
+/// starting with either `"` or `'`.
+fn parse_as_map<'a, S: AsRef<str>>(data: &'a [S]) -> Result<HashMap<&'a str, &'a str>> {
     let mut result = HashMap::new();
     for item in data {
         let s = item.as_ref();
@@ -365,11 +377,29 @@ fn parse_as_map<'a, S: AsRef<str>>(data: &'a [S]) -> HashMap<&'a str, &'a str> {
                 result.insert(*split.first().unwrap(), "");
             }
             _ => {
-                result.insert(*split.first().unwrap(), *split.get(1).unwrap());
+                let quoted_value = *split.get(1).unwrap();
+                let len = quoted_value.len();
+                if len < 2 {
+                    return raise!(
+                        "unparseable string encountered in XML declaration: '{}'",
+                        quoted_value
+                    );
+                }
+                let open = &quoted_value[..1];
+                let middle = &quoted_value[1..len - 1];
+                let end = &quoted_value[len - 1..];
+                if (open != "'" && open != "\"") || open != end {
+                    return raise!(
+                        "bad quotation marks encountered in XML declaration: '{}' and '{}'",
+                        open,
+                        end
+                    );
+                }
+                result.insert(*split.first().unwrap(), middle);
             }
         }
     }
-    result
+    Ok(result)
 }
 
 fn state_must_be_before_declaration(iter: &Iter<'_>) -> Result<()> {

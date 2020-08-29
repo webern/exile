@@ -77,8 +77,9 @@ structures and serialize them back.
 */
 
 #![deny(rust_2018_idioms)]
-#![deny(missing_docs)]
+#![deny(missing_docs, unused_imports)]
 
+use std::path::Path;
 pub use xdoc::{Document, Element, Node};
 
 /// The `error` module defines the error types for this library.
@@ -86,10 +87,14 @@ pub use xdoc::{Document, Element, Node};
 pub mod error;
 mod parser;
 
-/// Currently this is the only way to parse an XML document.
 /// TODO - streaming https://github.com/webern/exile/issues/20
 pub fn parse(xml: &str) -> crate::error::Result<Document> {
     parser::document_from_string(xml)
+}
+
+/// Load a document from a file.
+pub fn load<P: AsRef<Path>>(path: P) -> crate::error::Result<Document> {
+    parser::document_from_file(path)
 }
 
 #[test]

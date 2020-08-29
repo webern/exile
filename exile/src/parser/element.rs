@@ -82,10 +82,10 @@ fn parse_attributes(iter: &mut Iter<'_>) -> Result<OrdMap> {
         expect!(iter, '=')?;
         iter.advance_or_die()?;
         iter.skip_whitespace()?;
-        expect!(iter, '"')?;
+        let (start, string_type) = attribute_start_quote(iter)?;
         iter.advance_or_die()?;
-        let value = parse_attribute_value(iter)?;
-        expect!(iter, '"')?;
+        let value = parse_attribute_value(iter, string_type)?;
+        expect!(iter, start)?;
         attributes.mut_map().insert(key, value);
         if !iter.advance() {
             break;
@@ -94,8 +94,29 @@ fn parse_attributes(iter: &mut Iter<'_>) -> Result<OrdMap> {
     Ok(attributes)
 }
 
-fn parse_attribute_value(iter: &mut Iter<'_>) -> Result<String> {
-    parse_string(iter, StringType::Attribute)
+fn attribute_start_quote(iter: &Iter<'_>) -> Result<(char, StringType)> {
+    let c = iter.st.c;
+    match c {
+        '\'' => Ok((c, StringType::AttributeSingle)),
+        '"' => Ok((c, StringType::AttributeDouble)),
+        _ => raise!(
+            "expected attribute value to start with either a single or double quote, got '{}'",
+            c
+        ),
+    }
+}
+
+/// Expects the iter to be pointing at the first character of the string.
+fn parse_attribute_value(iter: &mut Iter<'_>, string_type: StringType) -> Result<String> {
+    match string_type {
+        StringType::AttributeDouble | StringType::AttributeSingle => {
+            parse_string(iter, string_type)
+        }
+        _ => raise!(
+            "bug: the wrong function was called for a string of type: {:?}",
+            string_type
+        ),
+    }
 }
 
 // this function takes over after an element's opening tag (the parent element) has been parsed.
@@ -213,4 +234,12 @@ fn parse_end_tag_name(iter: &mut Iter<'_>, parent: &Element) -> Result<()> {
 
 fn parse_text(iter: &mut Iter<'_>) -> Result<String> {
     parse_string(iter, StringType::Element)
+}
+
+#[test]
+fn parse_attribute_value_test_1() {
+    let mut iter = Iter::new(r#"some "fun" attribute value'"#).unwrap();
+    let value = parse_attribute_value(&mut iter, StringType::AttributeSingle).unwrap();
+    assert_eq!(value, r#"some "fun" attribute value"#);
+    assert_eq!(iter.st.c, '\'');
 }
