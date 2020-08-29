@@ -57,7 +57,8 @@ fn load_impl(test_name: &str, dir: &PathBuf) -> XmlFile {
 }
 
 fn load_metadata(p: PathBuf) -> Metadata {
-    let file = File::open(p).unwrap();
+    let file =
+        File::open(&p).unwrap_or_else(|e| panic!("Unable to load '{}: {:?}'", p.display(), e));
     let reader = BufReader::new(file);
     serde_json::from_reader(reader).unwrap()
 }

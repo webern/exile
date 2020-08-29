@@ -3,14 +3,18 @@ use crate::parser::Iter;
 
 #[derive(Clone, Copy, Eq, PartialEq, Debug)]
 pub(crate) enum StringType {
+    /// A string inside of an element, e.g. <element>string</element>.
+    /// TODO - things does not work for <element>some<p/>string</element>
     Element,
-    Attribute,
-    // TODO - support single quoted attributes https://github.com/webern/exile/issues/43
-    // AttributeSingle,
+    /// An attribute value string surrounded by double quotes, e.g. `"value"`.
+    AttributeDouble,
+    /// An attribute value string surrounded by single quotes, e.g. `'value'`.
+    AttributeSingle,
     // TODO - support CDATA https://github.com/webern/exile/issues/28
     // CDATA,
 }
 
+/// Parse a string that terminates based on some character(s) determined by `string_type`.
 pub(crate) fn parse_string(iter: &mut Iter<'_>, string_type: StringType) -> Result<String> {
     let mut result = String::new();
     while !is_end_char(iter, string_type) {
@@ -37,8 +41,8 @@ fn is_forbidden(iter: &Iter<'_>, string_type: StringType) -> bool {
     // &, < and > are illegal (as well as " or ' in attributes).
     match iter.st.c {
         '&' | '<' | '>' => true,
-        '\"' => string_type == StringType::Attribute,
-        // TODO - support single quoted attributes https://github.com/webern/exile/issues/43
+        '"' => string_type == StringType::AttributeDouble,
+        '\'' => string_type == StringType::AttributeSingle,
         _ => false,
     }
 }
@@ -46,8 +50,8 @@ fn is_forbidden(iter: &Iter<'_>, string_type: StringType) -> bool {
 fn end_char(string_type: StringType) -> char {
     match string_type {
         StringType::Element => '<',
-        StringType::Attribute => '\"',
-        // TODO - support single quoted attributes https://github.com/webern/exile/issues/43
+        StringType::AttributeDouble => '"',
+        StringType::AttributeSingle => '\'',
     }
 }
 
@@ -335,7 +339,7 @@ fn test_parse_string_ok() {
     let expected = "a&b'c>d<e\"f💙g🍺h";
     use crate::parser::Iter;
     let mut iter = Iter::new(input).unwrap();
-    let actual = parse_string(&mut iter, StringType::Attribute).unwrap();
+    let actual = parse_string(&mut iter, StringType::AttributeDouble).unwrap();
     assert_eq!(expected, actual);
 }
 
@@ -344,7 +348,7 @@ fn test_parse_string_end_err() {
     let input = "a&amp;b&apos;c&gt;d&lt;e&quot;f&#x1f499;g&#127866;h";
     use crate::parser::Iter;
     let mut iter = Iter::new(input).unwrap();
-    let result = parse_string(&mut iter, StringType::Attribute);
+    let result = parse_string(&mut iter, StringType::AttributeDouble);
     assert!(result.is_err());
 }
 
@@ -353,7 +357,7 @@ fn test_parse_string_bad_escape_err() {
     let input = "a&zoo;\"";
     use crate::parser::Iter;
     let mut iter = Iter::new(input).unwrap();
-    let result = parse_string(&mut iter, StringType::Attribute);
+    let result = parse_string(&mut iter, StringType::AttributeDouble);
     assert!(result.is_err());
 }
 
@@ -362,6 +366,26 @@ fn test_parse_string_bad_amp_or_apos_err() {
     let input = "a&anp;\"";
     use crate::parser::Iter;
     let mut iter = Iter::new(input).unwrap();
-    let result = parse_string(&mut iter, StringType::Attribute);
+    let result = parse_string(&mut iter, StringType::AttributeDouble);
     assert!(result.is_err());
+}
+
+#[test]
+fn test_parse_string_quotes_inside_1() {
+    let want = r#"attr val with something 'quoted' inside"#;
+    let terminated = format!("{}\"", want);
+    use crate::parser::Iter;
+    let mut iter = Iter::new(terminated.as_str()).unwrap();
+    let got = parse_string(&mut iter, StringType::AttributeDouble).unwrap();
+    assert_eq!(got, want);
+}
+
+#[test]
+fn test_parse_string_quotes_inside_2() {
+    let want = r#"attr val with something "quoted" inside"#;
+    let terminated = format!("{}'", want);
+    use crate::parser::Iter;
+    let mut iter = Iter::new(terminated.as_str()).unwrap();
+    let got = parse_string(&mut iter, StringType::AttributeSingle).unwrap();
+    assert_eq!(got, want);
 }

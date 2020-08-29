@@ -1,0 +1,21 @@
+{
+  "description": "a simple file with single-quoted attributes",
+  "syntax": {
+    "good": {}
+  },
+  "expected": {
+    "declaration": {
+      "version": "one_dot_one",
+      "encoding": "utf8"
+    },
+    "root": {
+      "namespace": null,
+      "name": "foo",
+      "attributes": {
+        "attr1": "bones",
+        "attr2": "bish"
+      },
+      "nodes": []
+    }
+  }
+}

@@ -152,6 +152,29 @@ fn good_syntax_simple_musicxml_test() {
 }
 
 #[test]
+/// a simple file with single-quoted attributes
+fn good_syntax_single_quotes_test() {
+    let info = xtest::load("single_quotes");
+    let xml_str = info.read_xml_file();
+    let parse_result = exile::parse(xml_str.as_str());
+    if let Err(e) = parse_result {
+        panic!("expected parse_result to be Ok, got Err: {}", e);
+    }
+    let got_doc = parse_result.as_ref().unwrap();
+    let want_doc = info.metadata.expected.as_ref().unwrap();
+    let equal = want_doc == got_doc;
+    if !equal {
+        let want = want_doc.to_string();
+        let got = got_doc.to_string();
+        if want != got {
+            assert_eq!(got, want);
+        } else {
+            assert!(equal);
+        }
+    }
+}
+
+#[test]
 /// unescaped angle bracket inside element text
 fn bad_syntax_unescaped_angle_test() {
     let info = xtest::load("unescaped-angle");

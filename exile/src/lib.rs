@@ -77,7 +77,7 @@ structures and serialize them back.
 */
 
 #![deny(rust_2018_idioms)]
-#![deny(missing_docs)]
+#![deny(missing_docs, unused_imports)]
 
 use std::path::Path;
 pub use xdoc::{Document, Element, Node};

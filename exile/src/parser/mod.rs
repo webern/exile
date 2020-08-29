@@ -337,13 +337,13 @@ fn parse_declaration(target: &str, instructions: &[String]) -> Result<Declaratio
     if instructions.len() > 2 {
         return raise!("");
     }
-    let map = parse_as_map(instructions);
+    let map = parse_as_map(instructions)?;
     if let Some(&val) = map.get("version") {
         match val {
-            "\"1.0\"" => {
+            "1.0" => {
                 declaration.version = Version::One;
             }
-            "\"1.1\"" => {
+            "1.1" => {
                 declaration.version = Version::OneDotOne;
             }
             _ => {
@@ -353,7 +353,7 @@ fn parse_declaration(target: &str, instructions: &[String]) -> Result<Declaratio
     }
     if let Some(&val) = map.get("encoding") {
         match val {
-            "\"UTF-8\"" => {
+            "UTF-8" => {
                 declaration.encoding = Encoding::Utf8;
             }
             _ => {
@@ -364,7 +364,9 @@ fn parse_declaration(target: &str, instructions: &[String]) -> Result<Declaratio
     Ok(declaration)
 }
 
-fn parse_as_map<'a, S: AsRef<str>>(data: &'a [S]) -> HashMap<&'a str, &'a str> {
+/// Splits each string on '=', then for the value on the right, expects it to be a quoted string
+/// starting with either `"` or `'`.
+fn parse_as_map<'a, S: AsRef<str>>(data: &'a [S]) -> Result<HashMap<&'a str, &'a str>> {
     let mut result = HashMap::new();
     for item in data {
         let s = item.as_ref();
@@ -375,11 +377,29 @@ fn parse_as_map<'a, S: AsRef<str>>(data: &'a [S]) -> HashMap<&'a str, &'a str> {
                 result.insert(*split.first().unwrap(), "");
             }
             _ => {
-                result.insert(*split.first().unwrap(), *split.get(1).unwrap());
+                let quoted_value = *split.get(1).unwrap();
+                let len = quoted_value.len();
+                if len < 2 {
+                    return raise!(
+                        "unparseable string encountered in XML declaration: '{}'",
+                        quoted_value
+                    );
+                }
+                let open = &quoted_value[..1];
+                let middle = &quoted_value[1..len - 1];
+                let end = &quoted_value[len - 1..];
+                if (open != "'" && open != "\"") || open != end {
+                    return raise!(
+                        "bad quotation marks encountered in XML declaration: '{}' and '{}'",
+                        open,
+                        end
+                    );
+                }
+                result.insert(*split.first().unwrap(), middle);
             }
         }
     }
-    result
+    Ok(result)
 }
 
 fn state_must_be_before_declaration(iter: &Iter<'_>) -> Result<()> {

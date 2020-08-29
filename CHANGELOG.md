@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Currently we are using v0.0.x where every version can and will contain breaking changes.
 
 ## [Unreleased]
+### Added
+- Support for single-quoted attributes [#58]
+- `exile::load` for loading files [#58]
+
+[#58]: https://github.com/webern/exile/pull/58
 
 ## [v0.0.1] - 2020-07-18
 ### Added
