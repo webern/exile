@@ -8,6 +8,7 @@ use crate::error::{display_char, parse_err, Error, ParseError, Result, ThrowSite
 use crate::parser::chars::{is_name_char, is_name_start_char};
 use crate::parser::element::parse_element;
 use crate::parser::pi::{parse_pi, parse_pi_logic};
+use std::path::Path;
 
 mod chars;
 mod element;
@@ -213,8 +214,8 @@ impl<'a> Iter<'a> {
     }
 }
 
-pub(crate) fn document_from_string(s: &str) -> crate::error::Result<Document> {
-    let mut iter = crate::parser::Iter::new(s)?;
+pub(crate) fn document_from_string<S: AsRef<str>>(s: S) -> crate::error::Result<Document> {
+    let mut iter = crate::parser::Iter::new(s.as_ref())?;
     let mut document = Document::new();
     loop {
         parse_document(&mut iter, &mut document)?;
@@ -223,6 +224,15 @@ pub(crate) fn document_from_string(s: &str) -> crate::error::Result<Document> {
         }
     }
     Ok(document)
+}
+
+pub(crate) fn document_from_file<P: AsRef<Path>>(path: P) -> crate::error::Result<Document> {
+    let s = wrap!(
+        std::fs::read_to_string(path.as_ref()),
+        "Unable to read file '{}'",
+        path.as_ref().display()
+    )?;
+    document_from_string(s)
 }
 
 // TODO - disallow dead code
