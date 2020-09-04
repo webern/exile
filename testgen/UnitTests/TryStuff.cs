@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Xml;
 using System.Xml.Resolvers;
 using NUnit.Framework;
@@ -23,66 +24,7 @@ namespace UnitTests
             Assert.AreEqual("#document", doc.Name);
             var root = doc.DocumentElement;
             printChildren(root);
-            foreach (var child in root.ChildNodes)
-            {
-                if (child is XmlElement)
-                {
-                    var element = (XmlElement) child;
-                    var n = element.Name;
-                    System.Console.WriteLine(n);
-                }
-                else if (child is XmlEntityReference)
-                {
-                    var reference = (XmlEntityReference) child;
-                    var n = reference.Name;
-                    System.Console.WriteLine(n);
-                    // reference.
-                }
-            }
-
-            // var set = new XmlReaderSettings();
-            // set.DtdProcessing = DtdProcessing.Parse;
-            //
-            // var reader = XmlReader.Create(file.FullName, set);
-            // Console.WriteLine("foo");
-            // while (reader.Read())
-            // {
-            //     switch (reader.NodeType)
-            //     {
-            //         case XmlNodeType.Element:
-            //             Console.Write("<{0}>", reader.Name);
-            //             break;
-            //         case XmlNodeType.Text:
-            //             Console.Write(reader.Value);
-            //             break;
-            //         case XmlNodeType.CDATA:
-            //             Console.Write("<![CDATA[{0}]]>", reader.Value);
-            //             break;
-            //         case XmlNodeType.ProcessingInstruction:
-            //             Console.Write("<?{0} {1}?>", reader.Name, reader.Value);
-            //             break;
-            //         case XmlNodeType.Comment:
-            //             Console.Write("<!--{0}-->", reader.Value);
-            //             break;
-            //         case XmlNodeType.XmlDeclaration:
-            //             Console.Write("<?xml version='1.0'?>");
-            //             break;
-            //         case XmlNodeType.Document:
-            //             break;
-            //         case XmlNodeType.DocumentType:
-            //             Console.Write("<!DOCTYPE {0} [{1}]", reader.Name, reader.Value);
-            //             break;
-            //         case XmlNodeType.EntityReference:
-            //             Console.Write(reader.Name);
-            //             break;
-            //         case XmlNodeType.EndElement:
-            //             Console.Write("</{0}>", reader.Name);
-            //             break;
-            //         case XmlNodeType.EntityReference:
-            //             Console.WriteLine("Entity reference: {0}", reader.Name);
-            //             break;
-            //     }
-            // }
+            var conformanceTests = findTests(root);
         }
 
         public void printChildren(XmlNode node)
@@ -100,7 +42,84 @@ namespace UnitTests
                     System.Console.WriteLine(((XmlElement) child).Name);
                     printChildren((XmlNode) child);
                 }
+                else if (child is XmlEntityReference)
+                {
+                    var reference = (XmlEntityReference) child;
+                    var n = reference.Name;
+                    System.Console.WriteLine("Reference: {0}", n);
+                    // reference.
+                }
             }
         }
+
+        public List<ConformanceTest> findTests(XmlNode root)
+        {
+            var tests = new List<ConformanceTest>();
+            findTestsRecursive(root, tests, "unknown", "");
+            return tests;
+        }
+
+        private void findTestsRecursive(XmlNode current, List<ConformanceTest> outTests, string currentSuite, string basePath)
+        {
+            if (!(current is XmlElement))
+            {
+                return;
+            }
+
+            var element = (XmlElement) current;
+            
+            // a base case, we do not follow children
+            if (element.Name == "TEST")
+            {
+                var conformanceTest = parseTest(element, currentSuite, basePath);
+                outTests.Add(conformanceTest);
+                return;
+            }
+            
+            if (element.Name == "TESTCASES")
+            {
+                foreach (var attribute in element.Attributes)
+                {
+                    if (attribute is XmlAttribute)
+                    {
+                        var a = (XmlAttribute) attribute;
+                        if (a.Name == "PROFILE")
+                        {
+                            currentSuite = a.Value;
+                        }
+                        else if (a.Name == "base")
+                        {
+                            basePath = a.Value;
+                        }
+                        else if (a.Name == "xml:base")
+                        {
+                            basePath = a.Value;
+                        }
+                    }
+                }
+            }
+            
+            foreach (var childNode in element.ChildNodes)
+            {
+                if (childNode is XmlElement)
+                {
+                    findTestsRecursive((XmlNode) childNode, outTests, currentSuite, basePath);
+                }
+            }
+        }
+
+        private ConformanceTest parseTest(XmlElement element, string currentSuite, string basePath)
+        {
+            var t = new ConformanceTest();
+            t.Profile = currentSuite;
+            t.BasePath = basePath;
+            return t;
+        }
+    }
+
+    public class ConformanceTest
+    {
+        public String Profile { get; set; }
+        public String BasePath { get; set; }
     }
 }
