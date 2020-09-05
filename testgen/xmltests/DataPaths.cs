@@ -5,14 +5,14 @@ namespace xmltests
 {
     public class DataPaths
     {
-        public DirectoryInfo XmlTestDir { get; }
+        public DirectoryInfo XmlConfDir { get; }
         public DirectoryInfo SchemaTestDir { get; }
 
         public FileInfo XmlConfFile
         {
             get
             {
-                var info = new FileInfo(Path.Combine(XmlTestDir.FullName, "xmlconf.xml"));
+                var info = new FileInfo(Path.Combine(XmlConfDir.FullName, "xmlconf.xml"));
                 if (!info.Exists)
                 {
                     throw new FileNotFoundException("Could not find xmlconf.xml");
@@ -36,15 +36,15 @@ namespace xmltests
             }
         }
         
-        public DataPaths(DirectoryInfo xmlTestDir, DirectoryInfo schemaTestDir)
+        public DataPaths(DirectoryInfo xmlConfDir, DirectoryInfo schemaTestDir)
         {
-            XmlTestDir = xmlTestDir;
+            XmlConfDir = xmlConfDir;
             SchemaTestDir = schemaTestDir;
 
-            if (XmlTestDir == null) throw new NullReferenceException("XmlTestDir");
+            if (XmlConfDir == null) throw new NullReferenceException("XmlTestDir");
 
-            if (!XmlTestDir.Exists)
-                throw new DirectoryNotFoundException($"No directory at {XmlTestDir.FullName}");
+            if (!XmlConfDir.Exists)
+                throw new DirectoryNotFoundException($"No directory at {XmlConfDir.FullName}");
 
             if (SchemaTestDir == null) throw new NullReferenceException("SchemaTestDir");
 

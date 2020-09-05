@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Xml;
 using System.Xml.Resolvers;
 using NUnit.Framework;
@@ -26,11 +28,145 @@ namespace UnitTests
             var root = doc.DocumentElement;
             // printChildren(root);
             var conformanceTests = findTests(root);
+            // foreach (var conformanceTest in conformanceTests)
+            // {
+            //     Console.WriteLine("{0} {1} {2} {3}", conformanceTest.Profile, conformanceTest.BasePath,
+            //         conformanceTest.Type, conformanceTest.ID);
+            // }
+
+            doMoreStuff(conformanceTests);
+        }
+
+        private void doMoreStuff(List<ConformanceTest> conformanceTests)
+        {
             foreach (var conformanceTest in conformanceTests)
             {
-                Console.WriteLine("{0} {1} {2} {3}", conformanceTest.Profile, conformanceTest.BasePath,
-                    conformanceTest.Type, conformanceTest.ID);
+                if (conformanceTest.Type == "valid" && conformanceTest.Namespace != "no")
+                {
+                    doOneThing(conformanceTest);
+                }
             }
+        }
+
+        private static void DisableUndeclaredEntityCheck(XmlTextReader obj)
+        {
+            
+            var binderFlagsA = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+            var binderFlagsB = BindingFlags.Public | BindingFlags.NonPublic;
+            var xmlTextReaderType = obj.GetType();
+            var implPropertyName = "Impl";
+            PropertyInfo implPropertyInfo = xmlTextReaderType.GetProperty(
+                implPropertyName, binderFlagsA);
+            if (implPropertyInfo == null)
+            {
+                throw new Exception("Could not find property Impl");
+            }
+
+            var impl = implPropertyInfo.GetValue(obj);
+            var implType = impl.GetType();
+            PropertyInfo propertyInfo = implType.GetProperty(
+                "DisableUndeclaredEntityCheck", binderFlagsA);
+            if (propertyInfo == null)
+            {
+                throw new Exception("Could not find property DisableUndeclaredEntityCheck");
+            }
+
+            propertyInfo.SetValue(impl, true);
+        }
+
+        private void doOneThing(ConformanceTest conformanceTest)
+        {
+            var path = Path.Combine(Paths.Instance.DataPaths.XmlConfDir.FullName,
+                conformanceTest.BasePath + conformanceTest.URI);
+            var fileInfo = new FileInfo(path);
+            if (!fileInfo.Exists)
+            {
+                throw new FileNotFoundException(path);
+            }
+
+            var textReader = new XmlTextReader(fileInfo.FullName);
+            DisableUndeclaredEntityCheck(textReader);
+            textReader.EntityHandling = EntityHandling.ExpandCharEntities;
+            textReader.DtdProcessing = DtdProcessing.Parse;
+            // textReader.XmlResolver = null;
+            textReader.Namespaces = true;
+            var doc = new XmlDocument();
+            Console.WriteLine(fileInfo.FullName);
+            doc.Load(textReader);
+            foreach (var docChild in doc.ChildNodes)
+            {
+                var node = asNode(docChild);
+                switch (node.NodeType)
+                {
+                    case XmlNodeType.None:
+                        throw new Exception("XmlNodeType.None");
+                        break;
+                    case XmlNodeType.Element:
+                        Console.WriteLine("Element : '{0}'", node.Value);
+                        break;
+                    case XmlNodeType.Attribute:
+                        Console.WriteLine("Attribute : '{0}'", node.Value);
+                        break;
+                    case XmlNodeType.Text:
+                        Console.WriteLine("Text : '{0}'", node.Value);
+                        break;
+                    case XmlNodeType.CDATA:
+                        Console.WriteLine("CDATA : '{0}'", node.Value);
+                        break;
+                    case XmlNodeType.EntityReference:
+                        Console.WriteLine("EntityReference : '{0}'", node.Value);
+                        break;
+                    case XmlNodeType.Entity:
+                        Console.WriteLine("Entity : '{0}'", node.Value);
+                        break;
+                    case XmlNodeType.ProcessingInstruction:
+                        Console.WriteLine("ProcessingInstruction : '{0}'", node.Value);
+                        break;
+                    case XmlNodeType.Comment:
+                        Console.WriteLine("Comment : '{0}'", node.Value);
+                        break;
+                    case XmlNodeType.Document:
+                        Console.WriteLine("Document : '{0}'", node.Value);
+                        break;
+                    case XmlNodeType.DocumentType:
+                        Console.WriteLine("DocumentType : '{0}'", node.Value);
+                        break;
+                    case XmlNodeType.DocumentFragment:
+                        throw new Exception("XmlNodeType.DocumentFragment");
+                        break;
+                    case XmlNodeType.Notation:
+                        throw new Exception("XmlNodeType.Notation");
+                        break;
+                    case XmlNodeType.Whitespace:
+                        Console.WriteLine("Whitespace : '{0}'", node.Value);
+                        break;
+                    case XmlNodeType.SignificantWhitespace:
+                        Console.WriteLine("SignificantWhitespace : '{0}'", node.Value);
+                        break;
+                    case XmlNodeType.EndElement:
+                        throw new Exception("XmlNodeType.EndElement");
+                        break;
+                    case XmlNodeType.EndEntity:
+                        throw new Exception("XmlNodeType.Exception");
+                        break;
+                    case XmlNodeType.XmlDeclaration:
+                        Console.WriteLine("XmlDeclaration : '{0}'", node.Value);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+        }
+
+        public XmlNode asNode(Object maybe)
+        {
+            var node = (XmlNode) maybe;
+            if (node == null)
+            {
+                throw new Exception("wtf? not an XmlNode?");
+            }
+
+            return node;
         }
 
         public void printChildren(XmlNode node)
@@ -140,6 +276,7 @@ namespace UnitTests
             t.Sections = getAttributeValue(element, "SECTIONS");
             t.Entities = getAttributeValue(element, "ENTITIES");
             t.URI = getAttributeValue(element, "URI");
+            t.Namespace = getAttributeValue(element, "NAMESPACE");
             return t;
         }
 
@@ -181,5 +318,6 @@ namespace UnitTests
         public String Entities { get; set; }
         public String URI { get; set; }
         public String Type { get; set; }
+        public String Namespace { get; set; }
     }
 }
