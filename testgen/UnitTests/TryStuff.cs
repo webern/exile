@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml;
 using System.Xml.Resolvers;
 using NUnit.Framework;
@@ -23,8 +24,13 @@ namespace UnitTests
             doc.Load(textReader);
             Assert.AreEqual("#document", doc.Name);
             var root = doc.DocumentElement;
-            printChildren(root);
+            // printChildren(root);
             var conformanceTests = findTests(root);
+            foreach (var conformanceTest in conformanceTests)
+            {
+                Console.WriteLine("{0} {1} {2} {3}", conformanceTest.Profile, conformanceTest.BasePath,
+                    conformanceTest.Type, conformanceTest.ID);
+            }
         }
 
         public void printChildren(XmlNode node)
@@ -55,19 +61,13 @@ namespace UnitTests
         public List<ConformanceTest> findTests(XmlNode root)
         {
             var tests = new List<ConformanceTest>();
-            findTestsRecursive(root, tests, "unknown", "");
+            findTestsRecursive((XmlElement) root, tests, "unknown", "");
             return tests;
         }
 
-        private void findTestsRecursive(XmlNode current, List<ConformanceTest> outTests, string currentSuite, string basePath)
+        private void findTestsRecursive(XmlElement element, List<ConformanceTest> outTests, string currentSuite,
+            string basePath)
         {
-            if (!(current is XmlElement))
-            {
-                return;
-            }
-
-            var element = (XmlElement) current;
-            
             // a base case, we do not follow children
             if (element.Name == "TEST")
             {
@@ -75,37 +75,60 @@ namespace UnitTests
                 outTests.Add(conformanceTest);
                 return;
             }
-            
+
             if (element.Name == "TESTCASES")
             {
-                foreach (var attribute in element.Attributes)
+                foreach (var a in attributes(element))
                 {
-                    if (attribute is XmlAttribute)
+                    if (a.Name == "PROFILE")
                     {
-                        var a = (XmlAttribute) attribute;
-                        if (a.Name == "PROFILE")
-                        {
-                            currentSuite = a.Value;
-                        }
-                        else if (a.Name == "base")
-                        {
-                            basePath = a.Value;
-                        }
-                        else if (a.Name == "xml:base")
-                        {
-                            basePath = a.Value;
-                        }
+                        currentSuite = a.Value;
+                    }
+                    else if (a.Name == "base")
+                    {
+                        basePath = a.Value;
+                    }
+                    else if (a.Name == "xml:base")
+                    {
+                        basePath = a.Value;
                     }
                 }
+
+                // foreach (var attribute in element.Attributes)
+                // {
+                //     if (attribute is XmlAttribute)
+                //     {
+                //         var a = (XmlAttribute) attribute;
+                //         if (a.Name == "PROFILE")
+                //         {
+                //             currentSuite = a.Value;
+                //         }
+                //         else if (a.Name == "base")
+                //         {
+                //             basePath = a.Value;
+                //         }
+                //         else if (a.Name == "xml:base")
+                //         {
+                //             basePath = a.Value;
+                //         }
+                //     }
+                // }
             }
-            
-            foreach (var childNode in element.ChildNodes)
+
+            foreach (var child in children(element))
             {
-                if (childNode is XmlElement)
-                {
-                    findTestsRecursive((XmlNode) childNode, outTests, currentSuite, basePath);
-                }
+                findTestsRecursive(child, outTests, currentSuite, basePath);
             }
+        }
+
+        private string getAttributeValue(XmlElement element, string attributeName)
+        {
+            foreach (var attribute in attributes(element).Where(attribute => attribute.Name == attributeName))
+            {
+                return attribute.Value;
+            }
+
+            return "";
         }
 
         private ConformanceTest parseTest(XmlElement element, string currentSuite, string basePath)
@@ -113,7 +136,39 @@ namespace UnitTests
             var t = new ConformanceTest();
             t.Profile = currentSuite;
             t.BasePath = basePath;
+            t.Type = getAttributeValue(element, "TYPE");
+            t.Sections = getAttributeValue(element, "SECTIONS");
+            t.Entities = getAttributeValue(element, "ENTITIES");
+            t.URI = getAttributeValue(element, "URI");
             return t;
+        }
+
+        private List<XmlElement> children(XmlElement element)
+        {
+            var children = new List<XmlElement>();
+            foreach (var childNode in element.ChildNodes)
+            {
+                if (childNode is XmlElement)
+                {
+                    children.Add((XmlElement) childNode);
+                }
+            }
+
+            return children;
+        }
+
+        private List<XmlAttribute> attributes(XmlElement element)
+        {
+            var attributes = new List<XmlAttribute>();
+            foreach (var thing in element.Attributes)
+            {
+                if (thing is XmlAttribute)
+                {
+                    attributes.Add((XmlAttribute) thing);
+                }
+            }
+
+            return attributes;
         }
     }
 
@@ -121,5 +176,10 @@ namespace UnitTests
     {
         public String Profile { get; set; }
         public String BasePath { get; set; }
+        public String ID { get; set; }
+        public String Sections { get; set; }
+        public String Entities { get; set; }
+        public String URI { get; set; }
+        public String Type { get; set; }
     }
 }
