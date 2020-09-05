@@ -50,7 +50,6 @@ namespace UnitTests
 
         private static void DisableUndeclaredEntityCheck(XmlTextReader obj)
         {
-            
             var binderFlagsA = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
             var binderFlagsB = BindingFlags.Public | BindingFlags.NonPublic;
             var xmlTextReaderType = obj.GetType();
@@ -311,8 +310,23 @@ namespace UnitTests
 
     public class ConformanceTest
     {
+        private string _basePath;
         public String Profile { get; set; }
-        public String BasePath { get; set; }
+
+        public String BasePath
+        {
+            get => _basePath;
+            set
+            {
+                if(value.Length > 0 && value[value.Length - 1] != '/')
+                {
+                    value += "/";
+                }
+
+                _basePath = value;
+            }
+        }
+
         public String ID { get; set; }
         public String Sections { get; set; }
         public String Entities { get; set; }
