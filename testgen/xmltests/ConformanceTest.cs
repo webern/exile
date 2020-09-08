@@ -3,6 +3,15 @@ using System.IO;
 
 namespace xmltests
 {
+    enum Entities
+    {
+        Both,
+        Empty,
+        General,
+        None,
+        Parameter,
+    }
+
     /// <summary>
     /// Represents an XML conformance test from the official XML conformance test suite.
     /// </summary>
@@ -12,10 +21,26 @@ namespace xmltests
         /// The ID of the test, as given in the <code>TESTCASE</code> element.
         /// </summary>
         public String Id { get; set; }
+
+        /// <summary>
+        /// The combined Profile, as given by one or more <code>TESTCASES</code> elements. Joined by ", ".
+        /// </summary>
         public String Profile { get; set; }
-        public String BasePath {get => _basePath; set => SetBasePath(value); }
-        
+
+        /// <summary>
+        /// The path to the directory where the XML file with the <code>TESTCASES</code> element lives (I think).
+        /// </summary>
+        public String BasePath
+        {
+            get => _basePath;
+            set => SetBasePath(value);
+        }
+
+        /// <summary>
+        /// Which sections of the XML specification are being tested. 
+        /// </summary>
         public String Sections { get; set; }
+
         public String Entities { get; set; }
         public String Uri { get; set; }
         public String Type { get; set; }

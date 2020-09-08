@@ -91,71 +91,72 @@ namespace UnitTests
             // textReader.XmlResolver = null;
             textReader.Namespaces = true;
             var doc = new XmlDocument();
-            Console.WriteLine(fileInfo.FullName);
+            // Console.WriteLine(fileInfo.FullName);
             doc.Load(textReader);
-            foreach (var docChild in doc.ChildNodes)
-            {
-                var node = asNode(docChild);
-                switch (node.NodeType)
-                {
-                    case XmlNodeType.None:
-                        throw new Exception("XmlNodeType.None");
-                        break;
-                    case XmlNodeType.Element:
-                        Console.WriteLine("Element : '{0}'", node.Value);
-                        break;
-                    case XmlNodeType.Attribute:
-                        Console.WriteLine("Attribute : '{0}'", node.Value);
-                        break;
-                    case XmlNodeType.Text:
-                        Console.WriteLine("Text : '{0}'", node.Value);
-                        break;
-                    case XmlNodeType.CDATA:
-                        Console.WriteLine("CDATA : '{0}'", node.Value);
-                        break;
-                    case XmlNodeType.EntityReference:
-                        Console.WriteLine("EntityReference : '{0}'", node.Value);
-                        break;
-                    case XmlNodeType.Entity:
-                        Console.WriteLine("Entity : '{0}'", node.Value);
-                        break;
-                    case XmlNodeType.ProcessingInstruction:
-                        Console.WriteLine("ProcessingInstruction : '{0}'", node.Value);
-                        break;
-                    case XmlNodeType.Comment:
-                        Console.WriteLine("Comment : '{0}'", node.Value);
-                        break;
-                    case XmlNodeType.Document:
-                        Console.WriteLine("Document : '{0}'", node.Value);
-                        break;
-                    case XmlNodeType.DocumentType:
-                        Console.WriteLine("DocumentType : '{0}'", node.Value);
-                        break;
-                    case XmlNodeType.DocumentFragment:
-                        throw new Exception("XmlNodeType.DocumentFragment");
-                        break;
-                    case XmlNodeType.Notation:
-                        throw new Exception("XmlNodeType.Notation");
-                        break;
-                    case XmlNodeType.Whitespace:
-                        Console.WriteLine("Whitespace : '{0}'", node.Value);
-                        break;
-                    case XmlNodeType.SignificantWhitespace:
-                        Console.WriteLine("SignificantWhitespace : '{0}'", node.Value);
-                        break;
-                    case XmlNodeType.EndElement:
-                        throw new Exception("XmlNodeType.EndElement");
-                        break;
-                    case XmlNodeType.EndEntity:
-                        throw new Exception("XmlNodeType.Exception");
-                        break;
-                    case XmlNodeType.XmlDeclaration:
-                        Console.WriteLine("XmlDeclaration : '{0}'", node.Value);
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-            }
+            // foreach (var docChild in doc.ChildNodes)
+            // {
+            //     var node = asNode(docChild);
+            //     switch (node.NodeType)
+            //     {
+            //         case XmlNodeType.None:
+            //             throw new Exception("XmlNodeType.None");
+            //             break;
+            //         case XmlNodeType.Element:
+            //             Console.WriteLine("Element : '{0}'", node.Value);
+            //             break;
+            //         case XmlNodeType.Attribute:
+            //             Console.WriteLine("Attribute : '{0}'", node.Value);
+            //             break;
+            //         case XmlNodeType.Text:
+            //             Console.WriteLine("Text : '{0}'", node.Value);
+            //             break;
+            //         case XmlNodeType.CDATA:
+            //             Console.WriteLine("CDATA : '{0}'", node.Value);
+            //             break;
+            //         case XmlNodeType.EntityReference:
+            //             Console.WriteLine("EntityReference : '{0}'", node.Value);
+            //             break;
+            //         case XmlNodeType.Entity:
+            //             Console.WriteLine("Entity : '{0}'", node.Value);
+            //             break;
+            //         case XmlNodeType.ProcessingInstruction:
+            //             Console.WriteLine("ProcessingInstruction : '{0}'", node.Value);
+            //             break;
+            //         case XmlNodeType.Comment:
+            //             Console.WriteLine("Comment : '{0}'", node.Value);
+            //             break;
+            //         case XmlNodeType.Document:
+            //             Console.WriteLine("Document : '{0}'", node.Value);
+            //             break;
+            //         case XmlNodeType.DocumentType:
+            //             Console.WriteLine("DocumentType : '{0}'", node.Value);
+            //             break;
+            //         case XmlNodeType.DocumentFragment:
+            //             throw new Exception("XmlNodeType.DocumentFragment");
+            //             break;
+            //         case XmlNodeType.Notation:
+            //             throw new Exception("XmlNodeType.Notation");
+            //             break;
+            //         case XmlNodeType.Whitespace:
+            //             Console.WriteLine("Whitespace : '{0}'", node.Value);
+            //             break;
+            //         case XmlNodeType.SignificantWhitespace:
+            //             Console.WriteLine("SignificantWhitespace : '{0}'", node.Value);
+            //             break;
+            //         case XmlNodeType.EndElement:
+            //             throw new Exception("XmlNodeType.EndElement");
+            //             break;
+            //         case XmlNodeType.EndEntity:
+            //             throw new Exception("XmlNodeType.Exception");
+            //             break;
+            //         case XmlNodeType.XmlDeclaration:
+            //             Console.WriteLine("XmlDeclaration : '{0}'", node.Value);
+            //             break;
+            //         default:
+            //             throw new ArgumentOutOfRangeException();
+            //     }
+            // }
+            Console.WriteLine(conformanceTest.Entities);
         }
 
         public XmlNode asNode(Object maybe)
