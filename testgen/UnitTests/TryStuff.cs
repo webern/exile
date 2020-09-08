@@ -42,7 +42,8 @@ namespace UnitTests
         {
             foreach (var conformanceTest in conformanceTests)
             {
-                if (conformanceTest.Type == "valid" && conformanceTest.Namespace != "no" && conformanceTest.Version != "1.1")
+                if (conformanceTest.Type == "valid" && conformanceTest.Namespace != "no" &&
+                    conformanceTest.Version != "1.1")
                 {
                     doOneThing(conformanceTest);
                 }
@@ -276,7 +277,27 @@ namespace UnitTests
             t.BasePath = basePath;
             t.Type = getAttributeValue(element, "TYPE");
             t.Sections = getAttributeValue(element, "SECTIONS");
-            t.Entities = getAttributeValue(element, "ENTITIES");
+            var entities = getAttributeValue(element, "ENTITIES");
+            switch (entities)
+            {
+                case "both":
+                    t.Entities = Entities.Both;
+                    break;
+                case "":
+                    t.Entities = Entities.Empty;
+                    break;
+                case "general":
+                    t.Entities = Entities.General;
+                    break;
+                case "none":
+                    t.Entities = Entities.None;
+                    break;
+                case "parameter":
+                    t.Entities = Entities.Parameter;
+                    break;
+                default:
+                    throw new Exception($"unknown entities value '{entities}'");
+            }
             t.Uri = getAttributeValue(element, "URI");
             t.Namespace = getAttributeValue(element, "NAMESPACE");
             t.Id = getAttributeValue(element, "ID");

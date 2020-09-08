@@ -3,7 +3,7 @@ using System.IO;
 
 namespace xmltests
 {
-    enum Entities
+    public enum Entities
     {
         Both,
         Empty,
@@ -41,7 +41,7 @@ namespace xmltests
         /// </summary>
         public String Sections { get; set; }
 
-        public String Entities { get; set; }
+        public Entities Entities { get; set; }
         public String Uri { get; set; }
         public String Type { get; set; }
         public String Namespace { get; set; }
