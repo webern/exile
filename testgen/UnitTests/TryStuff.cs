@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Xml;
 using System.Xml.Resolvers;
 using NUnit.Framework;
+using xmltests;
 
 namespace UnitTests
 {
@@ -41,7 +42,7 @@ namespace UnitTests
         {
             foreach (var conformanceTest in conformanceTests)
             {
-                if (conformanceTest.Type == "valid" && conformanceTest.Namespace != "no")
+                if (conformanceTest.Type == "valid" && conformanceTest.Namespace != "no" && conformanceTest.Version != "1.1")
                 {
                     doOneThing(conformanceTest);
                 }
@@ -196,17 +197,18 @@ namespace UnitTests
         public List<ConformanceTest> findTests(XmlNode root)
         {
             var tests = new List<ConformanceTest>();
-            findTestsRecursive((XmlElement) root, tests, "unknown", "");
+            findTestsRecursive((XmlElement) root, tests, new List<String>(), "");
             return tests;
         }
 
-        private void findTestsRecursive(XmlElement element, List<ConformanceTest> outTests, string currentSuite,
+        private void findTestsRecursive(XmlElement element, List<ConformanceTest> outTests, List<string> inProfiles,
             string basePath)
         {
+            var profiles = new List<string>(inProfiles);
             // a base case, we do not follow children
             if (element.Name == "TEST")
             {
-                var conformanceTest = parseTest(element, currentSuite, basePath);
+                var conformanceTest = parseTest(element, profiles, basePath, Paths.Instance.DataPaths);
                 outTests.Add(conformanceTest);
                 return;
             }
@@ -217,7 +219,7 @@ namespace UnitTests
                 {
                     if (a.Name == "PROFILE")
                     {
-                        currentSuite = a.Value;
+                        profiles.Add(a.Value);
                     }
                     else if (a.Name == "base")
                     {
@@ -252,7 +254,7 @@ namespace UnitTests
 
             foreach (var child in children(element))
             {
-                findTestsRecursive(child, outTests, currentSuite, basePath);
+                findTestsRecursive(child, outTests, profiles, basePath);
             }
         }
 
@@ -266,16 +268,91 @@ namespace UnitTests
             return "";
         }
 
-        private ConformanceTest parseTest(XmlElement element, string currentSuite, string basePath)
+        private ConformanceTest parseTest(XmlElement element, List<String> profiles, string basePath, DataPaths paths)
         {
             var t = new ConformanceTest();
-            t.Profile = currentSuite;
+            t.Profile = String.Join(", ", profiles);
             t.BasePath = basePath;
             t.Type = getAttributeValue(element, "TYPE");
             t.Sections = getAttributeValue(element, "SECTIONS");
             t.Entities = getAttributeValue(element, "ENTITIES");
             t.URI = getAttributeValue(element, "URI");
             t.Namespace = getAttributeValue(element, "NAMESPACE");
+            t.ID = getAttributeValue(element, "ID");
+            t.Recommendation = getAttributeValue(element, "RECOMMENDATION");
+            t.Version = getAttributeValue(element, "VERSION");
+
+            if (t.BasePath == "")
+            {
+                if (t.Profile == "Richard Tobin's XML 1.0 2nd edition errata test suite 21 Jul 2003")
+                {
+                    t.BasePath = "eduni/errata-2e/";
+                }
+                else if (t.Profile == "Richard Tobin's XML 1.1 test suite 13 Feb 2003")
+                {
+                    t.BasePath = "eduni/xml-1.1/";
+                }
+                else if (t.Profile == "Richard Tobin's XML Namespaces 1.0 test suite 14 Feb 2003")
+                {
+                    t.BasePath = "eduni/namespaces/1.0/";
+                }
+                else if (t.Profile == "Richard Tobin's XML Namespaces 1.1 test suite 14 Feb 2003")
+                {
+                    t.BasePath = "eduni/namespaces/1.1/";
+                }
+            }
+            else if (t.BasePath == "ibm/" && t.Version == "1.1")
+            {
+                if (t.Profile.Contains("IBM Invalid Conformance Tests for XML 1.1 CR October 15, 2002") ||
+                    t.Profile.Contains("IBM Not-WF Conformance Tests for XML 1.1 CR October 15, 2002") ||
+                    t.Profile.Contains("IBM Valid Conformance Tests for XML 1.1 CR October 15, 2002"))
+                {
+                    t.BasePath = "ibm/xml-1.1";
+                }
+            }
+
+            // TODO find the filepath to the test xml file within BasePath
+
+            // what follows is stupid. i don't know how to find the file from the given XML objects, so instead i
+            // search for the file by name.
+            var searchIn = Path.Combine(paths.XmlConfDir.FullName, t.BasePath);
+
+
+            var dir = new DirectoryInfo(searchIn);
+            if (!dir.Exists)
+            {
+                throw new DirectoryNotFoundException(dir.FullName);
+            }
+
+
+            string[] files = Directory.GetFiles(dir.FullName, t.URI, SearchOption.AllDirectories);
+            var filteredFiles = new List<String>();
+            foreach (var f in files)
+            {
+                var filterEduniOut = t.BasePath.StartsWith("eduni") && f.Contains($"out/{Path.GetFileName(t.URI)}");
+
+                if (f.EndsWith(t.URI) && !filterEduniOut)
+                {
+                    filteredFiles.Add(f);
+                }
+            }
+
+            if (filteredFiles.Count > 1)
+            {
+                throw new Exception($"more than one candidate file found for {t.URI}");
+            }
+            else if (filteredFiles.Count == 0)
+            {
+                throw new FileNotFoundException($"could not find {t.URI}");
+            }
+
+            var fileinfo = new FileInfo(files[0]);
+            if (!fileinfo.Exists)
+            {
+                throw new FileLoadException("Could not find file", files[0]);
+            }
+
+            t.XmlFile = fileinfo;
             return t;
         }
 
@@ -318,7 +395,7 @@ namespace UnitTests
             get => _basePath;
             set
             {
-                if(value.Length > 0 && value[value.Length - 1] != '/')
+                if (value.Length > 0 && value[value.Length - 1] != '/')
                 {
                     value += "/";
                 }
@@ -333,5 +410,9 @@ namespace UnitTests
         public String URI { get; set; }
         public String Type { get; set; }
         public String Namespace { get; set; }
+        public String Recommendation { get; set; }
+        public String Version { get; set; }
+
+        public FileInfo XmlFile { get; set; }
     }
 }
