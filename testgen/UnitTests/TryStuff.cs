@@ -77,7 +77,7 @@ namespace UnitTests
         private void doOneThing(ConformanceTest conformanceTest)
         {
             var path = Path.Combine(Paths.Instance.DataPaths.XmlConfDir.FullName,
-                conformanceTest.BasePath + conformanceTest.URI);
+                conformanceTest.BasePath + conformanceTest.Uri);
             var fileInfo = new FileInfo(path);
             if (!fileInfo.Exists)
             {
@@ -276,9 +276,9 @@ namespace UnitTests
             t.Type = getAttributeValue(element, "TYPE");
             t.Sections = getAttributeValue(element, "SECTIONS");
             t.Entities = getAttributeValue(element, "ENTITIES");
-            t.URI = getAttributeValue(element, "URI");
+            t.Uri = getAttributeValue(element, "URI");
             t.Namespace = getAttributeValue(element, "NAMESPACE");
-            t.ID = getAttributeValue(element, "ID");
+            t.Id = getAttributeValue(element, "ID");
             t.Recommendation = getAttributeValue(element, "RECOMMENDATION");
             t.Version = getAttributeValue(element, "VERSION");
 
@@ -325,13 +325,13 @@ namespace UnitTests
             }
 
 
-            string[] files = Directory.GetFiles(dir.FullName, t.URI, SearchOption.AllDirectories);
+            string[] files = Directory.GetFiles(dir.FullName, t.Uri, SearchOption.AllDirectories);
             var filteredFiles = new List<String>();
             foreach (var f in files)
             {
-                var filterEduniOut = t.BasePath.StartsWith("eduni") && f.Contains($"out/{Path.GetFileName(t.URI)}");
+                var filterEduniOut = t.BasePath.StartsWith("eduni") && f.Contains($"out/{Path.GetFileName(t.Uri)}");
 
-                if (f.EndsWith(t.URI) && !filterEduniOut)
+                if (f.EndsWith(t.Uri) && !filterEduniOut)
                 {
                     filteredFiles.Add(f);
                 }
@@ -339,11 +339,11 @@ namespace UnitTests
 
             if (filteredFiles.Count > 1)
             {
-                throw new Exception($"more than one candidate file found for {t.URI}");
+                throw new Exception($"more than one candidate file found for {t.Uri}");
             }
             else if (filteredFiles.Count == 0)
             {
-                throw new FileNotFoundException($"could not find {t.URI}");
+                throw new FileNotFoundException($"could not find {t.Uri}");
             }
 
             var fileinfo = new FileInfo(files[0]);
@@ -383,36 +383,5 @@ namespace UnitTests
 
             return attributes;
         }
-    }
-
-    public class ConformanceTest
-    {
-        private string _basePath;
-        public String Profile { get; set; }
-
-        public String BasePath
-        {
-            get => _basePath;
-            set
-            {
-                if (value.Length > 0 && value[value.Length - 1] != '/')
-                {
-                    value += "/";
-                }
-
-                _basePath = value;
-            }
-        }
-
-        public String ID { get; set; }
-        public String Sections { get; set; }
-        public String Entities { get; set; }
-        public String URI { get; set; }
-        public String Type { get; set; }
-        public String Namespace { get; set; }
-        public String Recommendation { get; set; }
-        public String Version { get; set; }
-
-        public FileInfo XmlFile { get; set; }
     }
 }

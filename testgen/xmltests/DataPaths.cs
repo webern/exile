@@ -51,6 +51,5 @@ namespace xmltests
             if (!SchemaTestDir.Exists)
                 throw new DirectoryNotFoundException($"No directory at {SchemaTestDir.FullName}");
         }
-
     }
 }
