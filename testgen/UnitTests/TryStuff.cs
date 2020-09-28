@@ -37,7 +37,9 @@ namespace UnitTests
                 if (conformanceTest.Type == "valid" && conformanceTest.Namespace != "no" &&
                     conformanceTest.Version != "1.1")
                 {
-                    ProcessTest(conformanceTest);
+                    var loadedTest = LoadTest(conformanceTest);
+                    var exileTestWriter = new ExileTestWriter("/some/dir", loadedTest);
+                    exileTestWriter.Write();
                 }
             }
         }
@@ -77,7 +79,7 @@ namespace UnitTests
         }
 
         // TODO - give this function a better name and document it.
-        private static void ProcessTest(ConformanceTest conformanceTest)
+        private static LoadedTest LoadTest(ConformanceTest conformanceTest)
         {
             var path = Path.Combine(Paths.Instance.DataPaths.XmlConfDir.FullName,
                 conformanceTest.BasePath + conformanceTest.Uri);
@@ -94,6 +96,7 @@ namespace UnitTests
             textReader.Namespaces = true;
             var doc = new XmlDocument();
             doc.Load(textReader);
+            return new LoadedTest(conformanceTest, doc);
             // TODO - do something interesting with the test
             // foreach (var docChild in doc.ChildNodes)
             // {
@@ -158,7 +161,7 @@ namespace UnitTests
             //             throw new ArgumentOutOfRangeException();
             //     }
             // }
-            Console.WriteLine(conformanceTest.Entities);
+            // Console.WriteLine(conformanceTest.Entities);
         }
 
         public XmlNode AsNode(Object maybe)
@@ -219,7 +222,7 @@ namespace UnitTests
 
             if (element.Name == "TESTCASES")
             {
-                foreach (var a in attributes(element))
+                foreach (var a in Attributes(element))
                 {
                     if (a.Name == "PROFILE")
                     {
@@ -236,7 +239,7 @@ namespace UnitTests
                 }
             }
 
-            foreach (var child in children(element))
+            foreach (var child in Children(element))
             {
                 FindTestsRecursive(child, outTests, profiles, basePath);
             }
@@ -244,7 +247,7 @@ namespace UnitTests
 
         private string GetAttributeValue(XmlElement element, string attributeName)
         {
-            foreach (var attribute in attributes(element).Where(attribute => attribute.Name == attributeName))
+            foreach (var attribute in Attributes(element).Where(attribute => attribute.Name == attributeName))
             {
                 return attribute.Value;
             }
@@ -288,6 +291,8 @@ namespace UnitTests
             t.Recommendation = GetAttributeValue(element, "RECOMMENDATION");
             t.Version = GetAttributeValue(element, "VERSION");
 
+            // it's not clear to me how to 'follow' the paths in these xml objects, the following base paths needed to
+            // be manually specified.
             if (t.BasePath == "")
             {
                 if (t.Profile == "Richard Tobin's XML 1.0 2nd edition errata test suite 21 Jul 2003")
@@ -322,15 +327,13 @@ namespace UnitTests
             // what follows is stupid. i don't know how to find the file from the given XML objects, so instead i
             // search for the file by name.
             var searchIn = Path.Combine(paths.XmlConfDir.FullName, t.BasePath);
-
-
+            
             var dir = new DirectoryInfo(searchIn);
             if (!dir.Exists)
             {
                 throw new DirectoryNotFoundException(dir.FullName);
             }
-
-
+            
             string[] files = Directory.GetFiles(dir.FullName, t.Uri, SearchOption.AllDirectories);
             var filteredFiles = new List<String>();
             foreach (var f in files)
@@ -362,7 +365,7 @@ namespace UnitTests
             return t;
         }
 
-        private List<XmlElement> children(XmlElement element)
+        private static List<XmlElement> Children(XmlElement element)
         {
             var children = new List<XmlElement>();
             foreach (var childNode in element.ChildNodes)
@@ -376,7 +379,7 @@ namespace UnitTests
             return children;
         }
 
-        private List<XmlAttribute> attributes(XmlElement element)
+        private static List<XmlAttribute> Attributes(XmlElement element)
         {
             var attributes = new List<XmlAttribute>();
             foreach (var thing in element.Attributes)
