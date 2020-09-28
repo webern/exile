@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml;
-using System.Xml.Resolvers;
 using NUnit.Framework;
 using xmltests;
 
@@ -17,56 +16,58 @@ namespace UnitTests
         {
             var file = Paths.Instance.DataPaths.XmlConfFile;
             var doc = new XmlDocument();
-
-            // var xmlReaderSettings = new XmlReaderSettings();
-            // xmlReaderSettings.DtdProcessing = DtdProcessing.Parse;
-            var textReader = new XmlTextReader(file.FullName);
-            textReader.EntityHandling = EntityHandling.ExpandEntities;
-            textReader.DtdProcessing = DtdProcessing.Parse;
-            textReader.XmlResolver = new XmlUrlResolver();
+            var textReader = new XmlTextReader(file.FullName)
+            {
+                EntityHandling = EntityHandling.ExpandEntities,
+                DtdProcessing = DtdProcessing.Parse,
+                XmlResolver = new XmlUrlResolver()
+            };
             doc.Load(textReader);
             Assert.AreEqual("#document", doc.Name);
             var root = doc.DocumentElement;
-            // printChildren(root);
-            var conformanceTests = findTests(root);
-            // foreach (var conformanceTest in conformanceTests)
-            // {
-            //     Console.WriteLine("{0} {1} {2} {3}", conformanceTest.Profile, conformanceTest.BasePath,
-            //         conformanceTest.Type, conformanceTest.ID);
-            // }
-
-            doMoreStuff(conformanceTests);
+            var conformanceTests = FindTests(root);
+            ProcessTests(conformanceTests);
         }
 
-        private void doMoreStuff(List<ConformanceTest> conformanceTests)
+        private void ProcessTests(List<ConformanceTest> conformanceTests)
         {
             foreach (var conformanceTest in conformanceTests)
             {
+                // TODO - Switch to Xerces because XML 1.1 is not supported in .net. 
                 if (conformanceTest.Type == "valid" && conformanceTest.Namespace != "no" &&
                     conformanceTest.Version != "1.1")
                 {
-                    doOneThing(conformanceTest);
+                    ProcessTest(conformanceTest);
                 }
             }
         }
 
-        private static void DisableUndeclaredEntityCheck(XmlTextReader obj)
+        /// <summary>
+        /// Digs into the private interface of XmlTextReader, using reflection, and disables entity checking. This
+        /// allows us to read DTD entity references with following them and throwing if they cannot be resolved.
+        /// </summary>
+        /// <param name="xmlTextReader">The XmlTextReader that will be altered to disable entity checking.</param>
+        /// <exception cref="Exception">If reflection fails, an exception will be thrown.</exception>
+        private static void DisableUndeclaredEntityCheck(XmlTextReader xmlTextReader)
         {
-            var binderFlagsA = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-            var binderFlagsB = BindingFlags.Public | BindingFlags.NonPublic;
-            var xmlTextReaderType = obj.GetType();
+            var binderFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+            var xmlTextReaderType = xmlTextReader.GetType();
             var implPropertyName = "Impl";
             PropertyInfo implPropertyInfo = xmlTextReaderType.GetProperty(
-                implPropertyName, binderFlagsA);
+                implPropertyName, binderFlags);
             if (implPropertyInfo == null)
             {
                 throw new Exception("Could not find property Impl");
             }
 
-            var impl = implPropertyInfo.GetValue(obj);
+            var impl = implPropertyInfo.GetValue(xmlTextReader);
+            if (impl == null)
+            {
+                throw new Exception("implPropertyInfo.GetValue(obj) returned null");
+            }
             var implType = impl.GetType();
             PropertyInfo propertyInfo = implType.GetProperty(
-                "DisableUndeclaredEntityCheck", binderFlagsA);
+                "DisableUndeclaredEntityCheck", binderFlags);
             if (propertyInfo == null)
             {
                 throw new Exception("Could not find property DisableUndeclaredEntityCheck");
@@ -75,7 +76,8 @@ namespace UnitTests
             propertyInfo.SetValue(impl, true);
         }
 
-        private void doOneThing(ConformanceTest conformanceTest)
+        // TODO - give this function a better name and document it.
+        private static void ProcessTest(ConformanceTest conformanceTest)
         {
             var path = Path.Combine(Paths.Instance.DataPaths.XmlConfDir.FullName,
                 conformanceTest.BasePath + conformanceTest.Uri);
@@ -89,11 +91,10 @@ namespace UnitTests
             DisableUndeclaredEntityCheck(textReader);
             textReader.EntityHandling = EntityHandling.ExpandCharEntities;
             textReader.DtdProcessing = DtdProcessing.Parse;
-            // textReader.XmlResolver = null;
             textReader.Namespaces = true;
             var doc = new XmlDocument();
-            // Console.WriteLine(fileInfo.FullName);
             doc.Load(textReader);
+            // TODO - do something interesting with the test
             // foreach (var docChild in doc.ChildNodes)
             // {
             //     var node = asNode(docChild);
@@ -160,7 +161,7 @@ namespace UnitTests
             Console.WriteLine(conformanceTest.Entities);
         }
 
-        public XmlNode asNode(Object maybe)
+        public XmlNode AsNode(Object maybe)
         {
             var node = (XmlNode) maybe;
             if (node == null)
@@ -171,7 +172,7 @@ namespace UnitTests
             return node;
         }
 
-        public void printChildren(XmlNode node)
+        public void PrintChildren(XmlNode node)
         {
             if (!(node is XmlElement))
             {
@@ -181,36 +182,37 @@ namespace UnitTests
             var element = (XmlElement) node;
             foreach (var child in element.ChildNodes)
             {
-                if (child is XmlElement)
+                switch (child)
                 {
-                    System.Console.WriteLine(((XmlElement) child).Name);
-                    printChildren((XmlNode) child);
-                }
-                else if (child is XmlEntityReference)
-                {
-                    var reference = (XmlEntityReference) child;
-                    var n = reference.Name;
-                    System.Console.WriteLine("Reference: {0}", n);
-                    // reference.
+                    case XmlElement xmlElement:
+                        Console.WriteLine(xmlElement.Name);
+                        PrintChildren(xmlElement);
+                        break;
+                    case XmlEntityReference entityReference:
+                    {
+                        var n = entityReference.Name;
+                        Console.WriteLine("Reference: {0}", n);
+                        break;
+                    }
                 }
             }
         }
 
-        public List<ConformanceTest> findTests(XmlNode root)
+        public List<ConformanceTest> FindTests(XmlNode root)
         {
             var tests = new List<ConformanceTest>();
-            findTestsRecursive((XmlElement) root, tests, new List<String>(), "");
+            FindTestsRecursive((XmlElement) root, tests, new List<String>(), "");
             return tests;
         }
 
-        private void findTestsRecursive(XmlElement element, List<ConformanceTest> outTests, List<string> inProfiles,
+        private void FindTestsRecursive(XmlElement element, List<ConformanceTest> outTests, List<string> inProfiles,
             string basePath)
         {
             var profiles = new List<string>(inProfiles);
             // a base case, we do not follow children
             if (element.Name == "TEST")
             {
-                var conformanceTest = parseTest(element, profiles, basePath, Paths.Instance.DataPaths);
+                var conformanceTest = ParseTest(element, profiles, basePath, Paths.Instance.DataPaths);
                 outTests.Add(conformanceTest);
                 return;
             }
@@ -232,35 +234,15 @@ namespace UnitTests
                         basePath = a.Value;
                     }
                 }
-
-                // foreach (var attribute in element.Attributes)
-                // {
-                //     if (attribute is XmlAttribute)
-                //     {
-                //         var a = (XmlAttribute) attribute;
-                //         if (a.Name == "PROFILE")
-                //         {
-                //             currentSuite = a.Value;
-                //         }
-                //         else if (a.Name == "base")
-                //         {
-                //             basePath = a.Value;
-                //         }
-                //         else if (a.Name == "xml:base")
-                //         {
-                //             basePath = a.Value;
-                //         }
-                //     }
-                // }
             }
 
             foreach (var child in children(element))
             {
-                findTestsRecursive(child, outTests, profiles, basePath);
+                FindTestsRecursive(child, outTests, profiles, basePath);
             }
         }
 
-        private string getAttributeValue(XmlElement element, string attributeName)
+        private string GetAttributeValue(XmlElement element, string attributeName)
         {
             foreach (var attribute in attributes(element).Where(attribute => attribute.Name == attributeName))
             {
@@ -270,14 +252,16 @@ namespace UnitTests
             return "";
         }
 
-        private ConformanceTest parseTest(XmlElement element, List<String> profiles, string basePath, DataPaths paths)
+        private ConformanceTest ParseTest(XmlElement element, List<String> profiles, string basePath, DataPaths paths)
         {
-            var t = new ConformanceTest();
-            t.Profile = String.Join(", ", profiles);
-            t.BasePath = basePath;
-            t.Type = getAttributeValue(element, "TYPE");
-            t.Sections = getAttributeValue(element, "SECTIONS");
-            var entities = getAttributeValue(element, "ENTITIES");
+            var t = new ConformanceTest
+            {
+                Profile = String.Join(", ", profiles),
+                BasePath = basePath,
+                Type = GetAttributeValue(element, "TYPE"),
+                Sections = GetAttributeValue(element, "SECTIONS")
+            };
+            var entities = GetAttributeValue(element, "ENTITIES");
             switch (entities)
             {
                 case "both":
@@ -298,11 +282,11 @@ namespace UnitTests
                 default:
                     throw new Exception($"unknown entities value '{entities}'");
             }
-            t.Uri = getAttributeValue(element, "URI");
-            t.Namespace = getAttributeValue(element, "NAMESPACE");
-            t.Id = getAttributeValue(element, "ID");
-            t.Recommendation = getAttributeValue(element, "RECOMMENDATION");
-            t.Version = getAttributeValue(element, "VERSION");
+            t.Uri = GetAttributeValue(element, "URI");
+            t.Namespace = GetAttributeValue(element, "NAMESPACE");
+            t.Id = GetAttributeValue(element, "ID");
+            t.Recommendation = GetAttributeValue(element, "RECOMMENDATION");
+            t.Version = GetAttributeValue(element, "VERSION");
 
             if (t.BasePath == "")
             {
@@ -353,7 +337,7 @@ namespace UnitTests
             {
                 var filterEduniOut = t.BasePath.StartsWith("eduni") && f.Contains($"out/{Path.GetFileName(t.Uri)}");
 
-                if (f.EndsWith(t.Uri) && !filterEduniOut)
+                if (f.EndsWith(t.Uri!) && !filterEduniOut)
                 {
                     filteredFiles.Add(f);
                 }
@@ -383,9 +367,9 @@ namespace UnitTests
             var children = new List<XmlElement>();
             foreach (var childNode in element.ChildNodes)
             {
-                if (childNode is XmlElement)
+                if (childNode is XmlElement node)
                 {
-                    children.Add((XmlElement) childNode);
+                    children.Add(node);
                 }
             }
 
@@ -397,9 +381,9 @@ namespace UnitTests
             var attributes = new List<XmlAttribute>();
             foreach (var thing in element.Attributes)
             {
-                if (thing is XmlAttribute)
+                if (thing is XmlAttribute attribute)
                 {
-                    attributes.Add((XmlAttribute) thing);
+                    attributes.Add(attribute);
                 }
             }
 
