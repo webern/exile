@@ -3,6 +3,7 @@ package com.matthewjamesbriggs.xmltestgen;
 import org.apache.xerces.parsers.DOMParser;
 import org.apache.xerces.xni.parser.XMLInputSource;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
@@ -14,9 +15,13 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+
+// http://www.java2s.com/Tutorials/Java/XML/How_to_get_root_element_from_Java_DOM_parser.htm
 
 public class App {
-    private static Object SAXException;
+    //    private static Object SAXException;
 
     public static void main(String[] args) {
 
@@ -37,33 +42,55 @@ public class App {
         String path = String.format("%s/xmlconf/xmlconf.xml", dir);
         String uri = String.format("file://%s", path);
 
-        String pathToTestData = String.format("file://%s/xmlconf/xmlconf.xml", p);
+        //        String pathToTestData = String.format("file://%s/xmlconf/xmlconf.xml", p);
         try {
-            DocumentBuilderFactory factory =
-                    DocumentBuilderFactory.newInstance();
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = factory.newDocumentBuilder();
             Document document = builder.parse(uri);
-            NodeList childNodes = document.getChildNodes();
-            if (childNodes.getLength() != 1) {
-                System.err.println("No root node.");
-                System.exit(1);
-            } else {
-                Node node = childNodes.item(0);
-                System.out.println(node.getNodeName());
-            }
+            doThings(document);
+        } catch (TestGenException e) {
+            // unable to do things
+            System.out.println(e.getMessage());
+            System.exit(250);
         } catch (FactoryConfigurationError e) {
             // unable to get a document builder factory
             System.out.println(e.getMessage());
+            System.exit(249);
         } catch (ParserConfigurationException e) {
             // parser was unable to be configured
             System.out.println(e.getMessage());
+            System.exit(248);
         } catch (SAXException e) {
             // parsing error
             System.out.println(e.getMessage());
+            System.exit(247);
         } catch (IOException e) {
             // i/o error
             System.out.println(e.getMessage());
+            System.exit(246);
         }
         System.out.println("Hello World!");
+    }
+
+    private static void doThings(Document document) throws TestGenException {
+        Element root = document.getDocumentElement();
+        System.out.println(root.getTagName());
+        List<Element> children = getChildren(root);
+        for (Element child : children) {
+            System.out.println(child.getTagName());
+        }
+    }
+
+    private static List<Element> getChildren(Element parent) throws TestGenException {
+        NodeList nodeList = parent.getChildNodes();
+        List<Element> children = new ArrayList<>();
+        for (int i = 0; i < nodeList.getLength(); ++i) {
+            Node node = nodeList.item(i);
+            if (node instanceof Element) {
+                Element element = ((Element) node);
+                children.add(element);
+            }
+        }
+        return children;
     }
 }

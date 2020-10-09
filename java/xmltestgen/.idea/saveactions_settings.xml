@@ -25,7 +25,6 @@
         <option value="explicitTypeCanBeDiamond" />
         <option value="suppressAnnotation" />
         <option value="unnecessarySemicolon" />
-        <option value="singleStatementInBlock" />
         <option value="accessCanBeTightened" />
       </set>
     </option>
