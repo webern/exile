@@ -24,52 +24,21 @@ public class App {
     //    private static Object SAXException;
 
     public static void main(String[] args) {
-
         if (args.length != 2) {
             System.err.println("--testdata path is required.");
             System.out.println("Example usage: ./testgen --testdata /path/to/dir");
             System.exit(255);
         }
-        String p = args[1];
-        File f = new File(System.getProperty("user.dir"), p);
-        String dir = "";
+        String relativePathToTestDataDir = args[1];
         try {
-            dir = f.getCanonicalPath();
-        } catch (IOException e) {
-            System.out.println(String.format("Unable to find directory %s from parent %s", p, System.getProperty("user.dir")));
-            System.exit(254);
-        }
-        String path = String.format("%s/xmlconf/xmlconf.xml", dir);
-        String uri = String.format("file://%s", path);
-
-        //        String pathToTestData = String.format("file://%s/xmlconf/xmlconf.xml", p);
-        try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            Document document = builder.parse(uri);
+            Document document = loadXconf(relativePathToTestDataDir);
             doThings(document);
         } catch (TestGenException e) {
-            // unable to do things
             System.out.println(e.getMessage());
-            System.exit(250);
-        } catch (FactoryConfigurationError e) {
-            // unable to get a document builder factory
-            System.out.println(e.getMessage());
-            System.exit(249);
-        } catch (ParserConfigurationException e) {
-            // parser was unable to be configured
-            System.out.println(e.getMessage());
-            System.exit(248);
-        } catch (SAXException e) {
-            // parsing error
-            System.out.println(e.getMessage());
-            System.exit(247);
-        } catch (IOException e) {
-            // i/o error
-            System.out.println(e.getMessage());
-            System.exit(246);
+            e.printStackTrace();
+            System.exit(1);
         }
-        System.out.println("Hello World!");
+        System.exit(0);
     }
 
     private static void doThings(Document document) throws TestGenException {
@@ -77,8 +46,32 @@ public class App {
         System.out.println(root.getTagName());
         List<Element> children = getChildren(root);
         for (Element child : children) {
-            System.out.println(child.getTagName());
+            if (!child.getTagName().equals("TESTCASES")) {
+                throw new TestGenException("Expected TESTCASES, got " + child.getTagName());
+            }
+            parseTestCases(child);
         }
+    }
+
+    private static void parseTestCases(Element element) throws TestGenException {
+        String profile = element.getAttribute("PROFILE");
+        System.out.println("TESTCASES - " + profile);
+        List<Element> children = getChildren(element);
+        for (Element child : children) {
+            if (child.getTagName().equals("TESTCASES")) {
+                parseTestCases(child);
+            } else if (child.getTagName().equals("TEST")) {
+                parseTest(child);
+            } else {
+                throw new TestGenException("Expected TESTCASES or TEST, got " + child.getTagName());
+            }
+        }
+    }
+
+    private static void parseTest(Element element) throws TestGenException {
+        String id = element.getAttribute("ID");
+        System.out.println(element.getTagName() + " - " + id);
+
     }
 
     private static List<Element> getChildren(Element parent) throws TestGenException {
@@ -92,5 +85,35 @@ public class App {
             }
         }
         return children;
+    }
+
+    private static Document loadXconf(String relativePathToTestDataDir) throws TestGenException {
+        File f = new File(System.getProperty("user.dir"), relativePathToTestDataDir);
+        String dir = "";
+        try {
+            dir = f.getCanonicalPath();
+        } catch (IOException e) {
+            throw new TestGenException(String.format("Unable to find directory %s from parent %s", relativePathToTestDataDir, System.getProperty("user.dir")), e);
+        }
+
+        String path = String.format("%s/xmlconf/xmlconf.xml", dir);
+        String uri = String.format("file://%s", path);
+
+        try {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            Document document = builder.parse(uri);
+            return document;
+        } catch (FactoryConfigurationError e) {
+            throw new TestGenException("unable to get a document builder factory", e);
+        } catch (ParserConfigurationException e) {
+            throw new TestGenException("parser was unable to be configured", e);
+        } catch (SAXException e) {
+            throw new TestGenException("parsing error", e);
+        } catch (IOException e) {
+            throw new TestGenException("i/o error", e);
+        } catch (Throwable t) {
+            throw new TestGenException("weird error", t);
+        }
     }
 }
