@@ -14,7 +14,10 @@ import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -69,9 +72,37 @@ public class App {
     }
 
     private static void parseTest(Element element) throws TestGenException {
-        String id = element.getAttribute("ID");
-        System.out.println(element.getTagName() + " - " + id);
-
+        try {
+            String id = element.getAttribute("ID");
+            URI baseUri = new URI(element.getBaseURI());
+            Path basePath = Paths.get(baseUri);
+            // a) in most cases, an `xml:base` is not specified, in which case baseUri is the current XML filepath.
+            // b) in other cases, an `xml:base` attribute is given, providing the parent of the current XML filepath.
+            // for case a, we need to get the parent before proceeding so that we can join with the test file paths.
+            File basePathFileObject = new File(basePath.toString());
+            if (basePathFileObject.exists() && basePathFileObject.isFile()) {
+                basePath = basePath.getParent();
+            } else if (!basePathFileObject.exists()) {
+                throw new TestGenException("we're fucked because this does not exist: " + basePathFileObject.getPath());
+            }
+            String uriAttribute = element.getAttribute("URI");
+            if (uriAttribute == null) {
+                throw new TestGenException("URI attribute not found for test " + id);
+            }
+            Path relativeFilepath = Paths.get(uriAttribute);
+            Path filepath = basePath.resolve(relativeFilepath);
+            File f = new File(filepath.toString());
+            if (!f.exists()) {
+                throw new TestGenException("File does not exist for " + id + ", " + filepath.toString());
+            } else if (f.isDirectory()) {
+                throw new TestGenException("Directory instead of file for " + id + ", " + filepath.toString());
+            }
+            // System.out.println(element.getTagName() + " - " + id + " - " + filepath);
+            ConfTest confTest = new ConfTest(element, filepath, new ConfTestCases());
+            System.out.println(confTest.toString());
+        } catch (URISyntaxException e) {
+            throw new TestGenException("malformed uri " + element.getBaseURI(), e);
+        }
     }
 
     private static List<Element> getChildren(Element parent) throws TestGenException {
