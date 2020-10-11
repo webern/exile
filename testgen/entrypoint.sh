@@ -15,7 +15,7 @@ a="--w3c-xml /data/xmlconf/xmlconf.xml"
 b="--w3c-schema /data/xmlschema/suite.xml"
 c="--custom-xml /fake"
 d="--custom-schema /fake"
-e="--xml-outdir /data"
+e="--xml-outdir /exile_tests"
 f="--schema-outdir /fake"
 
 # use maven to execute the program

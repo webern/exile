@@ -9,11 +9,11 @@ public enum ConfType {
             case "error":
                 return Error;
             case "invalid":
-                return Error;
+                return Invalid;
             case "not-wf":
-                return Error;
+                return NotWellFormed;
             case "valid":
-                return Error;
+                return Valid;
             default:
                 throw new TestGenException("unknown conf type " + s);
         }

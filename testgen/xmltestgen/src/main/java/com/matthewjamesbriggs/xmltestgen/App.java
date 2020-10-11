@@ -1,5 +1,6 @@
 package com.matthewjamesbriggs.xmltestgen;
 
+import org.apache.commons.io.FileUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -11,6 +12,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -25,17 +27,18 @@ public class App {
     private static final int SUCCESS = 0;
     private static final int FAILURE = 1;
     private static final int BAD_USAGE = 2;
+    private static final int NUM_TESTS = 5;
 
     public static void main(String[] args) {
-        ProgramOptions opt = null;
+        ProgramOptions opts = null;
         try {
-            opt = ProgramOptions.parse(args);
+            opts = ProgramOptions.parse(args);
         } catch (TestGenException e) {
             System.exit(BAD_USAGE);
         }
         try {
-            Document document = loadXconf(opt.getW3cXml().getPath());
-            doThings(document);
+            Document document = loadXconf(opts.getW3cXml().getPath());
+            doThings(document, opts);
         } catch (TestGenException e) {
             System.out.println(e.getMessage());
             e.printStackTrace();
@@ -44,34 +47,140 @@ public class App {
         System.exit(SUCCESS);
     }
 
-    private static void doThings(Document document) throws TestGenException {
+    private static void doThings(Document document, ProgramOptions opts) throws TestGenException {
+        List<ConfTest> confTests = parseConfTests(document);
+
+        // delete and recreate the directory named "generated"
+        File dir = new File(opts.getXmlOutdir(), "generated");
+        createOrReplaceDir(dir);
+
+        // create the mod.rs file
+        File modRs = new File(dir, "mod.rs");
+        createFile(modRs);
+        FileOutputStream modRsStream = openFile(modRs);
+        write(modRsStream, "// Hello %s", "World");
+
+        // create NUM_TESTS test files
+        int testCount = 0;
+        for (int i = 0; i < confTests.size() && testCount < NUM_TESTS; ++i) {
+            ConfTest t = confTests.get(i);
+            if (t.getConfType() != ConfType.Valid) {
+                continue;
+            }
+            ++testCount;
+        }
+
+        closeStream(modRs, modRsStream);
+
+        // run rust fmt
+    }
+
+    private static void closeStream(File file, FileOutputStream stream) throws TestGenException {
+        try {
+            stream.close();
+        } catch (IOException e) {
+            throw new TestGenException("unable to close file: " + file.getPath(), e);
+        }
+    }
+
+    private static void createFile(File file) throws TestGenException {
+        if (file.exists()) {
+            if (file.isFile()) {
+                FileUtils.deleteQuietly(file);
+            } else if (file.isDirectory()) {
+                try {
+                    FileUtils.deleteDirectory(file);
+                } catch (IOException e) {
+                    throw new TestGenException("a directory could not be deleted: " + file, e);
+                }
+            } else {
+                throw new TestGenException("something exists but i don't know what: " + file);
+            }
+        }
+        try {
+            if (!file.createNewFile()) {
+                throw new TestGenException("file already exists: " + file.getPath());
+            }
+        } catch (IOException e) {
+            throw new TestGenException("unable to create file: " + file.getPath(), e);
+        }
+    }
+
+    private static FileOutputStream openFile(File file) throws TestGenException {
+        try {
+            return FileUtils.openOutputStream(file);
+        } catch (IOException e) {
+            throw new TestGenException("could not open for writing: " + file.getPath(), e);
+        }
+    }
+
+    private static void createOrReplaceDir(File directory) throws TestGenException {
+        try {
+            directory = new File(directory.getCanonicalPath());
+        } catch (IOException e) {
+            throw new TestGenException("unable to canonicalize: " + directory.getPath());
+        }
+        if (directory.exists() && directory.isDirectory()) {
+            try {
+                FileUtils.deleteDirectory(directory);
+            } catch (IOException e) {
+                throw new TestGenException("unable to delete dir: " + directory.getPath());
+            }
+        } else if (directory.exists() && directory.isFile()) {
+            FileUtils.deleteQuietly(directory);
+        }
+        try {
+            FileUtils.forceMkdir(directory);
+        } catch (IOException e) {
+            throw new TestGenException("unable to create directory: " + directory.getPath());
+        }
+    }
+
+    private static void write(FileOutputStream os, String format, Object... args) throws TestGenException {
+        String line = String.format(format, args);
+        try {
+            os.write(line.getBytes());
+            os.flush();
+        } catch (IOException e) {
+            throw new TestGenException("unable to write to stream: " + os.toString(), e);
+        }
+    }
+
+    private static void writeln(FileOutputStream os, String format, Object... args) throws TestGenException {
+        write(os, format + "\n", args);
+    }
+
+    private static List<ConfTest> parseConfTests(Document document) throws TestGenException {
         Element root = document.getDocumentElement();
-        System.out.println(root.getTagName());
+        //        System.out.println(root.getTagName());
         List<Element> children = getChildren(root);
+        List<ConfTest> confTests = new ArrayList<>();
         for (Element child : children) {
             if (!child.getTagName().equals("TESTCASES")) {
                 throw new TestGenException("Expected TESTCASES, got " + child.getTagName());
             }
-            parseTestCases(child);
+            parseTestCases(child, confTests);
         }
+
+        return confTests;
     }
 
-    private static void parseTestCases(Element element) throws TestGenException {
+    private static void parseTestCases(Element element, List<ConfTest> outConfTests) throws TestGenException {
         String profile = element.getAttribute("PROFILE");
-        System.out.println("TESTCASES - " + profile);
+        //        System.out.println("TESTCASES - " + profile);
         List<Element> children = getChildren(element);
         for (Element child : children) {
             if (child.getTagName().equals("TESTCASES")) {
-                parseTestCases(child);
+                parseTestCases(child, outConfTests);
             } else if (child.getTagName().equals("TEST")) {
-                parseTest(child);
+                outConfTests.add(parseTest(child));
             } else {
                 throw new TestGenException("Expected TESTCASES or TEST, got " + child.getTagName());
             }
         }
     }
 
-    private static void parseTest(Element element) throws TestGenException {
+    private static ConfTest parseTest(Element element) throws TestGenException {
         try {
             String id = element.getAttribute("ID");
             URI baseUri = new URI(element.getBaseURI());
@@ -99,7 +208,7 @@ public class App {
             }
             // System.out.println(element.getTagName() + " - " + id + " - " + filepath);
             ConfTest confTest = new ConfTest(element, filepath, new ConfTestCases());
-            System.out.println(confTest.toString());
+            return confTest;
         } catch (URISyntaxException e) {
             throw new TestGenException("malformed uri " + element.getBaseURI(), e);
         }
