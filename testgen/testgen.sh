@@ -7,8 +7,7 @@ DATA=$(pwd)
 cd "${DIR}"
 
 docker build -f "${DIR}/Dockerfile" --tag testgenimage "${DIR}"
-docker run -it \
+docker run \
     -v "${DIR}/xmltestgen:/xmltestgen" \
     -v "${DATA}:/data" \
-    testgenimage \
-    /bin/bash
+    testgenimage
