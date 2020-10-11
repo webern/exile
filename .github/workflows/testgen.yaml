@@ -7,7 +7,7 @@ on:
     branches: [ "*" ]
 
 jobs:
-  build:
+  check-testgen:
 
     runs-on: ubuntu-latest
 
@@ -15,3 +15,5 @@ jobs:
       - uses: actions/checkout@v2
       - run: make testdata
       - run: test -f data/xmlconf/xmlconf.xml
+      - run: test -f data/xmlschema/suite.xml
+      - run: git diff --quiet
