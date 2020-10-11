@@ -16,5 +16,6 @@ jobs:
       - run: make testdata
       - run: test -f data/xmlconf/xmlconf.xml
       - run: test -f data/xmlschema/suite.xml
+      - run: touch poo
       - run: git diff --quiet && [[ -z $(git status -s) ]]
         name: assert git is clean
