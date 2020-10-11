@@ -1,7 +1,5 @@
 package com.matthewjamesbriggs.xmltestgen;
 
-import org.apache.xerces.parsers.DOMParser;
-import org.apache.xerces.xni.parser.XMLInputSource;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -24,24 +22,26 @@ import java.util.List;
 // http://www.java2s.com/Tutorials/Java/XML/How_to_get_root_element_from_Java_DOM_parser.htm
 
 public class App {
-    //    private static Object SAXException;
+    private static final int SUCCESS = 0;
+    private static final int FAILURE = 1;
+    private static final int BAD_USAGE = 2;
 
     public static void main(String[] args) {
-        if (args.length != 2) {
-            System.err.println("--testdata path is required.");
-            System.out.println("Example usage: ./testgen --testdata /path/to/dir");
-            System.exit(255);
-        }
-        String relativePathToTestDataDir = args[1];
+        ProgramOptions opt = null;
         try {
-            Document document = loadXconf(relativePathToTestDataDir);
+            opt = ProgramOptions.parse(args);
+        } catch (TestGenException e) {
+            System.exit(BAD_USAGE);
+        }
+        try {
+            Document document = loadXconf(opt.getW3cXml().getPath());
             doThings(document);
         } catch (TestGenException e) {
             System.out.println(e.getMessage());
             e.printStackTrace();
-            System.exit(1);
+            System.exit(FAILURE);
         }
-        System.exit(0);
+        System.exit(SUCCESS);
     }
 
     private static void doThings(Document document) throws TestGenException {
@@ -118,25 +118,19 @@ public class App {
         return children;
     }
 
-    private static Document loadXconf(String relativePathToTestDataDir) throws TestGenException {
-        File xmlConfDir = new File(relativePathToTestDataDir, "xmlconf");
-        if (!xmlConfDir.exists()) {
-            throw new TestGenException("this path does not exist: " + xmlConfDir.getPath());
-        } else if (!xmlConfDir.isDirectory()) {
-            throw new TestGenException("this path is not a directory: " + xmlConfDir.getPath());
-        }
-        File xmlConfFile = new File(xmlConfDir, "xmlconf.xml");
+    private static Document loadXconf(String w3cXmlFilepath) throws TestGenException {
+        File xmlConfFile = new File(w3cXmlFilepath);
         if (!xmlConfFile.exists()) {
-            throw new TestGenException("this path does not exist: " + xmlConfDir.getPath());
+            throw new TestGenException("this path does not exist: " + w3cXmlFilepath);
         } else if (!xmlConfFile.isFile()) {
-            throw new TestGenException("this path is not a file: " + xmlConfDir.getPath());
+            throw new TestGenException("this path is not a file: " + w3cXmlFilepath);
         }
 
         String dir = "";
         try {
             dir = xmlConfFile.getCanonicalPath();
         } catch (IOException e) {
-            throw new TestGenException(String.format("Unable to find directory %s from parent %s", relativePathToTestDataDir, System.getProperty("user.dir")), e);
+            throw new TestGenException(String.format("Unable to find canonical form of %s", w3cXmlFilepath));
         }
 
         String uri = String.format("file://%s", dir);

@@ -15,7 +15,7 @@ data/w3cdata:
 testdata: data/w3cdata
 
 testgen: testdata
-	./testgen/testgen.sh
+	${PWD}/testgen/testgen.sh
 
 clean:
 	rm -rf data && \
