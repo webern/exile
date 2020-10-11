@@ -1,4 +1,4 @@
-.PHONY: clean
+.PHONY: clean testgen
 
 ## data/w3cdata: creates the data directory by pulling testdata from dockerhub
 data/w3cdata:
@@ -13,6 +13,8 @@ data/w3cdata:
 
 ## testdata: pulls testdata from dockerhub into the gitignored data directory
 testdata: data/w3cdata
+
+testgen: testdata
 
 clean:
 	rm -rf data && \
