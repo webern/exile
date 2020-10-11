@@ -14,3 +14,4 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: make testdata
+      - run: test -f data/xmlconf/xmlconf.xml
