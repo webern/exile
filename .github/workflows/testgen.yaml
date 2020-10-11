@@ -1,4 +1,4 @@
-name: exile ci
+name: testgen
 
 on:
   push:
