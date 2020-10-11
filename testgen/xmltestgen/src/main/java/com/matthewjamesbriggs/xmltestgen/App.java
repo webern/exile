@@ -119,16 +119,27 @@ public class App {
     }
 
     private static Document loadXconf(String relativePathToTestDataDir) throws TestGenException {
-        File f = new File(System.getProperty("user.dir"), relativePathToTestDataDir);
+        File xmlConfDir = new File(relativePathToTestDataDir, "xmlconf");
+        if (!xmlConfDir.exists()) {
+            throw new TestGenException("this path does not exist: " + xmlConfDir.getPath());
+        } else if (!xmlConfDir.isDirectory()) {
+            throw new TestGenException("this path is not a directory: " + xmlConfDir.getPath());
+        }
+        File xmlConfFile = new File(xmlConfDir, "xmlconf.xml");
+        if (!xmlConfFile.exists()) {
+            throw new TestGenException("this path does not exist: " + xmlConfDir.getPath());
+        } else if (!xmlConfFile.isFile()) {
+            throw new TestGenException("this path is not a file: " + xmlConfDir.getPath());
+        }
+
         String dir = "";
         try {
-            dir = f.getCanonicalPath();
+            dir = xmlConfFile.getCanonicalPath();
         } catch (IOException e) {
             throw new TestGenException(String.format("Unable to find directory %s from parent %s", relativePathToTestDataDir, System.getProperty("user.dir")), e);
         }
 
-        String path = String.format("%s/xmlconf/xmlconf.xml", dir);
-        String uri = String.format("file://%s", path);
+        String uri = String.format("file://%s", dir);
 
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();

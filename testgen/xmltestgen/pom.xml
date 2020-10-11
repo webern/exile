@@ -6,10 +6,6 @@
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <!--        <compilerArgs>-->
-        <!--            <arg>&#45;&#45;add-modules</arg>-->
-        <!--            <arg>java.xml.bind</arg>-->
-        <!--        </compilerArgs>-->
     </properties>
     <groupId>com.matthewjamesbriggs</groupId>
     <artifactId>xmltestgen</artifactId>
@@ -26,6 +22,4 @@
             <version>2.11.0</version>
         </dependency>
     </dependencies>
-
-
 </project>
