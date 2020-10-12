@@ -58,7 +58,13 @@ public class App {
         File modRs = new File(dir, "mod.rs");
         createFile(modRs);
         FileOutputStream modRsStream = openFile(modRs);
-        write(modRsStream, "// Hello %s", "World");
+        writeln(modRsStream, "// generated file, do not edit");
+        writeln(modRsStream, "");
+
+        // TODO - remove this debug
+        //        for (ConfTest confTest : confTests) {
+        //            System.out.println(confTest.getSnakeCase());
+        //        }
 
         // create NUM_TESTS test files
         int testCount = 0;
@@ -68,6 +74,16 @@ public class App {
                 continue;
             }
             ++testCount;
+            String id = t.getSnakeCase();
+            File testFile = new File(dir, id + ".rs");
+            createFile(testFile);
+            FileOutputStream os = openFile(testFile);
+            writeln(modRsStream, "mod %s;", id);
+            writeln(os, "// generated file, do not edit");
+            writeln(os, "");
+            writeln(os, "#[test]");
+            writeln(os, "fn %s() {}", id);
+            closeStream(testFile, os);
         }
 
         closeStream(modRs, modRsStream);
@@ -152,7 +168,6 @@ public class App {
 
     private static List<ConfTest> parseConfTests(Document document) throws TestGenException {
         Element root = document.getDocumentElement();
-        //        System.out.println(root.getTagName());
         List<Element> children = getChildren(root);
         List<ConfTest> confTests = new ArrayList<>();
         for (Element child : children) {
@@ -167,7 +182,6 @@ public class App {
 
     private static void parseTestCases(Element element, List<ConfTest> outConfTests) throws TestGenException {
         String profile = element.getAttribute("PROFILE");
-        //        System.out.println("TESTCASES - " + profile);
         List<Element> children = getChildren(element);
         for (Element child : children) {
             if (child.getTagName().equals("TESTCASES")) {
@@ -206,7 +220,6 @@ public class App {
             } else if (f.isDirectory()) {
                 throw new TestGenException("Directory instead of file for " + id + ", " + filepath.toString());
             }
-            // System.out.println(element.getTagName() + " - " + id + " - " + filepath);
             ConfTest confTest = new ConfTest(element, filepath, new ConfTestCases());
             return confTest;
         } catch (URISyntaxException e) {
