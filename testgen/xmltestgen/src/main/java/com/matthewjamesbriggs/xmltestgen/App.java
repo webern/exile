@@ -11,9 +11,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
@@ -89,6 +87,38 @@ public class App {
         closeStream(modRs, modRsStream);
 
         // run rust fmt
+        //        boolean isWindows = System.getProperty("os.name").toLowerCase().startsWith("windows");
+        Process process;
+        try {
+            process = Runtime.getRuntime().exec("cargo fmt", null, dir);
+        } catch (IOException e) {
+            throw new TestGenException("cargo fmt did not work", e);
+        }
+        int exitCode = 0;
+        try {
+            exitCode = process.waitFor();
+        } catch (InterruptedException e) {
+            throw new TestGenException("process interrupted", e);
+        }
+        if (exitCode != 0) {
+            String processOutput = getProcessResults(process);
+            throw new TestGenException(String.format("cargo fmt failed with exit: %d\n%s", exitCode, processOutput));
+        }
+    }
+
+    private static String getProcessResults(Process process) throws TestGenException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+        StringBuilder everything = new StringBuilder();
+        String line = "";
+        try {
+            while ((line = reader.readLine()) != null) {
+                everything.append(line);
+                everything.append('\n');
+            }
+        } catch (IOException e) {
+            throw new TestGenException("proccess results could not be read", e);
+        }
+        return everything.toString();
     }
 
     private static void closeStream(File file, FileOutputStream stream) throws TestGenException {
