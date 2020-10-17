@@ -18,7 +18,7 @@ public class X {
      * @return The child elements.
      * @throws TestGenException if something bad happens.
      */
-    public static List<Element> getChildren(Element parent) throws TestGenException {
+    static List<Element> getChildren(Element parent) throws TestGenException {
         NodeList nodeList = parent.getChildNodes();
         List<Element> children = new ArrayList<>();
         for (int i = 0; i < nodeList.getLength(); ++i) {
@@ -29,5 +29,25 @@ public class X {
             }
         }
         return children;
+    }
+
+    public static String getRequiredAttribute(Element element, String key) throws TestGenException {
+        String value = element.getAttribute(key);
+        if (value == null) {
+            throw new TestGenException("no attribute named " + key);
+        } else if (value.isEmpty()) {
+            throw new TestGenException("empty value for attribute " + key);
+        }
+        return value;
+    }
+
+    public static String getOptionalAttribute(Element element, String key) {
+        String value = element.getAttribute(key);
+        if (value == null) {
+            return "";
+        } else if (value.isEmpty()) {
+            return "";
+        }
+        return value;
     }
 }

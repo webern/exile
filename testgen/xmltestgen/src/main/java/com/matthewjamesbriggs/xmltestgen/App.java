@@ -46,7 +46,6 @@ public class App {
     }
 
     private static void doThings(List<ConfTest> confTests, ProgramOptions opts) throws TestGenException {
-
         // delete and recreate the directory named "generated"
         File dir = new File(opts.getXmlOutdir(), "generated");
         dir = F.canonicalize(dir);
@@ -116,27 +115,13 @@ public class App {
         File manifestPath = new File(exileCrate, "Cargo.toml");
         manifestPath = F.canonicalize(manifestPath);
         F.checkFile(manifestPath);
-        Process process;
-        try {
-            process = Runtime.getRuntime().exec("cargo fmt --manifest-path " + manifestPath.getPath(), null, rustRoot);
-        } catch (IOException e) {
-            throw new TestGenException("cargo fmt did not work", e);
-        }
-        int exitCode;
-        try {
-            exitCode = process.waitFor();
-        } catch (InterruptedException e) {
-            throw new TestGenException("process interrupted", e);
-        }
-        if (exitCode != 0) {
-            String processOutput = getStdErr(process);
-            throw new TestGenException(String.format("cargo fmt failed with exit: %d\n%s", exitCode, processOutput));
-        } else {
-            String processOutput = getStdOut(process);
-            System.out.println(processOutput);
+        CmdResult result = Cmd.exec("cargo fmt", rustRoot);
+        if (result.getExit() != 0) {
+            throw new TestGenException(String.format("cargo fmt failed with exit: %d\n%s",
+                    result.getExit(),
+                    result.getStderr()));
         }
     }
-
 
     private static void copyXmlTestFile(ConfTest t, File copyToDir) throws TestGenException {
         F.checkDir(copyToDir);
@@ -144,37 +129,6 @@ public class App {
         F.checkFile(original);
         File copied = new File(copyToDir, t.getFileRename());
         F.copy(original, copied);
-    }
-
-
-    private static String getStdErr(Process process) throws TestGenException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-        StringBuilder everything = new StringBuilder();
-        String line = "";
-        try {
-            while ((line = reader.readLine()) != null) {
-                everything.append(line);
-                everything.append('\n');
-            }
-        } catch (IOException e) {
-            throw new TestGenException("proccess results could not be read", e);
-        }
-        return everything.toString();
-    }
-
-    private static String getStdOut(Process process) throws TestGenException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-        StringBuilder everything = new StringBuilder();
-        String line = "";
-        try {
-            while ((line = reader.readLine()) != null) {
-                everything.append(line);
-                everything.append('\n');
-            }
-        } catch (IOException e) {
-            throw new TestGenException("proccess results could not be read", e);
-        }
-        return everything.toString();
     }
 
     private static void closeStream(File file, FileOutputStream stream) throws TestGenException {
@@ -208,6 +162,4 @@ public class App {
     private static void writeln(FileOutputStream os, String format, Object... args) throws TestGenException {
         write(os, format + "\n", args);
     }
-
-
 }

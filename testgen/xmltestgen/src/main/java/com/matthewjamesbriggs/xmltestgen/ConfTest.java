@@ -33,19 +33,18 @@ class ConfTest {
     ConfTest(Element element, Path path, ConfTestCases confTestCases) throws TestGenException {
         this.path = path;
         this.confTestCases = confTestCases;
-        id = XmlHelpers.getRequiredAttribute(element, "ID");
-        String entitiesStr =
-                XmlHelpers.getOptionalAttribute(element, "ENTITIES"); // both, general, none, parameter, <absent>
+        id = X.getRequiredAttribute(element, "ID");
+        String entitiesStr = X.getOptionalAttribute(element, "ENTITIES"); // both, general, none, parameter, <absent>
         entities = Entities.fromString(entitiesStr);
-        namespace = XmlHelpers.getOptionalAttribute(element, "NAMESPACE").equals("yes");
-        output = XmlHelpers.getOptionalAttribute(element, "OUTPUT");
+        namespace = X.getOptionalAttribute(element, "NAMESPACE").equals("yes");
+        output = X.getOptionalAttribute(element, "OUTPUT");
         String recommendationStr =
-                XmlHelpers.getOptionalAttribute(element, "RECOMMENDATION"); // NS1.0, XML1.0, XML1.0-errata2e, XML1.1
+                X.getOptionalAttribute(element, "RECOMMENDATION"); // NS1.0, XML1.0, XML1.0-errata2e, XML1.1
         recommendation = Recommendation.fromString(recommendationStr);
-        sections = XmlHelpers.getOptionalAttribute(element, "SECTIONS");
-        String typeStr = XmlHelpers.getOptionalAttribute(element, "TYPE"); // error, invalid, not-wf, valid
+        sections = X.getOptionalAttribute(element, "SECTIONS");
+        String typeStr = X.getOptionalAttribute(element, "TYPE"); // error, invalid, not-wf, valid
         confType = ConfType.fromString(typeStr);
-        isVersion1_1 = XmlHelpers.getOptionalAttribute(element, "VERSION").equals("1.1");
+        isVersion1_1 = X.getOptionalAttribute(element, "VERSION").equals("1.1");
         prefix = confTestCases.getPrefix();
     }
 
