@@ -50,14 +50,14 @@ public class App {
 
         // delete and recreate the directory named "generated"
         File dir = new File(opts.getXmlOutdir(), "generated");
-        F.createOrReplaceDir(dir);
         dir = F.canonicalize(dir);
+        F.createOrReplaceDir(dir);
         File inputData = new File(opts.getXmlOutdir(), "input_data");
-        F.createOrReplaceDir(inputData);
         inputData = F.canonicalize(inputData);
+        F.createOrReplaceDir(inputData);
         File rustRoot = new File(opts.getRustRoot().getPath());
+        rustRoot = F.canonicalize(rustRoot);
         F.checkDir(rustRoot);
-        F.canonicalize(rustRoot);
 
         // create the mod.rs file
         File modRs = new File(dir, "mod.rs");
@@ -212,7 +212,7 @@ public class App {
 
     private static List<ConfTest> parseConfTests(Document document) throws TestGenException {
         Element root = document.getDocumentElement();
-        List<Element> children = getChildren(root);
+        List<Element> children = X.getChildren(root);
         List<ConfTest> confTests = new ArrayList<>();
         for (Element child : children) {
             if (!child.getTagName().equals("TESTCASES")) {
@@ -265,7 +265,7 @@ public class App {
             throw new TestGenException("unknown profile: " + profile);
         }
         ConfTestCases confTestCases = new ConfTestCases(prefix, profile);
-        List<Element> children = getChildren(element);
+        List<Element> children = X.getChildren(element);
         for (Element child : children) {
             if (child.getTagName().equals("TESTCASES")) {
                 parseTestCases(child, outConfTests);
@@ -310,51 +310,5 @@ public class App {
         }
     }
 
-    private static List<Element> getChildren(Element parent) throws TestGenException {
-        NodeList nodeList = parent.getChildNodes();
-        List<Element> children = new ArrayList<>();
-        for (int i = 0; i < nodeList.getLength(); ++i) {
-            Node node = nodeList.item(i);
-            if (node instanceof Element) {
-                Element element = ((Element) node);
-                children.add(element);
-            }
-        }
-        return children;
-    }
 
-    private static Document loadXconf(String w3cXmlFilepath) throws TestGenException {
-        File xmlConfFile = new File(w3cXmlFilepath);
-        if (!xmlConfFile.exists()) {
-            throw new TestGenException("this path does not exist: " + w3cXmlFilepath);
-        } else if (!xmlConfFile.isFile()) {
-            throw new TestGenException("this path is not a file: " + w3cXmlFilepath);
-        }
-
-        String dir = "";
-        try {
-            dir = xmlConfFile.getCanonicalPath();
-        } catch (IOException e) {
-            throw new TestGenException(String.format("Unable to find canonical form of %s", w3cXmlFilepath));
-        }
-
-        String uri = String.format("file://%s", dir);
-
-        try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            Document document = builder.parse(uri);
-            return document;
-        } catch (FactoryConfigurationError e) {
-            throw new TestGenException("unable to get a document builder factory", e);
-        } catch (ParserConfigurationException e) {
-            throw new TestGenException("parser was unable to be configured", e);
-        } catch (SAXException e) {
-            throw new TestGenException("parsing error", e);
-        } catch (IOException e) {
-            throw new TestGenException("i/o error", e);
-        } catch (Throwable t) {
-            throw new TestGenException("weird error", t);
-        }
-    }
 }
