@@ -50,18 +50,18 @@ public class App {
 
         // delete and recreate the directory named "generated"
         File dir = new File(opts.getXmlOutdir(), "generated");
-        createOrReplaceDir(dir);
-        dir = canonicalize(dir);
+        F.createOrReplaceDir(dir);
+        dir = F.canonicalize(dir);
         File inputData = new File(opts.getXmlOutdir(), "input_data");
-        createOrReplaceDir(inputData);
-        inputData = canonicalize(inputData);
+        F.createOrReplaceDir(inputData);
+        inputData = F.canonicalize(inputData);
         File rustRoot = new File(opts.getRustRoot().getPath());
-        checkDir(rustRoot);
-        canonicalize(rustRoot);
+        F.checkDir(rustRoot);
+        F.canonicalize(rustRoot);
 
         // create the mod.rs file
         File modRs = new File(dir, "mod.rs");
-        modRs = canonicalize(modRs);
+        modRs = F.canonicalize(modRs);
         createFile(modRs);
         FileOutputStream modRsStream = openFile(modRs);
         writeln(modRsStream, "// generated file, do not edit");
@@ -113,10 +113,10 @@ public class App {
         closeStream(modRs, modRsStream);
 
         File exileCrate = new File(rustRoot, "exile");
-        exileCrate = canonicalize(exileCrate);
+        exileCrate = F.canonicalize(exileCrate);
         File manifestPath = new File(exileCrate, "Cargo.toml");
-        manifestPath = canonicalize(manifestPath);
-        checkFile(manifestPath);
+        manifestPath = F.canonicalize(manifestPath);
+        F.checkFile(manifestPath);
         Process process;
         try {
             process = Runtime.getRuntime().exec("cargo fmt --manifest-path " + manifestPath.getPath(), null, rustRoot);
@@ -138,18 +138,11 @@ public class App {
         }
     }
 
-    private static File canonicalize(File path) throws TestGenException {
-        try {
-            return new File(path.getCanonicalFile().getPath());
-        } catch (IOException e) {
-            throw new TestGenException("unable to cannonicalize path, " + path.getPath() + ": " + e.getMessage());
-        }
-    }
 
     private static void copyXmlTestFile(ConfTest t, File copyToDir) throws TestGenException {
-        checkDir(copyToDir);
+        F.checkDir(copyToDir);
         File original = new File(t.getPath().toString());
-        checkFile(original);
+        F.checkFile(original);
         File copied = new File(copyToDir, t.getFileRename());
         try {
             FileUtils.copyFile(original, copied);
@@ -158,23 +151,6 @@ public class App {
         }
     }
 
-    private static void checkFile(File file) throws TestGenException {
-        if (!file.exists()) {
-            throw new TestGenException("file does not exist: " + file.getPath());
-        }
-        if (!file.isFile()) {
-            throw new TestGenException("not a file: " + file.getPath());
-        }
-    }
-
-    private static void checkDir(File dir) throws TestGenException {
-        if (!dir.exists()) {
-            throw new TestGenException("dir does not exist: " + dir.getPath());
-        }
-        if (!dir.isDirectory()) {
-            throw new TestGenException("not a dir: " + dir.getPath());
-        }
-    }
 
     private static String getStdErr(Process process) throws TestGenException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
@@ -245,27 +221,6 @@ public class App {
         }
     }
 
-    private static void createOrReplaceDir(File directory) throws TestGenException {
-        try {
-            directory = new File(directory.getCanonicalPath());
-        } catch (IOException e) {
-            throw new TestGenException("unable to canonicalize: " + directory.getPath());
-        }
-        if (directory.exists() && directory.isDirectory()) {
-            try {
-                FileUtils.deleteDirectory(directory);
-            } catch (IOException e) {
-                throw new TestGenException("unable to delete dir: " + directory.getPath());
-            }
-        } else if (directory.exists() && directory.isFile()) {
-            FileUtils.deleteQuietly(directory);
-        }
-        try {
-            FileUtils.forceMkdir(directory);
-        } catch (IOException e) {
-            throw new TestGenException("unable to create directory: " + directory.getPath());
-        }
-    }
 
     private static void write(FileOutputStream os, String format, Object... args) throws TestGenException {
         String line = String.format(format, args);
