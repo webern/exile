@@ -3,12 +3,13 @@ package com.matthewjamesbriggs.xmltestgen;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 /**
  * File and path related helper functions.
  */
-public class F {
+class F {
 
     /**
      * If the directory exists, deletes it and replaces it. Otherwise just creates it.
@@ -103,7 +104,7 @@ public class F {
      * @param file The file to create.
      * @throws TestGenException if the file could not be created.
      */
-    public static void createFile(File file) throws TestGenException {
+    static void createFile(File file) throws TestGenException {
         if (file.exists()) {
             if (file.isFile()) {
                 FileUtils.deleteQuietly(file);
@@ -124,5 +125,37 @@ public class F {
         } catch (IOException e) {
             throw new TestGenException("unable to create file: " + file.getPath(), e);
         }
+    }
+
+    public static void closeStream(File file, FileOutputStream stream) throws TestGenException {
+        try {
+            stream.close();
+        } catch (IOException e) {
+            throw new TestGenException("unable to close file: " + file.getPath(), e);
+        }
+    }
+
+
+    public static FileOutputStream openFile(File file) throws TestGenException {
+        try {
+            return FileUtils.openOutputStream(file);
+        } catch (IOException e) {
+            throw new TestGenException("could not open for writing: " + file.getPath(), e);
+        }
+    }
+
+
+    private static void write(FileOutputStream os, String format, Object... args) throws TestGenException {
+        String line = String.format(format, args);
+        try {
+            os.write(line.getBytes());
+            os.flush();
+        } catch (IOException e) {
+            throw new TestGenException("unable to write to stream: " + os.toString(), e);
+        }
+    }
+
+    public static void writeln(FileOutputStream os, String format, Object... args) throws TestGenException {
+        write(os, format + "\n", args);
     }
 }

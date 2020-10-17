@@ -49,9 +49,9 @@ public class App {
         File modRs = new File(dir, "mod.rs");
         modRs = F.canonicalize(modRs);
         F.createFile(modRs);
-        FileOutputStream modRsStream = openFile(modRs);
-        writeln(modRsStream, "// generated file, do not edit");
-        writeln(modRsStream, "");
+        FileOutputStream modRsStream = F.openFile(modRs);
+        F.writeln(modRsStream, "// generated file, do not edit");
+        F.writeln(modRsStream, "");
 
         // create test files
         int testCount = 0;
@@ -64,39 +64,39 @@ public class App {
             String id = t.getSnakeCase();
             File testFile = new File(dir, id + ".rs");
             F.createFile(testFile);
-            FileOutputStream os = openFile(testFile);
-            writeln(modRsStream, "mod %s;", id);
-            writeln(os, "// generated file, do not edit");
+            FileOutputStream os = F.openFile(testFile);
+            F.writeln(modRsStream, "mod %s;", id);
+            F.writeln(os, "// generated file, do not edit");
 
-            writeln(os, "use std::path::PathBuf;");
-            writeln(os, "const MANIFEST_DIR: &str = env!(\"CARGO_MANIFEST_DIR\");");
-            writeln(os, "const INPUT_DATA: &str = \"input_data\";");
-            writeln(os, "const FILENAME: &str = \"%s\";", t.getFileRename());
+            F.writeln(os, "use std::path::PathBuf;");
+            F.writeln(os, "const MANIFEST_DIR: &str = env!(\"CARGO_MANIFEST_DIR\");");
+            F.writeln(os, "const INPUT_DATA: &str = \"input_data\";");
+            F.writeln(os, "const FILENAME: &str = \"%s\";", t.getFileRename());
 
-            writeln(os, "");
-            writeln(os, "fn path() -> PathBuf {");
-            writeln(os, "    let p = PathBuf::from(MANIFEST_DIR)");
-            writeln(os, "        .join(\"tests\")");
-            writeln(os, "        .join(INPUT_DATA)");
-            writeln(os, "        .join(FILENAME);");
-            writeln(os, "    p.canonicalize()");
-            writeln(os, "        .expect(format!(\"bad path: {}\", p.display()).as_str())");
-            writeln(os, "}");
+            F.writeln(os, "");
+            F.writeln(os, "fn path() -> PathBuf {");
+            F.writeln(os, "    let p = PathBuf::from(MANIFEST_DIR)");
+            F.writeln(os, "        .join(\"tests\")");
+            F.writeln(os, "        .join(INPUT_DATA)");
+            F.writeln(os, "        .join(FILENAME);");
+            F.writeln(os, "    p.canonicalize()");
+            F.writeln(os, "        .expect(format!(\"bad path: {}\", p.display()).as_str())");
+            F.writeln(os, "}");
 
-            writeln(os, "");
-            writeln(os, "#[test]");
-            writeln(os, "fn %s() {", id);
-            writeln(os, "    let path = path();");
-            writeln(os, "    let _doc = exile::load(&path).unwrap();");
-            writeln(os, "}");
+            F.writeln(os, "");
+            F.writeln(os, "#[test]");
+            F.writeln(os, "fn %s() {", id);
+            F.writeln(os, "    let path = path();");
+            F.writeln(os, "    let _doc = exile::load(&path).unwrap();");
+            F.writeln(os, "}");
 
 
-            closeStream(testFile, os);
+            F.closeStream(testFile, os);
 
             copyXmlTestFile(t, inputData);
         }
 
-        closeStream(modRs, modRsStream);
+        F.closeStream(modRs, modRsStream);
 
         File exileCrate = new File(rustRoot, "exile");
         exileCrate = F.canonicalize(exileCrate);
@@ -112,37 +112,5 @@ public class App {
         F.checkFile(original);
         File copied = new File(copyToDir, t.getFileRename());
         F.copy(original, copied);
-    }
-
-    private static void closeStream(File file, FileOutputStream stream) throws TestGenException {
-        try {
-            stream.close();
-        } catch (IOException e) {
-            throw new TestGenException("unable to close file: " + file.getPath(), e);
-        }
-    }
-
-
-    private static FileOutputStream openFile(File file) throws TestGenException {
-        try {
-            return FileUtils.openOutputStream(file);
-        } catch (IOException e) {
-            throw new TestGenException("could not open for writing: " + file.getPath(), e);
-        }
-    }
-
-
-    private static void write(FileOutputStream os, String format, Object... args) throws TestGenException {
-        String line = String.format(format, args);
-        try {
-            os.write(line.getBytes());
-            os.flush();
-        } catch (IOException e) {
-            throw new TestGenException("unable to write to stream: " + os.toString(), e);
-        }
-    }
-
-    private static void writeln(FileOutputStream os, String format, Object... args) throws TestGenException {
-        write(os, format + "\n", args);
     }
 }
