@@ -4,17 +4,17 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 data_dir="${script_dir}/../data"
 cd "${data_dir}"
 data_dir=$(pwd)
-exile_tests="${data_dir}/../exile/tests"
-cd "${exile_tests}"
-exile_tests=$(pwd)
+workspace="${data_dir}/.."
+cd "${workspace}"
+workspace=$(pwd)
 
 echo "script_dir  = ${script_dir}"
 echo "data_dir    = ${data_dir}"
-echo "exile_tests = ${exile_tests}"
+echo "workspace   = ${workspace}"
 
 docker build -f "${script_dir}/Dockerfile" --tag testgenimage "${script_dir}"
 docker run \
     -v "${script_dir}/xmltestgen:/xmltestgen" \
     -v "${data_dir}:/data" \
-    -v "${exile_tests}:/exile_tests" \
+    -v "${workspace}:/workspace" \
     testgenimage

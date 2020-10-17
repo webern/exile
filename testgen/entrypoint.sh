@@ -15,10 +15,11 @@ a="--w3c-xml /data/xmlconf/xmlconf.xml"
 b="--w3c-schema /data/xmlschema/suite.xml"
 c="--custom-xml /fake"
 d="--custom-schema /fake"
-e="--xml-outdir /exile_tests"
+e="--xml-outdir /workspace/exile/tests"
 f="--schema-outdir /fake"
+g="--rust-root /workspace"
 
 # use maven to execute the program
 mvn exec:java \
   -Dexec.mainClass="com.matthewjamesbriggs.xmltestgen.App" \
-  -Dexec.args="${a} ${b} ${c} ${d} ${e} ${f}"
+  -Dexec.args="${a} ${b} ${c} ${d} ${e} ${f} ${g}"

@@ -51,20 +51,21 @@ public class App {
         // delete and recreate the directory named "generated"
         File dir = new File(opts.getXmlOutdir(), "generated");
         createOrReplaceDir(dir);
+        dir = canonicalize(dir);
         File inputData = new File(opts.getXmlOutdir(), "input_data");
         createOrReplaceDir(inputData);
+        inputData = canonicalize(inputData);
+        File rustRoot = new File(opts.getRustRoot().getPath());
+        checkDir(rustRoot);
+        canonicalize(rustRoot);
 
         // create the mod.rs file
         File modRs = new File(dir, "mod.rs");
+        modRs = canonicalize(modRs);
         createFile(modRs);
         FileOutputStream modRsStream = openFile(modRs);
         writeln(modRsStream, "// generated file, do not edit");
         writeln(modRsStream, "");
-
-        // TODO - remove this debug
-        //        for (ConfTest confTest : confTests) {
-        //            System.out.println(confTest.getSnakeCase());
-        //        }
 
         // create test files
         int testCount = 0;
@@ -111,13 +112,14 @@ public class App {
 
         closeStream(modRs, modRsStream);
 
-        File manifestPath = new File(opts.getRustRoot(), "Cargo.toml");
-        if (!manifestPath.exists() || !manifestPath.isFile()) {
-            throw new TestGenException("Cargo manifest could not be found at: " + manifestPath.getPath());
-        }
+        File exileCrate = new File(rustRoot, "exile");
+        exileCrate = canonicalize(exileCrate);
+        File manifestPath = new File(exileCrate, "Cargo.toml");
+        manifestPath = canonicalize(manifestPath);
+        checkFile(manifestPath);
         Process process;
         try {
-            process = Runtime.getRuntime().exec("cargo fmt --manifest-path " + manifestPath.getPath(), null, dir);
+            process = Runtime.getRuntime().exec("cargo fmt --manifest-path " + manifestPath.getPath(), null, rustRoot);
         } catch (IOException e) {
             throw new TestGenException("cargo fmt did not work", e);
         }
@@ -128,8 +130,19 @@ public class App {
             throw new TestGenException("process interrupted", e);
         }
         if (exitCode != 0) {
-            String processOutput = getProcessResults(process);
+            String processOutput = getStdErr(process);
             throw new TestGenException(String.format("cargo fmt failed with exit: %d\n%s", exitCode, processOutput));
+        } else {
+            String processOutput = getStdOut(process);
+            System.out.println(processOutput);
+        }
+    }
+
+    private static File canonicalize(File path) throws TestGenException {
+        try {
+            return new File(path.getCanonicalFile().getPath());
+        } catch (IOException e) {
+            throw new TestGenException("unable to cannonicalize path, " + path.getPath() + ": " + e.getMessage());
         }
     }
 
@@ -163,8 +176,23 @@ public class App {
         }
     }
 
-    private static String getProcessResults(Process process) throws TestGenException {
+    private static String getStdErr(Process process) throws TestGenException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+        StringBuilder everything = new StringBuilder();
+        String line = "";
+        try {
+            while ((line = reader.readLine()) != null) {
+                everything.append(line);
+                everything.append('\n');
+            }
+        } catch (IOException e) {
+            throw new TestGenException("proccess results could not be read", e);
+        }
+        return everything.toString();
+    }
+
+    private static String getStdOut(Process process) throws TestGenException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
         StringBuilder everything = new StringBuilder();
         String line = "";
         try {
