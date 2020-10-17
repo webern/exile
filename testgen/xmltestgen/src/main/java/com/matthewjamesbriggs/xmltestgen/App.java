@@ -80,9 +80,57 @@ public class App {
             FileOutputStream os = openFile(testFile);
             writeln(modRsStream, "mod %s;", id);
             writeln(os, "// generated file, do not edit");
+
+            writeln(os, "use std::path::PathBuf;");
+            writeln(os, "const MANIFEST_DIR: &str = env!(\"CARGO_MANIFEST_DIR\");");
+            writeln(os, "const INPUT_DATA: &str = \"input_data\";");
+            writeln(os, "const FILENAME: &str = \"%s\";", t.getFileRename());
+            writeln(os, "fn path() -> PathBuf {");
+            writeln(os, "    let p = PathBuf::from(MANIFEST_DIR)");
+            writeln(os, "        .join(\"tests\")");
+            writeln(os, "        .join(INPUT_DATA)");
+            writeln(os, "        .join(FILENAME);");
+            writeln(os, "    p.canonicalize()");
+            writeln(os, "        .expect(format!(\"bad path: {}\", p.display()).as_str())");
+            writeln(os, "}");
+
+
             writeln(os, "");
             writeln(os, "#[test]");
-            writeln(os, "fn %s() {}", id);
+            writeln(os, "fn %s() {", id);
+            writeln(os, "");
+            writeln(os, "");
+            writeln(os, "");
+            writeln(os, "");
+            writeln(os, "");
+            writeln(os, "");
+            writeln(os, "");
+            writeln(os, "");
+
+            /*
+
+            // generated file, do not edit
+
+
+
+
+
+
+
+
+
+
+}
+
+#[test]
+fn valid_sa_001() {
+    let path = path();
+    let _doc = exile::load(&path).unwrap();
+    assert_eq!(_doc.root().name, "doc");
+}
+             */
+
+
             closeStream(testFile, os);
 
             copyXmlTestFile(t, inputData);
