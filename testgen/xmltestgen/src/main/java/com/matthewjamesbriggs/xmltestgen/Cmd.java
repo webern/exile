@@ -3,6 +3,14 @@ package com.matthewjamesbriggs.xmltestgen;
 import java.io.*;
 
 class Cmd {
+    /**
+     * Execute a command at the shell.
+     *
+     * @param cmd        The shell command to run, e.g. "echo hello".
+     * @param contextDir The directory to be in when running the command.
+     * @return The result of the command.
+     * @throws TestGenException if the command cannot be executed.
+     */
     private static CmdResult exec(String cmd, File contextDir) throws TestGenException {
         Process process;
         try {
@@ -21,6 +29,12 @@ class Cmd {
         return new CmdResult(stdout, stderr, exitCode);
     }
 
+    /**
+     * Run <code>cargo fmt</code> in the specified directory.
+     *
+     * @param directoryToFmt The directory to be in when running <code>cargo fmt</code>
+     * @throws TestGenException if <code>cargo fmt</code> cannot be executed, or exits non-zero.
+     */
     static void fmt(File directoryToFmt) throws TestGenException {
         CmdResult result = Cmd.exec("cargo fmt", directoryToFmt);
         if (result.getExit() != 0) {
