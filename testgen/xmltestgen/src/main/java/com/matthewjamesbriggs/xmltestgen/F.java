@@ -75,11 +75,29 @@ public class F {
      * @return The cannonicalized file path.
      * @throws TestGenException If the cannonicalization failes.
      */
-    public static File canonicalize(File path) throws TestGenException {
+    static File canonicalize(File path) throws TestGenException {
         try {
             return new File(path.getCanonicalFile().getPath());
         } catch (IOException e) {
             throw new TestGenException("unable to cannonicalize path, " + path.getPath() + ": " + e.getMessage());
+        }
+    }
+
+    /**
+     * Copies a file from 'original' to 'destination'.
+     *
+     * @param original    The filepath to the file to be copied.
+     * @param destination The filepath to copy the original file to.
+     * @throws TestGenException If the operation fails.
+     */
+    public static void copy(File original, File destination) throws TestGenException {
+        try {
+            FileUtils.copyFile(original, destination);
+        } catch (IOException e) {
+            throw new TestGenException("unable to copy file from: " +
+                    original.getPath() +
+                    ", to: " +
+                    destination.getPath());
         }
     }
 }

@@ -123,7 +123,7 @@ public class App {
         } catch (IOException e) {
             throw new TestGenException("cargo fmt did not work", e);
         }
-        int exitCode = 0;
+        int exitCode;
         try {
             exitCode = process.waitFor();
         } catch (InterruptedException e) {
@@ -144,11 +144,7 @@ public class App {
         File original = new File(t.getPath().toString());
         F.checkFile(original);
         File copied = new File(copyToDir, t.getFileRename());
-        try {
-            FileUtils.copyFile(original, copied);
-        } catch (IOException e) {
-            throw new TestGenException("unable to copy file from: " + original.getPath() + ", to: " + copied.getPath());
-        }
+        F.copy(original, copied);
     }
 
 
