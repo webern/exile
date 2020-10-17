@@ -3,7 +3,7 @@ package com.matthewjamesbriggs.xmltestgen;
 import java.io.*;
 
 class Cmd {
-    static CmdResult exec(String cmd, File contextDir) throws TestGenException {
+    private static CmdResult exec(String cmd, File contextDir) throws TestGenException {
         Process process;
         try {
             process = Runtime.getRuntime().exec(cmd, null, contextDir);
@@ -21,6 +21,14 @@ class Cmd {
         return new CmdResult(stdout, stderr, exitCode);
     }
 
+    static void fmt(File directoryToFmt) throws TestGenException {
+        CmdResult result = Cmd.exec("cargo fmt", directoryToFmt);
+        if (result.getExit() != 0) {
+            throw new TestGenException(String.format("cargo fmt failed with exit: %d\n%s",
+                    result.getExit(),
+                    result.getStderr()));
+        }
+    }
 
     private static String getStdErr(Process process) throws TestGenException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));

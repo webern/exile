@@ -115,12 +115,7 @@ public class App {
         File manifestPath = new File(exileCrate, "Cargo.toml");
         manifestPath = F.canonicalize(manifestPath);
         F.checkFile(manifestPath);
-        CmdResult result = Cmd.exec("cargo fmt", rustRoot);
-        if (result.getExit() != 0) {
-            throw new TestGenException(String.format("cargo fmt failed with exit: %d\n%s",
-                    result.getExit(),
-                    result.getStderr()));
-        }
+        Cmd.fmt(rustRoot);
     }
 
     private static void copyXmlTestFile(ConfTest t, File copyToDir) throws TestGenException {
