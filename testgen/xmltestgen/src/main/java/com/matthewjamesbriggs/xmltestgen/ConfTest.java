@@ -27,6 +27,8 @@ class ConfTest {
     private final ConfType confType;
     @Getter
     private final boolean isVersion1_1;
+    @Getter
+    private final String prefix;
 
     ConfTest(Element element, Path path, ConfTestCases confTestCases) throws TestGenException {
         this.path = path;
@@ -44,6 +46,7 @@ class ConfTest {
         String typeStr = XmlHelpers.getOptionalAttribute(element, "TYPE"); // error, invalid, not-wf, valid
         confType = ConfType.fromString(typeStr);
         isVersion1_1 = XmlHelpers.getOptionalAttribute(element, "VERSION").equals("1.1");
+        prefix = confTestCases.getPrefix();
     }
 
     private static boolean isLetter(char c) {
@@ -85,7 +88,7 @@ class ConfTest {
      *
      * @return The ID in snake case.
      */
-    public String getSnakeCase() {
+    String getSnakeCase() {
         String s = getId();
         StringBuilder result = new StringBuilder(s.length() + 4);
         boolean wasUnderscore = false;
@@ -108,5 +111,9 @@ class ConfTest {
             }
         }
         return result.toString();
+    }
+
+    String getFileRename() {
+        return getPrefix() + getSnakeCase() + ".xml";
     }
 }

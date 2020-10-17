@@ -51,6 +51,8 @@ public class App {
         // delete and recreate the directory named "generated"
         File dir = new File(opts.getXmlOutdir(), "generated");
         createOrReplaceDir(dir);
+        File inputData = new File(opts.getXmlOutdir(), "input_data");
+        createOrReplaceDir(inputData);
 
         // create the mod.rs file
         File modRs = new File(dir, "mod.rs");
@@ -64,7 +66,7 @@ public class App {
         //            System.out.println(confTest.getSnakeCase());
         //        }
 
-        // create NUM_TESTS test files
+        // create test files
         int testCount = 0;
         for (int i = 0; i < confTests.size() && testCount < NUM_TESTS; ++i) {
             ConfTest t = confTests.get(i);
@@ -82,15 +84,19 @@ public class App {
             writeln(os, "#[test]");
             writeln(os, "fn %s() {}", id);
             closeStream(testFile, os);
+
+            copyXmlTestFile(t, inputData);
         }
 
         closeStream(modRs, modRsStream);
 
-        // run rust fmt
-        //        boolean isWindows = System.getProperty("os.name").toLowerCase().startsWith("windows");
+        File manifestPath = new File(opts.getRustRoot(), "Cargo.toml");
+        if (!manifestPath.exists() || !manifestPath.isFile()) {
+            throw new TestGenException("Cargo manifest could not be found at: " + manifestPath.getPath());
+        }
         Process process;
         try {
-            process = Runtime.getRuntime().exec("cargo fmt", null, dir);
+            process = Runtime.getRuntime().exec("cargo fmt --manifest-path " + manifestPath.getPath(), null, dir);
         } catch (IOException e) {
             throw new TestGenException("cargo fmt did not work", e);
         }
@@ -103,6 +109,36 @@ public class App {
         if (exitCode != 0) {
             String processOutput = getProcessResults(process);
             throw new TestGenException(String.format("cargo fmt failed with exit: %d\n%s", exitCode, processOutput));
+        }
+    }
+
+    private static void copyXmlTestFile(ConfTest t, File copyToDir) throws TestGenException {
+        checkDir(copyToDir);
+        File original = new File(t.getPath().toString());
+        checkFile(original);
+        File copied = new File(copyToDir, t.getFileRename());
+        try {
+            FileUtils.copyFile(original, copied);
+        } catch (IOException e) {
+            throw new TestGenException("unable to copy file from: " + original.getPath() + ", to: " + copied.getPath());
+        }
+    }
+
+    private static void checkFile(File file) throws TestGenException {
+        if (!file.exists()) {
+            throw new TestGenException("file does not exist: " + file.getPath());
+        }
+        if (!file.isFile()) {
+            throw new TestGenException("not a file: " + file.getPath());
+        }
+    }
+
+    private static void checkDir(File dir) throws TestGenException {
+        if (!dir.exists()) {
+            throw new TestGenException("dir does not exist: " + dir.getPath());
+        }
+        if (!dir.isDirectory()) {
+            throw new TestGenException("not a dir: " + dir.getPath());
         }
     }
 
@@ -212,19 +248,58 @@ public class App {
 
     private static void parseTestCases(Element element, List<ConfTest> outConfTests) throws TestGenException {
         String profile = element.getAttribute("PROFILE");
+        String prefix = "unknown";
+        if (profile.equals("James Clark XMLTEST cases, 18-Nov-1998")) {
+            prefix = "jclark";
+        } else if (profile.equals("Fuji Xerox Japanese Text Tests")) {
+            prefix = "xjapan";
+        } else if (profile.equals("Sun Microsystems XML Tests")) {
+            prefix = "sun";
+        } else if (profile.equals("OASIS/NIST TESTS, 1-Nov-1998")) {
+            prefix = "nist";
+        } else if (profile.equals("IBM XML Tests")) {
+            prefix = "ibm";
+        } else if (profile.equals("IBM XML Conformance Test Suite - invalid tests")) {
+            prefix = "ibminv";
+        } else if (profile.equals("IBM XML Conformance Test Suite - not-wf tests")) {
+            prefix = "ibmnotwf";
+        } else if (profile.startsWith("IBM XML Conformance Test Suite - Production ")) {
+            prefix = "ibmprod";
+        } else if (profile.equals("IBM XML Conformance Test Suite - valid tests")) {
+            prefix = "ibmval";
+        } else if (profile.equals("IBM Invalid Conformance Tests for XML 1.1 CR October 15, 2002")) {
+            prefix = "ibm11";
+        } else if (profile.equals("IBM XML Conformance Test Suite")) {
+            prefix = "ibmconf";
+        } else if (profile.equals("IBM Not-WF Conformance Tests for XML 1.1 CR October 15, 2002")) {
+            prefix = "ibmnw11";
+        } else if (profile.equals("IBM Valid Conformance Tests for XML 1.1 CR October 15, 2002")) {
+            prefix = "ibmval11";
+        } else if (profile.equals("Richard Tobin's XML 1.0 2nd edition errata test suite 21 Jul 2003")) {
+            prefix = "edunierr";
+        } else if (profile.equals("Richard Tobin's XML 1.1 test suite 13 Feb 2003")) {
+            prefix = "eduni11";
+        } else if (profile.equals("Richard Tobin's XML Namespaces 1.0 test suite 14 Feb 2003")) {
+            prefix = "edunins10";
+        } else if (profile.equals("Richard Tobin's XML Namespaces 1.1 test suite 14 Feb 2003")) {
+            prefix = "edunins11";
+        } else {
+            throw new TestGenException("unknown profile: " + profile);
+        }
+        ConfTestCases confTestCases = new ConfTestCases(prefix, profile);
         List<Element> children = getChildren(element);
         for (Element child : children) {
             if (child.getTagName().equals("TESTCASES")) {
                 parseTestCases(child, outConfTests);
             } else if (child.getTagName().equals("TEST")) {
-                outConfTests.add(parseTest(child));
+                outConfTests.add(parseTest(child, confTestCases));
             } else {
                 throw new TestGenException("Expected TESTCASES or TEST, got " + child.getTagName());
             }
         }
     }
 
-    private static ConfTest parseTest(Element element) throws TestGenException {
+    private static ConfTest parseTest(Element element, ConfTestCases confTestCases) throws TestGenException {
         try {
             String id = element.getAttribute("ID");
             URI baseUri = new URI(element.getBaseURI());
@@ -250,7 +325,7 @@ public class App {
             } else if (f.isDirectory()) {
                 throw new TestGenException("Directory instead of file for " + id + ", " + filepath.toString());
             }
-            ConfTest confTest = new ConfTest(element, filepath, new ConfTestCases());
+            ConfTest confTest = new ConfTest(element, filepath, confTestCases);
             return confTest;
         } catch (URISyntaxException e) {
             throw new TestGenException("malformed uri " + element.getBaseURI(), e);
