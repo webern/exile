@@ -114,6 +114,6 @@ class ConfTest {
     }
 
     String getFileRename() {
-        return getPrefix() + getSnakeCase() + ".xml";
+        return getPrefix() + "_" + getSnakeCase() + ".xml";
     }
 }

@@ -85,6 +85,8 @@ public class App {
             writeln(os, "const MANIFEST_DIR: &str = env!(\"CARGO_MANIFEST_DIR\");");
             writeln(os, "const INPUT_DATA: &str = \"input_data\";");
             writeln(os, "const FILENAME: &str = \"%s\";", t.getFileRename());
+
+            writeln(os, "");
             writeln(os, "fn path() -> PathBuf {");
             writeln(os, "    let p = PathBuf::from(MANIFEST_DIR)");
             writeln(os, "        .join(\"tests\")");
@@ -94,41 +96,12 @@ public class App {
             writeln(os, "        .expect(format!(\"bad path: {}\", p.display()).as_str())");
             writeln(os, "}");
 
-
             writeln(os, "");
             writeln(os, "#[test]");
             writeln(os, "fn %s() {", id);
-            writeln(os, "");
-            writeln(os, "");
-            writeln(os, "");
-            writeln(os, "");
-            writeln(os, "");
-            writeln(os, "");
-            writeln(os, "");
-            writeln(os, "");
-
-            /*
-
-            // generated file, do not edit
-
-
-
-
-
-
-
-
-
-
-}
-
-#[test]
-fn valid_sa_001() {
-    let path = path();
-    let _doc = exile::load(&path).unwrap();
-    assert_eq!(_doc.root().name, "doc");
-}
-             */
+            writeln(os, "    let path = path();");
+            writeln(os, "    let _doc = exile::load(&path).unwrap();");
+            writeln(os, "}");
 
 
             closeStream(testFile, os);

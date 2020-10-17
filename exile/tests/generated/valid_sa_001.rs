@@ -1,10 +1,8 @@
 // generated file, do not edit
-
 use std::path::PathBuf;
-
 const MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
 const INPUT_DATA: &str = "input_data";
-const FILENAME: &str = "jclarkvalid_sa_001.xml";
+const FILENAME: &str = "jclark_valid_sa_001.xml";
 
 fn path() -> PathBuf {
     let p = PathBuf::from(MANIFEST_DIR)
@@ -19,5 +17,4 @@ fn path() -> PathBuf {
 fn valid_sa_001() {
     let path = path();
     let _doc = exile::load(&path).unwrap();
-    assert_eq!(_doc.root().name, "doc");
 }
