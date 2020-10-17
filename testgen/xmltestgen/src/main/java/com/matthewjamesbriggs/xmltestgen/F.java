@@ -14,14 +14,10 @@ public class F {
      * If the directory exists, deletes it and replaces it. Otherwise just creates it.
      *
      * @param directory The directory to create.
-     * @throws TestGenException
+     * @throws TestGenException if the directory could not be created
      */
     static void createOrReplaceDir(File directory) throws TestGenException {
-        try {
-            directory = new File(directory.getCanonicalPath());
-        } catch (IOException e) {
-            throw new TestGenException("unable to canonicalize: " + directory.getPath());
-        }
+        directory = new File(canonicalize(directory).getPath());
         if (directory.exists() && directory.isDirectory()) {
             try {
                 FileUtils.deleteDirectory(directory);
@@ -42,7 +38,7 @@ public class F {
      * Throws an exception if the directory does not exist, or if it is not a directory.
      *
      * @param dir The directory to check.
-     * @throws TestGenException If the directory does not exist or is not a directory.
+     * @throws TestGenException if the directory does not exist or is not a directory.
      */
     static void checkDir(File dir) throws TestGenException {
         if (!dir.exists()) {
@@ -57,7 +53,7 @@ public class F {
      * Throws an exception if the file does not exist, or if it is not a file.
      *
      * @param file The file to check.
-     * @throws TestGenException If the file does not exist or is not a file.
+     * @throws TestGenException if the file does not exist or is not a file.
      */
     static void checkFile(File file) throws TestGenException {
         if (!file.exists()) {
@@ -73,7 +69,7 @@ public class F {
      *
      * @param path The path to cannonicalize.
      * @return The cannonicalized file path.
-     * @throws TestGenException If the cannonicalization failes.
+     * @throws TestGenException if the cannonicalization failes.
      */
     static File canonicalize(File path) throws TestGenException {
         try {
@@ -88,9 +84,9 @@ public class F {
      *
      * @param original    The filepath to the file to be copied.
      * @param destination The filepath to copy the original file to.
-     * @throws TestGenException If the operation fails.
+     * @throws TestGenException if the operation fails.
      */
-    public static void copy(File original, File destination) throws TestGenException {
+    static void copy(File original, File destination) throws TestGenException {
         try {
             FileUtils.copyFile(original, destination);
         } catch (IOException e) {
@@ -98,6 +94,35 @@ public class F {
                     original.getPath() +
                     ", to: " +
                     destination.getPath());
+        }
+    }
+
+    /**
+     * Creates (or replaces if it exists) a file.
+     *
+     * @param file The file to create.
+     * @throws TestGenException if the file could not be created.
+     */
+    public static void createFile(File file) throws TestGenException {
+        if (file.exists()) {
+            if (file.isFile()) {
+                FileUtils.deleteQuietly(file);
+            } else if (file.isDirectory()) {
+                try {
+                    FileUtils.deleteDirectory(file);
+                } catch (IOException e) {
+                    throw new TestGenException("a directory could not be deleted: " + file, e);
+                }
+            } else {
+                throw new TestGenException("something exists but i don't know what: " + file);
+            }
+        }
+        try {
+            if (!file.createNewFile()) {
+                throw new TestGenException("file already exists: " + file.getPath());
+            }
+        } catch (IOException e) {
+            throw new TestGenException("unable to create file: " + file.getPath(), e);
         }
     }
 }

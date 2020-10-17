@@ -62,7 +62,7 @@ public class App {
         // create the mod.rs file
         File modRs = new File(dir, "mod.rs");
         modRs = F.canonicalize(modRs);
-        createFile(modRs);
+        F.createFile(modRs);
         FileOutputStream modRsStream = openFile(modRs);
         writeln(modRsStream, "// generated file, do not edit");
         writeln(modRsStream, "");
@@ -77,7 +77,7 @@ public class App {
             ++testCount;
             String id = t.getSnakeCase();
             File testFile = new File(dir, id + ".rs");
-            createFile(testFile);
+            F.createFile(testFile);
             FileOutputStream os = openFile(testFile);
             writeln(modRsStream, "mod %s;", id);
             writeln(os, "// generated file, do not edit");
@@ -186,28 +186,6 @@ public class App {
         }
     }
 
-    private static void createFile(File file) throws TestGenException {
-        if (file.exists()) {
-            if (file.isFile()) {
-                FileUtils.deleteQuietly(file);
-            } else if (file.isDirectory()) {
-                try {
-                    FileUtils.deleteDirectory(file);
-                } catch (IOException e) {
-                    throw new TestGenException("a directory could not be deleted: " + file, e);
-                }
-            } else {
-                throw new TestGenException("something exists but i don't know what: " + file);
-            }
-        }
-        try {
-            if (!file.createNewFile()) {
-                throw new TestGenException("file already exists: " + file.getPath());
-            }
-        } catch (IOException e) {
-            throw new TestGenException("unable to create file: " + file.getPath(), e);
-        }
-    }
 
     private static FileOutputStream openFile(File file) throws TestGenException {
         try {
