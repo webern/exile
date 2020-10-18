@@ -127,7 +127,19 @@ class F {
         }
     }
 
-    public static void closeStream(File file, FileOutputStream stream) throws TestGenException {
+    /**
+     * Creates (or replaces if it exists) a file, then opens a stream to that file.
+     *
+     * @param file The file to create and open.
+     * @return The stream to the new file.
+     * @throws TestGenException if the file could not be created or opened.
+     */
+    static FileOutputStream createAndOpen(File file) throws TestGenException {
+        createFile(file);
+        return openFile(file);
+    }
+
+    static void closeStream(File file, FileOutputStream stream) throws TestGenException {
         try {
             stream.close();
         } catch (IOException e) {
@@ -136,7 +148,7 @@ class F {
     }
 
 
-    public static FileOutputStream openFile(File file) throws TestGenException {
+    static FileOutputStream openFile(File file) throws TestGenException {
         try {
             return FileUtils.openOutputStream(file);
         } catch (IOException e) {
@@ -155,7 +167,7 @@ class F {
         }
     }
 
-    public static void writeln(FileOutputStream os, String format, Object... args) throws TestGenException {
+    static void writeln(FileOutputStream os, String format, Object... args) throws TestGenException {
         write(os, format + "\n", args);
     }
 }
