@@ -112,7 +112,11 @@ class ConfTest {
         return result.toString();
     }
 
+    String getTestName() {
+        return getPrefix() + "_" + getSnakeCase();
+    }
+
     String getFileRename() {
-        return getPrefix() + "_" + getSnakeCase() + ".xml";
+        return getTestName() + ".xml";
     }
 }

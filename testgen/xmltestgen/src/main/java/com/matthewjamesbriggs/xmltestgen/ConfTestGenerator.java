@@ -50,7 +50,7 @@ class ConfTestGenerator {
             ++testCount;
             generateValidTest(t, mod);
         }
-        
+
         F.writeln(mod, "");
         F.closeStream(modRs, mod);
         Cmd.fmt(rustWorkspaceDir);
@@ -60,9 +60,9 @@ class ConfTestGenerator {
         if (t.getConfType() != ConfType.Valid) {
             throw new TestGenException("wrong test type, expected 'valid', got " + t.getConfType().toString());
         }
-        File testFile = new File(generatedDir, t.getSnakeCase() + ".rs");
+        File testFile = new File(generatedDir, t.getTestName() + ".rs");
         FileOutputStream os = F.createAndOpen(testFile);
-        F.writeln(mod, "mod %s;", t.getSnakeCase());
+        F.writeln(mod, "mod %s;", t.getTestName());
         writeCodeFileHeader(os);
         F.writeln(os, "");
         writeUseStatements(t, os);
