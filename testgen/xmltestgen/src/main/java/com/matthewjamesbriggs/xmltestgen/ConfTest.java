@@ -26,7 +26,7 @@ class ConfTest {
     @Getter
     private final ConfType confType;
     @Getter
-    private final boolean isVersion1_1;
+    private final XmlVersion xmlVersion;
     @Getter
     private final String prefix;
 
@@ -44,7 +44,11 @@ class ConfTest {
         sections = X.getOptionalAttribute(element, "SECTIONS");
         String typeStr = X.getOptionalAttribute(element, "TYPE"); // error, invalid, not-wf, valid
         confType = ConfType.fromString(typeStr);
-        isVersion1_1 = X.getOptionalAttribute(element, "VERSION").equals("1.1");
+        if (X.getOptionalAttribute(element, "VERSION").equals("1.1")) {
+            xmlVersion = XmlVersion.V11;
+        } else {
+            xmlVersion = XmlVersion.V10;
+        }
         prefix = confTestCases.getPrefix();
     }
 
@@ -71,14 +75,14 @@ class ConfTest {
     @Override
     public String toString() {
         return String.format(
-                "ConfTest: %s, Entities: %s, Path: %s, Output: %s, Namespace: %b, ConfType: %s, IsVersion1_1: %b, Sections: %s",
+                "ConfTest: %s, Entities: %s, Path: %s, Output: %s, Namespace: %b, ConfType: %s, XmlVersion: %s, Sections: %s",
                 id,
                 entities.toString(),
                 path.toString(),
                 output,
                 namespace,
                 confType.toString(),
-                isVersion1_1,
+                xmlVersion.toString(),
                 sections);
     }
 

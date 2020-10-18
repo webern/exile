@@ -19,7 +19,6 @@ public class App {
             System.exit(BAD_USAGE);
         }
         try {
-
             generateConfTests(opts);
         } catch (TestGenException e) {
             System.out.println(e.getMessage());
