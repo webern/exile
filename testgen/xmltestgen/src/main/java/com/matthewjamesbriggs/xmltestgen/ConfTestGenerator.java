@@ -4,14 +4,22 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.util.List;
 
-public class ConfTestGenerator {
+class ConfTestGenerator {
+    /// The tests directory, e.g. exile_repo/exile/tests
     private final File outDir;
+    /// The root of the generated tests, e.g. exile_repo/exile/tests/generated
     private final File generatedDir;
+    /// The place to copy xml files, e.g. exile_repo/exile/tests/input_data
     private final File testDataDir;
+    /// The root of the rust workspace, e.g. exile_repo
     private final File rustWorkspaceDir;
+    /// The parsed conf tests to use as our source for generating rust tests
     private final List<ConfTest> tests;
+    /// The mod.rs file for our generated rust tests to be compiled, e.g. exile_repo/exile/tests/generated/mod.rs
+    private final File modRs;
 
-    public ConfTestGenerator(List<ConfTest> tests, ProgramOptions opts) throws TestGenException {
+
+    ConfTestGenerator(List<ConfTest> tests, ProgramOptions opts) throws TestGenException {
         outDir = F.canonicalize(opts.getXmlOutdir());
         F.checkDir(outDir);
         generatedDir = F.canonicalize(new File(opts.getXmlOutdir(), "generated"));
@@ -21,17 +29,16 @@ public class ConfTestGenerator {
         rustWorkspaceDir = F.canonicalize(opts.getRustRoot());
         F.checkDir(rustWorkspaceDir);
         this.tests = tests;
+        modRs = F.canonicalize(new File(generatedDir, "mod.rs"));
     }
 
-    public void generateTests(int maxTests) throws TestGenException {
-        File dir = generatedDir;
+    void generateTests(int maxTests) throws TestGenException {
         F.createOrReplaceDir(generatedDir);
 
         // create the mod.rs file
-        File modRs = F.canonicalize(new File(dir, "mod.rs"));
-        FileOutputStream modRsStream = F.createAndOpen(modRs);
-        F.writeln(modRsStream, "// generated file, do not edit");
-        F.writeln(modRsStream, "");
+        FileOutputStream mod = F.createAndOpen(modRs);
+        writeCodeFileHeader(mod);
+        F.writeln(mod, "");
 
         // create test files
         int testCount = 0;
@@ -41,52 +48,65 @@ public class ConfTestGenerator {
                 continue;
             }
             ++testCount;
-            String id = t.getSnakeCase();
-            File testFile = new File(dir, id + ".rs");
-            FileOutputStream os = F.createAndOpen(testFile);
-            F.writeln(modRsStream, "mod %s;", id);
-            F.writeln(os, "// generated file, do not edit");
-
-            F.writeln(os, "use std::path::PathBuf;");
-            F.writeln(os, "const MANIFEST_DIR: &str = env!(\"CARGO_MANIFEST_DIR\");");
-            F.writeln(os, "const INPUT_DATA: &str = \"input_data\";");
-            F.writeln(os, "const FILENAME: &str = \"%s\";", t.getFileRename());
-
-            F.writeln(os, "");
-            F.writeln(os, "fn path() -> PathBuf {");
-            F.writeln(os, "    let p = PathBuf::from(MANIFEST_DIR)");
-            F.writeln(os, "        .join(\"tests\")");
-            F.writeln(os, "        .join(INPUT_DATA)");
-            F.writeln(os, "        .join(FILENAME);");
-            F.writeln(os, "    p.canonicalize()");
-            F.writeln(os, "        .expect(format!(\"bad path: {}\", p.display()).as_str())");
-            F.writeln(os, "}");
-
-            F.writeln(os, "");
-            F.writeln(os, "#[test]");
-            F.writeln(os, "fn %s() {", id);
-            F.writeln(os, "    let path = path();");
-            F.writeln(os, "    let _doc = exile::load(&path).unwrap();");
-            F.writeln(os, "}");
-
-
-            F.closeStream(testFile, os);
-
-            copyXmlTestFile(t);
+            generateValidTest(t, mod);
         }
-
-        F.closeStream(modRs, modRsStream);
-
-        File exileCrate = new File(rustWorkspaceDir, "exile");
-        exileCrate = F.canonicalize(exileCrate);
-        File manifestPath = new File(exileCrate, "Cargo.toml");
-        manifestPath = F.canonicalize(manifestPath);
-        F.checkFile(manifestPath);
+        
+        F.writeln(mod, "");
+        F.closeStream(modRs, mod);
         Cmd.fmt(rustWorkspaceDir);
     }
 
-    private void generateTest(ConfTest t) throws TestGenException {
+    private void generateValidTest(ConfTest t, FileOutputStream mod) throws TestGenException {
+        if (t.getConfType() != ConfType.Valid) {
+            throw new TestGenException("wrong test type, expected 'valid', got " + t.getConfType().toString());
+        }
+        File testFile = new File(generatedDir, t.getSnakeCase() + ".rs");
+        FileOutputStream os = F.createAndOpen(testFile);
+        F.writeln(mod, "mod %s;", t.getSnakeCase());
+        writeCodeFileHeader(os);
+        F.writeln(os, "");
+        writeUseStatements(t, os);
+        F.writeln(os, "");
+        writeConstDeclarations(t, os);
+        F.writeln(os, "");
+        writePathFunction(t, os);
+        F.writeln(os, "");
+        writeTestFunction(t, os);
+        F.closeStream(testFile, os);
+        copyXmlTestFile(t);
+    }
 
+    private static void writeCodeFileHeader(FileOutputStream os) throws TestGenException {
+        F.writeln(os, "// generated file, do not edit");
+    }
+
+    private static void writeUseStatements(ConfTest t, FileOutputStream os) throws TestGenException {
+        F.writeln(os, "use std::path::PathBuf;");
+    }
+
+    private static void writeConstDeclarations(ConfTest t, FileOutputStream os) throws TestGenException {
+        F.writeln(os, "const MANIFEST_DIR: &str = env!(\"CARGO_MANIFEST_DIR\");");
+        F.writeln(os, "const INPUT_DATA: &str = \"input_data\";");
+        F.writeln(os, "const FILENAME: &str = \"%s\";", t.getFileRename());
+    }
+
+    private static void writePathFunction(ConfTest t, FileOutputStream os) throws TestGenException {
+        F.writeln(os, "fn path() -> PathBuf {");
+        F.writeln(os, "    let p = PathBuf::from(MANIFEST_DIR)");
+        F.writeln(os, "        .join(\"tests\")");
+        F.writeln(os, "        .join(INPUT_DATA)");
+        F.writeln(os, "        .join(FILENAME);");
+        F.writeln(os, "    p.canonicalize()");
+        F.writeln(os, "        .expect(format!(\"bad path: {}\", p.display()).as_str())");
+        F.writeln(os, "}");
+    }
+
+    private static void writeTestFunction(ConfTest t, FileOutputStream os) throws TestGenException {
+        F.writeln(os, "#[test]");
+        F.writeln(os, "fn %s() {", t.getSnakeCase());
+        F.writeln(os, "    let path = path();");
+        F.writeln(os, "    let _doc = exile::load(&path).unwrap();");
+        F.writeln(os, "}");
     }
 
     private void copyXmlTestFile(ConfTest t) throws TestGenException {

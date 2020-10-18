@@ -2,8 +2,9 @@ package com.matthewjamesbriggs.xmltestgen;
 
 import java.util.List;
 
-// http://www.java2s.com/Tutorials/Java/XML/How_to_get_root_element_from_Java_DOM_parser.htm
-
+/**
+ * The entrypoint class for a program that generates exile XML tests.
+ */
 public class App {
     private static final int SUCCESS = 0;
     private static final int FAILURE = 1;

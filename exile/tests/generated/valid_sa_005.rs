@@ -1,5 +1,7 @@
 // generated file, do not edit
+
 use std::path::PathBuf;
+
 const MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
 const INPUT_DATA: &str = "input_data";
 const FILENAME: &str = "jclark_valid_sa_005.xml";

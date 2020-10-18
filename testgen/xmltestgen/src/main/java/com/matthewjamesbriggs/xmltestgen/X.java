@@ -10,9 +10,12 @@ import java.util.List;
 /**
  * XML generic helper functions.
  */
-public class X {
+class X {
     /**
      * Gets the child elements from an element.
+     * <p>
+     * Note, there is some helpful information here:
+     * <a href="http://www.java2s.com/Tutorials/Java/XML/How_to_get_root_element_from_Java_DOM_parser.htm">info</a>
      *
      * @param parent The element to get the children from.
      * @return The child elements.
@@ -31,7 +34,7 @@ public class X {
         return children;
     }
 
-    public static String getRequiredAttribute(Element element, String key) throws TestGenException {
+    static String getRequiredAttribute(Element element, String key) throws TestGenException {
         String value = element.getAttribute(key);
         if (value == null) {
             throw new TestGenException("no attribute named " + key);
@@ -41,7 +44,7 @@ public class X {
         return value;
     }
 
-    public static String getOptionalAttribute(Element element, String key) {
+    static String getOptionalAttribute(Element element, String key) {
         String value = element.getAttribute(key);
         if (value == null) {
             return "";
