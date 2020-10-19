@@ -19,6 +19,7 @@ import java.util.List;
  * XML generic helper functions.
  */
 class X {
+
     /**
      * Gets the child elements from an element.
      * <p>
@@ -70,12 +71,24 @@ class X {
      * @throws TestGenException
      */
     static Document loadComplete(File file) throws TestGenException {
+        return load(file, true);
+    }
+
+    static Document loadShallow(File file) throws TestGenException {
+        return load(file, false);
+    }
+
+    private static Document load(File file, boolean expandEntities) throws TestGenException {
         file = F.canonicalize(file);
         F.checkFile(file);
         String uri = file.toPath().toUri().toString();
 
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            if (!expandEntities) {
+                // https://bugs.openjdk.java.net/browse/JDK-8217937
+                factory.setExpandEntityReferences(false);
+            }
             DocumentBuilder builder = factory.newDocumentBuilder();
             Document document = builder.parse(uri);
             return document;

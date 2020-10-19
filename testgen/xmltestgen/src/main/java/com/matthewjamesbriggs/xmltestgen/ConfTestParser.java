@@ -2,14 +2,8 @@ package com.matthewjamesbriggs.xmltestgen;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.FactoryConfigurationError;
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
@@ -33,7 +27,9 @@ class ConfTestParser {
             }
             parseTestCases(child, confTests);
         }
-
+        if (confTests.isEmpty()) {
+            throw new TestGenException("something went wrong, no tests were parsed");
+        }
         return confTests;
     }
 
