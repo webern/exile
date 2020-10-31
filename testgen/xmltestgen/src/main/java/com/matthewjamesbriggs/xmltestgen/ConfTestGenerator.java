@@ -1,5 +1,7 @@
 package com.matthewjamesbriggs.xmltestgen;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import org.w3c.dom.*;
 
 import java.io.File;
@@ -39,6 +41,21 @@ class ConfTestGenerator {
         F.checkDir(rustWorkspaceDir);
         this.tests = tests;
         modRs = F.canonicalize(new File(generatedDir, "mod.rs"));
+    }
+
+    @AllArgsConstructor private static class FoundDecl {
+        @Getter
+        private final String version;
+        @Getter
+        private final String encoding;
+
+        boolean hasVersion() {
+            return version != null && version.length() == 3;
+        }
+
+        boolean hasEncoding() {
+            return encoding != null && encoding.length() > 0;
+        }
     }
 
 
@@ -81,7 +98,8 @@ class ConfTestGenerator {
         F.writeln(mod, "mod %s;", t.getTestName());
         writeCodeFileHeader(os);
         F.writeln(os, "");
-        writeUseStatements(t, os);
+        FoundDecl foundDecl = findDecl(t);
+        writeUseStatements(foundDecl, os);
         F.writeln(os, "");
         writeConstDeclarations(t, os);
         F.writeln(os, "");
@@ -89,7 +107,7 @@ class ConfTestGenerator {
         F.writeln(os, "");
         writeTestFunction(t, os);
         F.writeln(os, "");
-        writeExpectedFunction(t, os);
+        writeExpectedFunction(t, foundDecl, os);
         copyXmlTestFile(t);
 
         // close the stream, we are done writing to the test file
@@ -100,10 +118,16 @@ class ConfTestGenerator {
         F.writeln(os, "// generated file, do not edit");
     }
 
-    private static void writeUseStatements(ConfTest t, FileOutputStream os) throws TestGenException {
+    private static void writeUseStatements(FoundDecl foundDecl, FileOutputStream os) throws TestGenException {
         F.writeln(os, "use exile::Document;");
         F.writeln(os, "use std::path::PathBuf;");
         F.writeln(os, "use xdoc::Declaration;");
+        if (foundDecl.hasVersion()) {
+            F.writeln(os, "use xdoc::Version;");
+        }
+        if (foundDecl.hasEncoding()) {
+            F.writeln(os, "use xdoc::Encoding;");
+        }
     }
 
     private static void writeConstDeclarations(ConfTest t, FileOutputStream os) throws TestGenException {
@@ -141,13 +165,15 @@ class ConfTestGenerator {
         F.writeln(os, "}");
     }
 
-    private static void writeExpectedFunction(ConfTest t, FileOutputStream os) throws TestGenException {
+    private static void writeExpectedFunction(ConfTest t,
+                                              FoundDecl foundDecl,
+                                              FileOutputStream os) throws TestGenException {
         //        F.writeln(os, "// Creates a document that matches %s", t.getFileRename());
         F.writeln(os, "fn expected() -> Document {");
         Document doc = X.loadShallow(t.getPath().toFile());
         DocumentType doctype = doc.getDoctype();
         F.writeln(os, "let mut doc = Document::new();");
-        writeExpectedXmlDeclaration(t, os);
+        writeExpectedXmlDeclaration(foundDecl, os);
         if (doctype != null) {
             writeExpectedDoctype(doctype, os);
         }
@@ -175,35 +201,9 @@ class ConfTestGenerator {
         }
     }
 
-    private static void writeExpectedXmlDeclaration(ConfTest t, FileOutputStream os) throws TestGenException {
-        // TODO - what if it's not UTF-8>
-        List<String> lines = readAllLines(t.getPath(), StandardCharsets.UTF_8);
-        Pattern rxVersion = Pattern.compile("version=\"([0-9]+.[0-9]+)\"", 0);
-        Pattern rxEncoding = Pattern.compile("encoding=\"(.+)\"", 0);
-        String version = null;
-        String encoding = null;
-        for (String line : lines) {
-            if (line.contains("<?xml")) {
-                Matcher versionMatcher = rxVersion.matcher(line);
-                if (versionMatcher.find()) {
-                    try {
-                        version = versionMatcher.group(1);
-                    } catch (Throwable e) {
-                        // ignore
-                    }
-                }
-                Matcher encodingMatcher = rxEncoding.matcher(line);
-                if (encodingMatcher.find()) {
-                    try {
-                        encoding = encodingMatcher.group(1);
-                    } catch (Throwable e) {
-                        // ignore
-                    }
-                }
-                break;
-            }
-        }
+    private static void writeExpectedXmlDeclaration(FoundDecl foundDecl, FileOutputStream os) throws TestGenException {
         String rsVersion = "BAD";
+        String version = foundDecl.getVersion();
         if (version == null) {
             rsVersion = "None";
         } else if (version.equals("1.0")) {
@@ -213,6 +213,7 @@ class ConfTestGenerator {
         } else {
             throw new TestGenException("Bad XML version parsed: " + version);
         }
+        String encoding = foundDecl.getEncoding();
         String rsEncoding = "BAD";
         if (encoding == null) {
             rsEncoding = "None";
@@ -222,7 +223,6 @@ class ConfTestGenerator {
             throw new TestGenException("Unsupported XML encoding parsed: " + encoding);
         }
         F.writeln(os, "doc.set_declaration(Declaration{ version: %s, encoding: %s });", rsVersion, rsEncoding);
-        //
     }
 
     private static void writeExpectedDoctype(DocumentType dt, FileOutputStream os) throws TestGenException {
@@ -286,5 +286,35 @@ class ConfTestGenerator {
         F.checkFile(original);
         File copied = new File(testDataDir, t.getFileRename());
         F.copy(original, copied);
+    }
+
+    private static FoundDecl findDecl(ConfTest t) throws TestGenException {
+        List<String> lines = readAllLines(t.getPath(), StandardCharsets.UTF_8);
+        Pattern rxVersion = Pattern.compile("version=\"([0-9]+.[0-9]+)\"", 0);
+        Pattern rxEncoding = Pattern.compile("encoding=\"(.+)\"", 0);
+        String version = null;
+        String encoding = null;
+        for (String line : lines) {
+            if (line.contains("<?xml")) {
+                Matcher versionMatcher = rxVersion.matcher(line);
+                if (versionMatcher.find()) {
+                    try {
+                        version = versionMatcher.group(1);
+                    } catch (Throwable e) {
+                        // ignore
+                    }
+                }
+                Matcher encodingMatcher = rxEncoding.matcher(line);
+                if (encodingMatcher.find()) {
+                    try {
+                        encoding = encodingMatcher.group(1);
+                    } catch (Throwable e) {
+                        // ignore
+                    }
+                }
+                break;
+            }
+        }
+        return new FoundDecl(version, encoding);
     }
 }

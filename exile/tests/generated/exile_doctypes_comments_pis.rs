@@ -3,6 +3,7 @@
 use exile::Document;
 use std::path::PathBuf;
 use xdoc::Declaration;
+use xdoc::Version;
 
 const MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
 const INPUT_DATA: &str = "input_data";
