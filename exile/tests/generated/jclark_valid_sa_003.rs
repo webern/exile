@@ -40,4 +40,3 @@ doc.set_declaration(Declaration{ version: None, encoding: None });
 let mut root = doc.root_mut();
 root.set_name(r#"doc"#);
 doc
-}

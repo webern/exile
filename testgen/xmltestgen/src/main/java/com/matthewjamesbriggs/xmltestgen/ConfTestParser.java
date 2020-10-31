@@ -1,10 +1,12 @@
 package com.matthewjamesbriggs.xmltestgen;
 
+import com.google.gson.Gson;
 import lombok.Getter;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -178,6 +180,9 @@ class ConfTestParser {
     }
 
     private static ConfTest makeExileConfTest(ExileTestLocation location) throws TestGenException {
+        Gson gson = new Gson();
+        ExileTestMetadata metadata = gson.fromJson(F.readFile(location.metadata), ExileTestMetadata.class);
+
         ConfTestCases confTestCases = new ConfTestCases("exile", "exile");
         Path path = location.getXml().toPath();
         // TODO - support entities, check test metadata?

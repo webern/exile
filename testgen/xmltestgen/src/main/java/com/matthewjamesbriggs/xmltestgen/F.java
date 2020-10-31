@@ -2,9 +2,7 @@ package com.matthewjamesbriggs.xmltestgen;
 
 import org.apache.commons.io.FileUtils;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 
 /**
  * File and path related helper functions.
@@ -104,7 +102,7 @@ class F {
      * @param file The file to create.
      * @throws TestGenException if the file could not be created.
      */
-    static void createFile(File file) throws TestGenException {
+    private static void createFile(File file) throws TestGenException {
         if (file.exists()) {
             if (file.isFile()) {
                 FileUtils.deleteQuietly(file);
@@ -148,11 +146,19 @@ class F {
     }
 
 
-    static FileOutputStream openFile(File file) throws TestGenException {
+    private static FileOutputStream openFile(File file) throws TestGenException {
         try {
             return FileUtils.openOutputStream(file);
         } catch (IOException e) {
             throw new TestGenException("could not open for writing: " + file.getPath(), e);
+        }
+    }
+
+    static InputStreamReader readFile(File file) throws TestGenException {
+        try {
+            return new FileReader(file);
+        } catch (IOException e) {
+            throw new TestGenException("could not open for reading: " + file.getPath(), e);
         }
     }
 
