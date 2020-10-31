@@ -21,8 +21,8 @@ fn main() {
 
     let mut doc = Document::new();
     doc.set_declaration(Declaration {
-        version: Version::OneDotOne,
-        encoding: Encoding::Utf8,
+        version: Some(Version::V11),
+        encoding: Some(Encoding::Utf8),
     });
     doc.push_prolog_misc(Misc::PI(PI {
         target: "a".to_owned(),

@@ -5,8 +5,8 @@
   },
   "expected": {
     "declaration": {
-      "version": "one",
-      "encoding": "none"
+      "version": "v10",
+      "encoding": null
     },
     "root": {
       "namespace": null,
