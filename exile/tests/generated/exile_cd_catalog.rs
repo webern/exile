@@ -38,7 +38,7 @@ fn cd_catalog() {
 fn expected() -> Document {
     let mut doc = Document::new();
     doc.set_declaration(Declaration {
-        version: Some(Version::V10),
+        version: Some(Version: V10),
         encoding: Some(Encoding::Utf8),
     });
     let mut root = doc.root_mut();

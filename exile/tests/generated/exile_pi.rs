@@ -38,7 +38,7 @@ fn pi() {
 fn expected() -> Document {
     let mut doc = Document::new();
     doc.set_declaration(Declaration {
-        version: Some(Version::V11),
+        version: Some(Version: V11),
         encoding: Some(Encoding::Utf8),
     });
     let mut root = doc.root_mut();

@@ -37,7 +37,7 @@ fn escapes() {
 fn expected() -> Document {
     let mut doc = Document::new();
     doc.set_declaration(Declaration {
-        version: Some(Version::V10),
+        version: Some(Version: V10),
         encoding: None,
     });
     let mut root = doc.root_mut();

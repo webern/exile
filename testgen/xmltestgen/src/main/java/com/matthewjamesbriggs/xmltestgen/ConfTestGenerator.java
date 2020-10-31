@@ -56,6 +56,18 @@ class ConfTestGenerator {
         boolean hasEncoding() {
             return encoding != null && encoding.length() > 0;
         }
+
+        XmlVersion getVersion() throws TestGenException {
+            if (!hasVersion()) {
+                throw new TestGenException("function only works when there is a version string");
+            }
+            if (version.equals("1.0")) {
+                return XmlVersion.V10;
+            } else if (version.equals("1.1")) {
+                return XmlVersion.V11;
+            }
+            throw new TestGenException("bad version string: " + version);
+        }
     }
 
 
@@ -202,25 +214,22 @@ class ConfTestGenerator {
     }
 
     private static void writeExpectedXmlDeclaration(FoundDecl foundDecl, FileOutputStream os) throws TestGenException {
-        String rsVersion = "BAD";
-        String version = foundDecl.getVersion();
-        if (version == null) {
-            rsVersion = "None";
-        } else if (version.equals("1.0")) {
-            rsVersion = "Some(Version::V10)";
-        } else if (version.equals("1.1")) {
-            rsVersion = "Some(Version::V11)";
-        } else {
-            throw new TestGenException("Bad XML version parsed: " + version);
+        String rsVersion = "None";
+        if (foundDecl.hasVersion()) {
+            XmlVersion version = foundDecl.getVersion();
+            if (version == XmlVersion.V10) {
+                rsVersion = "Some(Version:V10)";
+            } else if (version == XmlVersion.V11) {
+                rsVersion = "Some(Version:V11)";
+            }
         }
-        String encoding = foundDecl.getEncoding();
-        String rsEncoding = "BAD";
-        if (encoding == null) {
-            rsEncoding = "None";
-        } else if (encoding.equals("UTF-8")) {
-            rsEncoding = "Some(Encoding::Utf8)";
-        } else {
-            throw new TestGenException("Unsupported XML encoding parsed: " + encoding);
+        String rsEncoding = "None";
+        if (foundDecl.hasEncoding()) {
+            if (foundDecl.getEncoding().equals("UTF-8")) {
+                rsEncoding = "Some(Encoding::Utf8)";
+            } else {
+                throw new TestGenException("Unsupported XML encoding parsed: " + foundDecl.getEncoding());
+            }
         }
         F.writeln(os, "doc.set_declaration(Declaration{ version: %s, encoding: %s });", rsVersion, rsEncoding);
     }

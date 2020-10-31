@@ -37,7 +37,7 @@ fn doctypes_comments_pis() {
 fn expected() -> Document {
     let mut doc = Document::new();
     doc.set_declaration(Declaration {
-        version: Some(Version::V10),
+        version: Some(Version: V10),
         encoding: None,
     });
     // TODO - write doctype information
