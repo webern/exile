@@ -1,12 +1,13 @@
 package com.matthewjamesbriggs.xmltestgen;
 
+import lombok.AllArgsConstructor;
 import org.w3c.dom.Element;
 import lombok.Getter;
 
 import java.nio.file.Path;
 
 
-class ConfTest {
+@AllArgsConstructor class ConfTest {
     @Getter
     private final ConfTestCases confTestCases;
     @Getter

@@ -34,13 +34,10 @@ fn valid_sa_004() {
 }
 
 fn expected() -> Document {
-    let mut doc = Document::new();
-    doc.set_declaration(Declaration {
-        version: None,
-        encoding: None,
-    });
-    // TODO - write doctype information
-    let mut root = doc.root_mut();
-    root.set_name(r#"doc"#);
-    doc
+let mut doc = Document::new();
+doc.set_declaration(Declaration{ version: None, encoding: None });
+// TODO - write doctype information
+let mut root = doc.root_mut();
+root.set_name(r#"doc"#);
+doc
 }

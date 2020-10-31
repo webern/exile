@@ -6,7 +6,7 @@ use xdoc::Declaration;
 
 const MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
 const INPUT_DATA: &str = "input_data";
-const FILENAME: &str = "jclark_valid_sa_003.xml";
+const FILENAME: &str = "exile_unescaped_angle.xml";
 
 fn path() -> PathBuf {
     let p = PathBuf::from(MANIFEST_DIR)
@@ -18,7 +18,7 @@ fn path() -> PathBuf {
 }
 
 #[test]
-fn valid_sa_003() {
+fn unescaped_angle() {
     let path = path();
     let loaded = exile::load(&path).unwrap();
     let expected = expected();
@@ -34,10 +34,3 @@ fn valid_sa_003() {
 }
 
 fn expected() -> Document {
-let mut doc = Document::new();
-doc.set_declaration(Declaration{ version: None, encoding: None });
-// TODO - write doctype information
-let mut root = doc.root_mut();
-root.set_name(r#"doc"#);
-doc
-}

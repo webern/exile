@@ -52,13 +52,19 @@ class ConfTestGenerator {
 
         // create test files
         int testCount = 0;
-        for (int i = 0; i < tests.size() && testCount < maxTests; ++i) {
+        for (int i = 0; i < tests.size(); ++i) {
             ConfTest t = tests.get(i);
             if (t.getConfType() != ConfType.Valid) {
                 continue;
             }
-            ++testCount;
-            generateValidTest(t, mod);
+            // we always generate all of our own custom tests, but if is a w3c test then we increment the testCount to
+            // ensure we only generate as many w3c tests as specified by 'maxTests'.
+            if (t.getPrefix() == "exile" && t.getConfType() == ConfType.Valid) {
+                generateValidTest(t, mod);
+            } else if (t.getConfType() == ConfType.Valid && testCount < maxTests) {
+                ++testCount;
+                generateValidTest(t, mod);
+            }
         }
 
         F.writeln(mod, "");

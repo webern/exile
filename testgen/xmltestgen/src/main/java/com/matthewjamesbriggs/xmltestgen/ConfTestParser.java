@@ -1,6 +1,5 @@
 package com.matthewjamesbriggs.xmltestgen;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -16,13 +15,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 class ConfTestParser {
-    @Getter private static class ExileTestFiles {
+    @Getter private static class ExileTestLocation {
         private final String testName;
         private final File xml;
         private final File metadata;
         private final File expected;
 
-        ExileTestFiles(File mainFile) throws TestGenException {
+        ExileTestLocation(File mainFile) throws TestGenException {
             F.checkFile(mainFile);
             xml = F.canonicalize(mainFile);
             String filename = xml.toPath().getFileName().toString();
@@ -143,15 +142,16 @@ class ConfTestParser {
     }
 
     static List<ConfTest> parseExileTests(File dir) throws TestGenException {
-        List<File> files = listExileTestFiles(dir);
-        List<ExileTestFiles> exiles = new ArrayList<>();
-        for (File file : files) {
-            exiles.add(new ExileTestFiles(file));
+        List<ExileTestLocation> locations = listExileTestFiles(dir);
+        List<ConfTest> exileTests = new ArrayList<>();
+        for (ExileTestLocation location : locations) {
+            ConfTest confTest = makeExileConfTest(location);
+            exileTests.add(confTest);
         }
-        return new ArrayList<>();
+        return exileTests;
     }
 
-    private static List<File> listExileTestFiles(File dir) throws TestGenException {
+    private static List<ExileTestLocation> listExileTestFiles(File dir) throws TestGenException {
         List<File> files = new ArrayList<>();
         try {
             Files.list(dir.toPath()).limit(9999999).forEach(path -> {
@@ -166,6 +166,43 @@ class ConfTestParser {
         } catch (IOException e) {
             throw new TestGenException("Unable to list dir: " + dir.toString(), e);
         }
-        return files;
+        return listExileTestFiles(files);
+    }
+
+    private static List<ExileTestLocation> listExileTestFiles(List<File> xmlFiles) throws TestGenException {
+        List<ExileTestLocation> exiles = new ArrayList<>();
+        for (File file : xmlFiles) {
+            exiles.add(new ExileTestLocation(file));
+        }
+        return exiles;
+    }
+
+    private static ConfTest makeExileConfTest(ExileTestLocation location) throws TestGenException {
+        ConfTestCases confTestCases = new ConfTestCases("exile", "exile");
+        Path path = location.getXml().toPath();
+        // TODO - support entities, check test metadata?
+        final Entities entities = Entities.None;
+        String id = location.getTestName();
+        // TODO - get this from the metadata
+        final Recommendation recommendation = Recommendation.XML1_1;
+        final String sections = "N/A";
+        // TODO - get this from the metadata
+        final boolean namespace = true;
+        // TODO - get this from the metadata
+        final ConfType confType = ConfType.Valid;
+        // TODO - get this from the metadata
+        final XmlVersion xmlVersion = XmlVersion.V11;
+        String prefix = confTestCases.getPrefix();
+        return new ConfTest(confTestCases,
+                path,
+                entities,
+                id,
+                null,
+                recommendation,
+                sections,
+                namespace,
+                confType,
+                xmlVersion,
+                prefix);
     }
 }
