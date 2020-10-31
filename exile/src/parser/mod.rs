@@ -145,10 +145,7 @@ impl<'a> Iter<'a> {
         if self.is_whitespace() {
             return true;
         }
-        match self.st.c {
-            ' ' | '\t' | '=' | '/' | '>' | '\n' => true,
-            _ => false,
-        }
+        matches!(self.st.c, ' ' | '\t' | '=' | '/' | '>' | '\n')
     }
 
     pub(crate) fn expect_name_start_char(&self) -> Result<()> {
@@ -341,10 +338,10 @@ fn parse_declaration(target: &str, instructions: &[String]) -> Result<Declaratio
     if let Some(&val) = map.get("version") {
         match val {
             "1.0" => {
-                declaration.version = Version::One;
+                declaration.version = Some(Version::V10);
             }
             "1.1" => {
-                declaration.version = Version::OneDotOne;
+                declaration.version = Some(Version::V11);
             }
             _ => {
                 return raise!("");
@@ -354,7 +351,7 @@ fn parse_declaration(target: &str, instructions: &[String]) -> Result<Declaratio
     if let Some(&val) = map.get("encoding") {
         match val {
             "UTF-8" => {
-                declaration.encoding = Encoding::Utf8;
+                declaration.encoding = Some(Encoding::Utf8);
             }
             _ => {
                 return raise!("");

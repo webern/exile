@@ -13,17 +13,15 @@ use crate::{Element, Misc, WriteOpts};
 )]
 /// Represents the XML Version being used.
 pub enum Version {
-    /// The XML Version is 1.0 and is not shown.
-    None,
-    /// The XML Version is 1.0 and is shown.
-    One,
-    /// The XML Version is 1.1 and is shown.
-    OneDotOne,
+    /// The XML Version is 1.0.
+    V10,
+    /// The XML Version is 1.1.
+    V11,
 }
 
 impl Default for Version {
     fn default() -> Self {
-        Version::None
+        Version::V10
     }
 }
 
@@ -35,15 +33,13 @@ impl Default for Version {
 )]
 /// The encoding of the XML Document, currently only UTF-8 is supported.
 pub enum Encoding {
-    /// The encoding is UTF-8, but the encoding is not shown in the declaration.
-    None,
-    /// The encoding is UTF-8 and is shown in the declaration.
+    /// The encoding is UTF-8.
     Utf8,
 }
 
 impl Default for Encoding {
     fn default() -> Self {
-        Encoding::None
+        Encoding::Utf8
     }
 }
 
@@ -55,10 +51,10 @@ impl Default for Encoding {
 )]
 /// The XML declaration at the start of the XML Document.
 pub struct Declaration {
-    /// The version of the XML Document.
-    pub version: Version,
-    /// The encoding of the XML Document.
-    pub encoding: Encoding,
+    /// The version of the XML Document. Default is `Version::V10` when `None`.
+    pub version: Option<Version>,
+    /// The encoding of the XML Document. Default is `Encoding::Utf8` when `None`.
+    pub encoding: Option<Encoding>,
 }
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
@@ -189,36 +185,36 @@ impl Document {
     where
         W: Write,
     {
-        if self.declaration.encoding != Encoding::None || self.declaration.version != Version::None
-        {
+        if self.declaration.encoding.is_some() || self.declaration.version.is_some() {
             if let Err(e) = write!(writer, "<?xml ") {
                 return wrap!(e);
             }
-            let mut need_space = true;
-            match self.declaration.version {
-                Version::None => need_space = false,
-                Version::One => {
-                    if let Err(e) = write!(writer, "version=\"1.0\"") {
-                        return wrap!(e);
-                    }
-                }
-                Version::OneDotOne => {
-                    if let Err(e) = write!(writer, "version=\"1.1\"") {
-                        return wrap!(e);
-                    }
-                }
-            }
-
-            match self.declaration.encoding {
-                Encoding::None => {}
-                Encoding::Utf8 => {
-                    if need_space {
-                        if let Err(e) = write!(writer, " ") {
+            let need_space = true;
+            if let Some(version) = &self.declaration.version {
+                match version {
+                    Version::V10 => {
+                        if let Err(e) = write!(writer, "version=\"1.0\"") {
                             return wrap!(e);
                         }
                     }
-                    if let Err(e) = write!(writer, "encoding=\"UTF-8\"") {
-                        return wrap!(e);
+                    Version::V11 => {
+                        if let Err(e) = write!(writer, "version=\"1.1\"") {
+                            return wrap!(e);
+                        }
+                    }
+                }
+            }
+            if let Some(encoding) = &self.declaration.encoding {
+                match encoding {
+                    Encoding::Utf8 => {
+                        if need_space {
+                            if let Err(e) = write!(writer, " ") {
+                                return wrap!(e);
+                            }
+                        }
+                        if let Err(e) = write!(writer, "encoding=\"UTF-8\"") {
+                            return wrap!(e);
+                        }
                     }
                 }
             }
@@ -367,8 +363,8 @@ mod tests {
 
         Document {
             declaration: Declaration {
-                version: Version::One,
-                encoding: Encoding::Utf8,
+                version: Some(Version::V10),
+                encoding: Some(Encoding::Utf8),
             },
             doctypedecl: None,
             prolog_misc: vec![],

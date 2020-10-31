@@ -5,7 +5,7 @@
   },
   "expected": {
     "declaration": {
-      "version": "one",
+      "version": "v10",
       "encoding": "utf8"
     },
     "root": {
