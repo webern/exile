@@ -6,7 +6,7 @@ use xdoc::Declaration;
 
 const MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
 const INPUT_DATA: &str = "input_data";
-const FILENAME: &str = "jclark_valid_sa_001.xml";
+const FILENAME: &str = "exile_single_quotes.xml";
 
 fn path() -> PathBuf {
     let p = PathBuf::from(MANIFEST_DIR)
@@ -18,7 +18,7 @@ fn path() -> PathBuf {
 }
 
 #[test]
-fn valid_sa_001() {
+fn single_quotes() {
     let path = path();
     let loaded = exile::load(&path).unwrap();
     let expected = expected();
@@ -37,10 +37,9 @@ fn expected() -> Document {
     let mut doc = Document::new();
     doc.set_declaration(Declaration {
         version: None,
-        encoding: None,
+        encoding: Some(Encoding::Utf8),
     });
-    // TODO - write doctype information
     let mut root = doc.root_mut();
-    root.set_name(r#"doc"#);
+    root.set_name(r#"foo"#);
     doc
 }

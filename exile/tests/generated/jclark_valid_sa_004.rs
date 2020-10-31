@@ -6,7 +6,7 @@ use xdoc::Declaration;
 
 const MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
 const INPUT_DATA: &str = "input_data";
-const FILENAME: &str = "jclark_valid_sa_001.xml";
+const FILENAME: &str = "jclark_valid_sa_004.xml";
 
 fn path() -> PathBuf {
     let p = PathBuf::from(MANIFEST_DIR)
@@ -18,7 +18,7 @@ fn path() -> PathBuf {
 }
 
 #[test]
-fn valid_sa_001() {
+fn valid_sa_004() {
     let path = path();
     let loaded = exile::load(&path).unwrap();
     let expected = expected();

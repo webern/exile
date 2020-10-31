@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@AllArgsConstructor @NoArgsConstructor public class ExileTestMetadataBad {
+@AllArgsConstructor @NoArgsConstructor class ExileTestMetadataBad {
     @SerializedName("character_position")
     @Getter
     private int characterPosition;

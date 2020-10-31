@@ -6,7 +6,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -182,21 +181,15 @@ class ConfTestParser {
     private static ConfTest makeExileConfTest(ExileTestLocation location) throws TestGenException {
         Gson gson = new Gson();
         ExileTestMetadata metadata = gson.fromJson(F.readFile(location.metadata), ExileTestMetadata.class);
-
         ConfTestCases confTestCases = new ConfTestCases("exile", "exile");
         Path path = location.getXml().toPath();
-        // TODO - support entities, check test metadata?
-        final Entities entities = Entities.None;
+        Entities entities = ExileTestMetadata.getEntities();
         String id = location.getTestName();
-        // TODO - get this from the metadata
-        final Recommendation recommendation = Recommendation.XML1_1;
+        Recommendation recommendation = metadata.getRecommendation();
         final String sections = "N/A";
-        // TODO - get this from the metadata
-        final boolean namespace = true;
-        // TODO - get this from the metadata
-        final ConfType confType = ConfType.Valid;
-        // TODO - get this from the metadata
-        final XmlVersion xmlVersion = XmlVersion.V11;
+        boolean namespace = ExileTestMetadata.getNamespace();
+        ConfType confType = metadata.getSyntax().getConfType();
+        XmlVersion xmlVersion = metadata.getXmlVersion();
         String prefix = confTestCases.getPrefix();
         return new ConfTest(confTestCases,
                 path,

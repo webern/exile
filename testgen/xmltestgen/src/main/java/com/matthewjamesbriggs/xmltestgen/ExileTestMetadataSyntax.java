@@ -9,4 +9,14 @@ import lombok.NoArgsConstructor;
     private ExileTestMetadataGood good;
     @Getter
     private ExileTestMetadataBad bad;
+
+    ConfType getConfType() throws TestGenException {
+        if (good != null) {
+            return ConfType.Valid;
+        } else if (bad != null) {
+            return ConfType.NotWellFormed;
+        } else {
+            throw new TestGenException("uninizialed");
+        }
+    }
 }

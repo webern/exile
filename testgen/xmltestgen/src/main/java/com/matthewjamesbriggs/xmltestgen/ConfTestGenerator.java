@@ -187,7 +187,7 @@ class ConfTestGenerator {
                 Matcher versionMatcher = rxVersion.matcher(line);
                 if (versionMatcher.find()) {
                     try {
-                        version = versionMatcher.group(0);
+                        version = versionMatcher.group(1);
                     } catch (Throwable e) {
                         // ignore
                     }
@@ -195,7 +195,7 @@ class ConfTestGenerator {
                 Matcher encodingMatcher = rxEncoding.matcher(line);
                 if (encodingMatcher.find()) {
                     try {
-                        encoding = encodingMatcher.group(0);
+                        encoding = encodingMatcher.group(1);
                     } catch (Throwable e) {
                         // ignore
                     }
