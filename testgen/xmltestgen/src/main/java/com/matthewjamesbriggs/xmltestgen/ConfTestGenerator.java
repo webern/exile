@@ -131,85 +131,12 @@ class ConfTestGenerator {
     }
 
     private static void writeExpectedDoctype(DocumentType dt, FileOutputStream os) throws TestGenException {
-        //        F.writeln(os, "// let mut doctype = Doctype::new();");
-        //        F.writeln(os, "// dt.toString(): %s", dt.toString());
-        //        F.writeln(os, "// dt.getInternalSubset(): %s", dt.getInternalSubset());
-        //        F.writeln(os, "// dt.getName(): %s", dt.getName());
-        //        F.writeln(os, "// dt.getInternalSubset(): %s", dt.getChildNodes());
-        NodeList childNodes = dt.getChildNodes();
-        /*
-        public static final short ELEMENT_NODE              = 1;
-        public static final short ATTRIBUTE_NODE            = 2;
-        public static final short TEXT_NODE                 = 3;
-        public static final short CDATA_SECTION_NODE        = 4;
-        public static final short ENTITY_REFERENCE_NODE     = 5;
-        public static final short ENTITY_NODE               = 6;
-        public static final short PROCESSING_INSTRUCTION_NODE = 7;
-        public static final short COMMENT_NODE              = 8;
-        public static final short DOCUMENT_NODE             = 9;
-        public static final short DOCUMENT_TYPE_NODE        = 10;
-        public static final short DOCUMENT_FRAGMENT_NODE    = 11;
-        public static final short NOTATION_NODE             = 12;
-        */
-        for (int i = 0; i < childNodes.getLength(); ++i) {
-            Node node = childNodes.item(i);
-            switch (node.getNodeType()) {
-                case Node.ELEMENT_NODE:
-                    F.writeln(os, "// ELEMENT_NODE: %s", node.getLocalName());
-                    break;
-                case Node.ATTRIBUTE_NODE:
-                    F.writeln(os, "// ATTRIBUTE_NODE: %s", node.getLocalName());
-                    break;
-                case Node.TEXT_NODE:
-                    F.writeln(os, "// TEXT_NODE: %s", node.getLocalName());
-                    break;
-                case Node.CDATA_SECTION_NODE:
-                    F.writeln(os, "// CDATA_SECTION_NODE: %s", node.getLocalName());
-                    break;
-                case Node.ENTITY_REFERENCE_NODE:
-                    F.writeln(os, "// ENTITY_REFERENCE_NODE: %s", node.getLocalName());
-                    break;
-                case Node.ENTITY_NODE:
-                    F.writeln(os, "// ENTITY_NODE: %s", node.getLocalName());
-                    break;
-                case Node.PROCESSING_INSTRUCTION_NODE:
-                    F.writeln(os, "// PROCESSING_INSTRUCTION_NODE: %s", node.getLocalName());
-                    break;
-                case Node.COMMENT_NODE:
-                    F.writeln(os, "// COMMENT_NODE: %s", node.getLocalName());
-                    break;
-                case Node.DOCUMENT_NODE:
-                    F.writeln(os, "// DOCUMENT_NODE: %s", node.getLocalName());
-                    break;
-                case Node.DOCUMENT_TYPE_NODE:
-                    F.writeln(os, "// DOCUMENT_TYPE_NODE: %s", node.getLocalName());
-                    break;
-                case Node.DOCUMENT_FRAGMENT_NODE:
-                    F.writeln(os, "// DOCUMENT_FRAGMENT_NODE: %s", node.getLocalName());
-                    break;
-                case Node.NOTATION_NODE:
-                    F.writeln(os, "// NOTATION_NODE: %s", node.getLocalName());
-                    break;
-            }
+        if (dt == null) {
+            return;
         }
-        F.writeln(os, "// dt.getEntities()...");
-        writeNamedNodeMap(dt.getEntities(), os);
-        F.writeln(os, "// dt.getNotations()...");
-        writeNamedNodeMap(dt.getNotations(), os);
-        F.writeln(os, "// dt.getAttributes()...");
-        writeNamedNodeMap(dt.getAttributes(), os);
-
-        F.writeln(os, "// dt.getPublicId(): %s", dt.getPublicId());
-        F.writeln(os, "// dt.getInternalSubset(): %s", dt.getInternalSubset());
-        F.writeln(os, "// dt.getSystemId(): %s", dt.getSystemId());
-        F.writeln(os, "// dt.getBaseURI(): %s", dt.getBaseURI());
-        F.writeln(os, "// dt.getLocalName(): %s", dt.getLocalName());
-        F.writeln(os, "// dt.getNodeName(): %s", dt.getNodeName());
-        //        F.writeln(os, "// dt.getInternalSubset(): %s", dt.getInternalSubset());
-        //        F.writeln(os, "// dt.getInternalSubset(): %s", dt.getInternalSubset());
-        //        F.writeln(os, "// dt.getInternalSubset(): %s", dt.getInternalSubset());
-        //        F.writeln(os, "// dt.getInternalSubset(): %s", dt.getInternalSubset());
-        //        F.writeln(os, "// dt.getInternalSubset(): %s", dt.getInternalSubset());
+        F.writeln(os, "// TODO - write doctype information");
+        F.writeln(os, "/*");
+        F.writeln(os, "%s*/", dt.getInternalSubset());
     }
 
     private static void writeNamedNodeMap(NamedNodeMap nnm, FileOutputStream os) throws TestGenException {

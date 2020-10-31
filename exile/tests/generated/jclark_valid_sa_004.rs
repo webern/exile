@@ -1,7 +1,7 @@
 // generated file, do not edit
 
-use std::path::PathBuf;
 use exile::Document;
+use std::path::PathBuf;
 
 const MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
 const INPUT_DATA: &str = "input_data";
@@ -23,17 +23,11 @@ fn valid_sa_004() {
 }
 
 fn expected() -> Document {
-let mut doc = Document::new();
-// dt.getEntities()...
-// dt.getNotations()...
-// dt.getAttributes()...
-// dt.getPublicId(): null
-// dt.getInternalSubset(): <!ELEMENT doc (#PCDATA)>
-<!ATTLIST doc a1 CDATA #IMPLIED>
-
-// dt.getSystemId(): null
-// dt.getBaseURI(): null
-// dt.getLocalName(): null
-// dt.getNodeName(): doc
-doc
+    let mut doc = Document::new();
+    // TODO - write doctype information
+    /*
+    <!ELEMENT doc (#PCDATA)>
+    <!ATTLIST doc a1 CDATA #IMPLIED>
+    */
+    doc
 }
