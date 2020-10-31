@@ -9,7 +9,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -96,8 +95,9 @@ class ConfTestGenerator {
     }
 
     private static void writeUseStatements(ConfTest t, FileOutputStream os) throws TestGenException {
-        F.writeln(os, "use std::path::PathBuf;");
         F.writeln(os, "use exile::Document;");
+        F.writeln(os, "use std::path::PathBuf;");
+        F.writeln(os, "use xdoc::Declaration;");
     }
 
     private static void writeConstDeclarations(ConfTest t, FileOutputStream os) throws TestGenException {
@@ -121,7 +121,17 @@ class ConfTestGenerator {
         F.writeln(os, "#[test]");
         F.writeln(os, "fn %s() {", t.getSnakeCase());
         F.writeln(os, "    let path = path();");
-        F.writeln(os, "    let _doc = exile::load(&path).unwrap();");
+        F.writeln(os, "    let loaded = exile::load(&path).unwrap();");
+        F.writeln(os, "    let expected = expected();");
+        F.writeln(os, "    if loaded != expected {");
+        F.writeln(os, "        let loaded_str = loaded.to_string();");
+        F.writeln(os, "        let expected_str = expected.to_string();");
+        F.writeln(os, "        if loaded_str != expected_str {");
+        F.writeln(os, "            assert_eq!(loaded_str, expected_str);");
+        F.writeln(os, "        } else {");
+        F.writeln(os, "            assert_eq!(loaded, expected);");
+        F.writeln(os, "        }");
+        F.writeln(os, "    }");
         F.writeln(os, "}");
     }
 
@@ -131,12 +141,24 @@ class ConfTestGenerator {
         Document doc = X.loadShallow(t.getPath().toFile());
         DocumentType doctype = doc.getDoctype();
         F.writeln(os, "let mut doc = Document::new();");
-        writeExpectedXmlVersion(t, os);
+        writeExpectedXmlDeclaration(t, os);
         if (doctype != null) {
             writeExpectedDoctype(doctype, os);
         }
+        writeExpectedContents(t, doc, os);
         F.writeln(os, "doc");
         F.writeln(os, "}");
+    }
+
+    private static void writeExpectedContents(ConfTest t, Document doc, FileOutputStream os) throws TestGenException {
+        Element root = doc.getDocumentElement();
+        String name = root.getNodeName();
+        F.writeln(os, "let mut root = doc.root_mut();");
+        F.writeln(os, "root.set_name(r#\"%s\"#);", name);
+    }
+
+    private static void writeExpectedRootNode(ConfTest t, Document doc, FileOutputStream os) throws TestGenException {
+
     }
 
     private static List<String> readAllLines(Path path, Charset cs) throws TestGenException {
@@ -147,17 +169,27 @@ class ConfTestGenerator {
         }
     }
 
-    private static void writeExpectedXmlVersion(ConfTest t, FileOutputStream os) throws TestGenException {
+    private static void writeExpectedXmlDeclaration(ConfTest t, FileOutputStream os) throws TestGenException {
         // TODO - what if it's not UTF-8>
         List<String> lines = readAllLines(t.getPath(), StandardCharsets.UTF_8);
-        Pattern regx = Pattern.compile("version=\"([0-9]+.[0-9]+)\"", 0);
+        Pattern rxVersion = Pattern.compile("version=\"([0-9]+.[0-9]+)\"", 0);
+        Pattern rxEncoding = Pattern.compile("encoding=\"(.+)\"", 0);
         String version = null;
+        String encoding = null;
         for (String line : lines) {
-            if (line.contains("<?xml") && line.contains("version=")) {
-                Matcher matcher = regx.matcher(line);
-                if (matcher.find()) {
+            if (line.contains("<?xml")) {
+                Matcher versionMatcher = rxVersion.matcher(line);
+                if (versionMatcher.find()) {
                     try {
-                        version = matcher.group(0);
+                        version = versionMatcher.group(0);
+                    } catch (Throwable e) {
+                        // ignore
+                    }
+                }
+                Matcher encodingMatcher = rxEncoding.matcher(line);
+                if (encodingMatcher.find()) {
+                    try {
+                        encoding = encodingMatcher.group(0);
                     } catch (Throwable e) {
                         // ignore
                     }
@@ -165,15 +197,26 @@ class ConfTestGenerator {
                 break;
             }
         }
+        String rsVersion = "BAD";
         if (version == null) {
-            F.writeln(os, "doc.setVersion(None);");
+            rsVersion = "None";
         } else if (version.equals("1.0")) {
-            F.writeln(os, "doc.setVersion(1.0);");
+            rsVersion = "Some(Version::V10)";
         } else if (version.equals("1.1")) {
-            F.writeln(os, "doc.setVersion(1.1);");
+            rsVersion = "Some(Version::V11)";
         } else {
             throw new TestGenException("Bad XML version parsed: " + version);
         }
+        String rsEncoding = "BAD";
+        if (encoding == null) {
+            rsEncoding = "None";
+        } else if (encoding.equals("UTF-8")) {
+            rsEncoding = "Some(Encoding::Utf8)";
+        } else {
+            throw new TestGenException("Unsupported XML encoding parsed: " + encoding);
+        }
+        F.writeln(os, "doc.set_declaration(Declaration{ version: %s, encoding: %s });", rsVersion, rsEncoding);
+        //
     }
 
     private static void writeExpectedDoctype(DocumentType dt, FileOutputStream os) throws TestGenException {

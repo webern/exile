@@ -88,6 +88,12 @@ impl Element {
         self.name.clone()
     }
 
+    // TODO - fullname? figure out namespace stuff
+    /// Sets the name of this element.
+    pub fn set_name<S: AsRef<str>>(&mut self, name: S) {
+        self.name = name.as_ref().into()
+    }
+
     /// Does this element have any sub elements. For example, if the element is empty or contains
     /// only text and/or pis and/or comments, then false. if the element has elements, then true.
     pub fn has_children(&self) -> bool {

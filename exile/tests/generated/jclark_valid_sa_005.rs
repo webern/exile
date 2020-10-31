@@ -2,6 +2,7 @@
 
 use exile::Document;
 use std::path::PathBuf;
+use xdoc::Declaration;
 
 const MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
 const INPUT_DATA: &str = "input_data";
@@ -19,12 +20,27 @@ fn path() -> PathBuf {
 #[test]
 fn valid_sa_005() {
     let path = path();
-    let _doc = exile::load(&path).unwrap();
+    let loaded = exile::load(&path).unwrap();
+    let expected = expected();
+    if loaded != expected {
+        let loaded_str = loaded.to_string();
+        let expected_str = expected.to_string();
+        if loaded_str != expected_str {
+            assert_eq!(loaded_str, expected_str);
+        } else {
+            assert_eq!(loaded, expected);
+        }
+    }
 }
 
 fn expected() -> Document {
     let mut doc = Document::new();
-    // doc.setVersion(None);
+    doc.set_declaration(Declaration {
+        version: None,
+        encoding: None,
+    });
     // TODO - write doctype information
+    let mut root = doc.root_mut();
+    root.set_name(r#"doc"#);
     doc
 }

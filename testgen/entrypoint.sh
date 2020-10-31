@@ -18,8 +18,9 @@ d="--custom-schema /fake"
 e="--xml-outdir /workspace/exile/tests"
 f="--schema-outdir /fake"
 g="--rust-root /workspace"
+h="--exile-tests /workspace/xtest/data" # TODO - this will move
 
 # use maven to execute the program
 mvn exec:java \
   -Dexec.mainClass="com.matthewjamesbriggs.xmltestgen.App" \
-  -Dexec.args="${a} ${b} ${c} ${d} ${e} ${f} ${g}"
+  -Dexec.args="${a} ${b} ${c} ${d} ${e} ${f} ${g} ${h}"

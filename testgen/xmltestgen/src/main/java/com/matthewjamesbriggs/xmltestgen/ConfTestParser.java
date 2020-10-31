@@ -1,17 +1,40 @@
 package com.matthewjamesbriggs.xmltestgen;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
 class ConfTestParser {
+    @Getter private static class ExileTestFiles {
+        private final String testName;
+        private final File xml;
+        private final File metadata;
+        private final File expected;
+
+        ExileTestFiles(File mainFile) throws TestGenException {
+            F.checkFile(mainFile);
+            xml = F.canonicalize(mainFile);
+            String filename = xml.toPath().getFileName().toString();
+            // remove .xml extension
+            testName = filename.substring(0, filename.length() - 4);
+            Path parent = xml.toPath().getParent();
+            metadata = new File(Paths.get(parent.toString(), testName + ".metadata.json").toString());
+            F.checkFile(metadata);
+            expected = new File(Paths.get(parent.toString(), testName + ".expected.xml").toString());
+        }
+    }
+
     static List<ConfTest> parse(String w3cXmlFilepath) throws TestGenException {
         Document doc = X.loadComplete(new File(w3cXmlFilepath));
         return parseDocument(doc);
@@ -117,5 +140,32 @@ class ConfTestParser {
         } catch (URISyntaxException e) {
             throw new TestGenException("malformed uri " + element.getBaseURI(), e);
         }
+    }
+
+    static List<ConfTest> parseExileTests(File dir) throws TestGenException {
+        List<File> files = listExileTestFiles(dir);
+        List<ExileTestFiles> exiles = new ArrayList<>();
+        for (File file : files) {
+            exiles.add(new ExileTestFiles(file));
+        }
+        return new ArrayList<>();
+    }
+
+    private static List<File> listExileTestFiles(File dir) throws TestGenException {
+        List<File> files = new ArrayList<>();
+        try {
+            Files.list(dir.toPath()).limit(9999999).forEach(path -> {
+                if (!path.getFileName().toString().startsWith("disabled.") &&
+                        !path.toString().endsWith(".expected.xml") &&
+                        !path.toString().endsWith("metadata.json") &&
+                        path.toString().endsWith(".xml")) {
+                    files.add(new File(path.toString()));
+                    System.out.println(path);
+                }
+            });
+        } catch (IOException e) {
+            throw new TestGenException("Unable to list dir: " + dir.toString(), e);
+        }
+        return files;
     }
 }
