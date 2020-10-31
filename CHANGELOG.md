@@ -11,7 +11,11 @@ Currently we are using v0.0.x where every version can and will contain breaking 
 - Support for single-quoted attributes [#58]
 - `exile::load` for loading files [#58]
 
+### Changed
+- The `xdoc` `Version` and `Encoding` enums were weird, changed to remove `None` [#59]
+
 [#58]: https://github.com/webern/exile/pull/58
+[#59]: https://github.com/webern/exile/pull/59
 
 ## [v0.0.1] - 2020-07-18
 ### Added

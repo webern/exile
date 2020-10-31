@@ -189,7 +189,7 @@ impl Document {
             if let Err(e) = write!(writer, "<?xml ") {
                 return wrap!(e);
             }
-            let mut need_space = true;
+            let need_space = true;
             if let Some(version) = &self.declaration.version {
                 match version {
                     Version::V10 => {
@@ -363,8 +363,8 @@ mod tests {
 
         Document {
             declaration: Declaration {
-                version: Version::V10,
-                encoding: Encoding::Utf8,
+                version: Some(Version::V10),
+                encoding: Some(Encoding::Utf8),
             },
             doctypedecl: None,
             prolog_misc: vec![],

@@ -145,10 +145,7 @@ impl<'a> Iter<'a> {
         if self.is_whitespace() {
             return true;
         }
-        match self.st.c {
-            ' ' | '\t' | '=' | '/' | '>' | '\n' => true,
-            _ => false,
-        }
+        matches!(self.st.c, ' ' | '\t' | '=' | '/' | '>' | '\n')
     }
 
     pub(crate) fn expect_name_start_char(&self) -> Result<()> {
