@@ -21,7 +21,7 @@ fn main() {
 
     let mut doc = Document::new();
     doc.set_declaration(Declaration {
-        version: Version::OneDotOne,
+        version: Version::V11,
         encoding: Encoding::Utf8,
     });
     doc.push_prolog_misc(Misc::PI(PI {

@@ -4,7 +4,15 @@ import org.w3c.dom.*;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 class ConfTestGenerator {
     /// The tests directory, e.g. exile_repo/exile/tests
@@ -123,6 +131,7 @@ class ConfTestGenerator {
         Document doc = X.loadShallow(t.getPath().toFile());
         DocumentType doctype = doc.getDoctype();
         F.writeln(os, "let mut doc = Document::new();");
+        writeExpectedXmlVersion(t, os);
         if (doctype != null) {
             writeExpectedDoctype(doctype, os);
         }
@@ -130,13 +139,48 @@ class ConfTestGenerator {
         F.writeln(os, "}");
     }
 
+    private static List<String> readAllLines(Path path, Charset cs) throws TestGenException {
+        try {
+            return Files.readAllLines(path, cs);
+        } catch (IOException e) {
+            throw new TestGenException("Unable to read lines of '" + path.toString() + "': " + e.getMessage());
+        }
+    }
+
+    private static void writeExpectedXmlVersion(ConfTest t, FileOutputStream os) throws TestGenException {
+        // TODO - what if it's not UTF-8>
+        List<String> lines = readAllLines(t.getPath(), StandardCharsets.UTF_8);
+        Pattern regx = Pattern.compile("version=\"([0-9]+.[0-9]+)\"", 0);
+        String version = null;
+        for (String line : lines) {
+            if (line.contains("<?xml") && line.contains("version=")) {
+                Matcher matcher = regx.matcher(line);
+                if (matcher.find()) {
+                    try {
+                        version = matcher.group(0);
+                    } catch (Throwable e) {
+                        // ignore
+                    }
+                }
+                break;
+            }
+        }
+        if (version == null) {
+            F.writeln(os, "doc.setVersion(None);");
+        } else if (version.equals("1.0")) {
+            F.writeln(os, "doc.setVersion(1.0);");
+        } else if (version.equals("1.1")) {
+            F.writeln(os, "doc.setVersion(1.1);");
+        } else {
+            throw new TestGenException("Bad XML version parsed: " + version);
+        }
+    }
+
     private static void writeExpectedDoctype(DocumentType dt, FileOutputStream os) throws TestGenException {
         if (dt == null) {
             return;
         }
         F.writeln(os, "// TODO - write doctype information");
-        F.writeln(os, "/*");
-        F.writeln(os, "%s*/", dt.getInternalSubset());
     }
 
     private static void writeNamedNodeMap(NamedNodeMap nnm, FileOutputStream os) throws TestGenException {

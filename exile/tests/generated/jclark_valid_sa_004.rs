@@ -24,10 +24,7 @@ fn valid_sa_004() {
 
 fn expected() -> Document {
     let mut doc = Document::new();
+    // doc.setVersion(None);
     // TODO - write doctype information
-    /*
-    <!ELEMENT doc (#PCDATA)>
-    <!ATTLIST doc a1 CDATA #IMPLIED>
-    */
     doc
 }

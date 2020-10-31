@@ -5,7 +5,7 @@
   },
   "expected": {
     "declaration": {
-      "version": "one_dot_one",
+      "version": "v11",
       "encoding": "utf8"
     },
     "root": {
