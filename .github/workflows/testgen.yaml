@@ -2,12 +2,12 @@ name: testgen
 
 on:
   push:
-    branches: [ master, testgen, '*develop*' ]
+    branches: [ 'master', 'testgen', '*develop*' ]
   pull_request:
-    branches: [ "*" ]
+    branches: [ '*' ]
 
 jobs:
-  check-testgen:
+  testgen:
 
     runs-on: ubuntu-latest
 
