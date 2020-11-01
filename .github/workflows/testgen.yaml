@@ -2,7 +2,7 @@ name: testgen
 
 on:
   push:
-    branches: [ master, testgen ]
+    branches: [ master, testgen, '*develop*' ]
   pull_request:
     branches: [ "*" ]
 
