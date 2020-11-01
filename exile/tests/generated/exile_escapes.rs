@@ -37,10 +37,16 @@ fn escapes() {
 fn expected() -> Document {
     let mut doc = Document::new();
     doc.set_declaration(Declaration {
-        version: Some(Version: V10),
+        version: Some(Version::V10),
         encoding: None,
     });
     let mut root = doc.root_mut();
     root.set_name(r#"escapes"#);
+    let gen1n1 = root.add_new_child().unwrap();
+    gen1n1.set_name(r#"a"#);
+    gen1n1.add_attribute(r#"s"#, r#"<😃>"#);
+    let gen1n3 = root.add_new_child().unwrap();
+    gen1n3.set_name(r#"_b"#);
+    gen1n3.add_attribute(r#"x"#, r#"&"#);
     doc
 }

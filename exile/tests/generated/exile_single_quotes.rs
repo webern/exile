@@ -42,5 +42,7 @@ fn expected() -> Document {
     });
     let mut root = doc.root_mut();
     root.set_name(r#"foo"#);
+    root.add_attribute(r#"attr1"#, r#"bones"#);
+    root.add_attribute(r#"attr2"#, r#"bish"#);
     doc
 }

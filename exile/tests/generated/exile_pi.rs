@@ -38,10 +38,12 @@ fn pi() {
 fn expected() -> Document {
     let mut doc = Document::new();
     doc.set_declaration(Declaration {
-        version: Some(Version: V11),
+        version: Some(Version::V11),
         encoding: Some(Encoding::Utf8),
     });
     let mut root = doc.root_mut();
     root.set_name(r#"c"#);
+    let gen1n3 = root.add_new_child().unwrap();
+    gen1n3.set_name(r#"f"#);
     doc
 }

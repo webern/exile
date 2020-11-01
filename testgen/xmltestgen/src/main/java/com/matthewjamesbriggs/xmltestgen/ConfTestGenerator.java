@@ -199,10 +199,71 @@ class ConfTestGenerator {
         String name = root.getNodeName();
         F.writeln(os, "let mut root = doc.root_mut();");
         F.writeln(os, "root.set_name(r#\"%s\"#);", name);
+        NamedNodeMap attributes = root.getAttributes();
+        int numAttributes = attributes.getLength();
+        for (int i = 0; i < numAttributes; ++i) {
+            Node item = attributes.item(i);
+            String key = item.getNodeName();
+            String val = item.getNodeValue();
+            F.writeln(os, "root.add_attribute(r#\"%s\"#, r#\"%s\"#);", key, val);
+        }
+        writeChildren(root, "root", 0, t, doc, os);
     }
 
-    private static void writeExpectedRootNode(ConfTest t, Document doc, FileOutputStream os) throws TestGenException {
+    private static void writeChildren(Node parent,
+                                      String parentVariableName,
+                                      int parentGeneration,
+                                      ConfTest t,
+                                      Document doc,
+                                      FileOutputStream os) throws TestGenException {
+        NodeList children = parent.getChildNodes();
+        int childCount = children.getLength();
+        for (int i = 0; i < childCount; ++i) {
+            Node child = children.item(i);
+            XType xtype = XType.fromNode(child);
+            switch (xtype) {
+                case Element:
+                    writeElementChild(parentVariableName, parentGeneration, i, (Element) child, t, doc, os);
+                    break;
+                case Attribute:
+                case Text:
+                case CData:
+                case EntityReference:
+                case Entity:
+                case ProcessingInstruction:
+                case Comment:
+                case Document:
+                case DocumentType:
+                case DocumentFragment:
+                case Notation:
+                case Unknown:
+                default:
+                    System.out.println(String.format("%s: %s", xtype.toString(), child.getNodeName()));
+                    break;
+            }
+        }
+    }
 
+    private static void writeElementChild(String parentVariableName,
+                                          int parentGeneration,
+                                          int childIndex,
+                                          Element child,
+                                          ConfTest t,
+                                          Document doc,
+                                          FileOutputStream os) throws TestGenException {
+        int myGeneration = parentGeneration + 1;
+        String varName = String.format("gen%dn%d", myGeneration, childIndex);
+        F.writeln(os, "let %s = %s.add_new_child().unwrap();", varName, parentVariableName);
+        F.writeln(os, "%s.set_name(r#\"%s\"#);", varName, child.getNodeName());
+        NamedNodeMap attributes = child.getAttributes();
+        int numAttributes = attributes.getLength();
+        for (int i = 0; i < numAttributes; ++i) {
+            Node item = attributes.item(i);
+            String key = item.getNodeName();
+            String val = item.getNodeValue();
+            F.writeln(os, "%s.add_attribute(r#\"%s\"#, r#\"%s\"#);", varName, key, val);
+        }
+        writeChildren(child, varName, myGeneration, t, doc, os);
     }
 
     private static List<String> readAllLines(Path path, Charset cs) throws TestGenException {
@@ -218,9 +279,9 @@ class ConfTestGenerator {
         if (foundDecl.hasVersion()) {
             XmlVersion version = foundDecl.getVersion();
             if (version == XmlVersion.V10) {
-                rsVersion = "Some(Version:V10)";
+                rsVersion = "Some(Version::V10)";
             } else if (version == XmlVersion.V11) {
-                rsVersion = "Some(Version:V11)";
+                rsVersion = "Some(Version::V11)";
             }
         }
         String rsEncoding = "None";
@@ -326,4 +387,5 @@ class ConfTestGenerator {
         }
         return new FoundDecl(version, encoding);
     }
+
 }

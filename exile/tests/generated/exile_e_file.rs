@@ -38,10 +38,16 @@ fn e_file() {
 fn expected() -> Document {
     let mut doc = Document::new();
     doc.set_declaration(Declaration {
-        version: Some(Version: V10),
+        version: Some(Version::V10),
         encoding: Some(Encoding::Utf8),
     });
     let mut root = doc.root_mut();
     root.set_name(r#"cats"#);
+    let gen1n1 = root.add_new_child().unwrap();
+    gen1n1.set_name(r#"cat"#);
+    gen1n1.add_attribute(r#"name"#, r#"bones"#);
+    let gen1n3 = root.add_new_child().unwrap();
+    gen1n3.set_name(r#"cat"#);
+    gen1n3.add_attribute(r#"name"#, r#"bishop"#);
     doc
 }

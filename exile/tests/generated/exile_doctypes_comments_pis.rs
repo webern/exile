@@ -37,11 +37,19 @@ fn doctypes_comments_pis() {
 fn expected() -> Document {
     let mut doc = Document::new();
     doc.set_declaration(Declaration {
-        version: Some(Version: V10),
+        version: Some(Version::V10),
         encoding: None,
     });
     // TODO - write doctype information
     let mut root = doc.root_mut();
     root.set_name(r#"note"#);
+    let gen1n3 = root.add_new_child().unwrap();
+    gen1n3.set_name(r#"to"#);
+    let gen1n5 = root.add_new_child().unwrap();
+    gen1n5.set_name(r#"from"#);
+    let gen1n7 = root.add_new_child().unwrap();
+    gen1n7.set_name(r#"heading"#);
+    let gen1n9 = root.add_new_child().unwrap();
+    gen1n9.set_name(r#"body"#);
     doc
 }

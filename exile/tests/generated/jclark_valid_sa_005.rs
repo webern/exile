@@ -42,5 +42,6 @@ fn expected() -> Document {
     // TODO - write doctype information
     let mut root = doc.root_mut();
     root.set_name(r#"doc"#);
+    root.add_attribute(r#"a1"#, r#"v1"#);
     doc
 }
