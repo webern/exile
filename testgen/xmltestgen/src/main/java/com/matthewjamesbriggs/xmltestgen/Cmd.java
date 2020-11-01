@@ -44,6 +44,22 @@ class Cmd {
         }
     }
 
+    /**
+     * Run <code>cargo clippy --tests --locked -- -D warnings</code> in the specified directory.
+     *
+     * @param directory The directory to be in when running <code>cargo fmt</code>
+     * @throws TestGenException if <code>cargo clippy --tests --locked -- -D warnings</code> cannot be executed, or
+     *                          exits non-zero.
+     */
+    static void clippy(File directory) throws TestGenException {
+        CmdResult result = Cmd.exec("cargo clippy --tests --locked -- -D warnings", directory);
+        if (result.getExit() != 0) {
+            throw new TestGenException(String.format("cargo fmt failed with exit: %d\n%s",
+                    result.getExit(),
+                    result.getStderr()));
+        }
+    }
+
     private static String getStdErr(Process process) throws TestGenException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
         StringBuilder everything = new StringBuilder();

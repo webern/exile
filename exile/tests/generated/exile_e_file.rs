@@ -16,7 +16,7 @@ fn path() -> PathBuf {
         .join(INPUT_DATA)
         .join(FILENAME);
     p.canonicalize()
-        .expect(format!("bad path: {}", p.display()).as_str())
+        .unwrap_or_else(|e| panic!("bad path: {}: {}", p.display(), e))
 }
 
 #[test]
@@ -41,7 +41,7 @@ fn expected() -> Document {
         version: Some(Version::V10),
         encoding: Some(Encoding::Utf8),
     });
-    let mut root = doc.root_mut();
+    let root = doc.root_mut();
     root.set_name(r#"cats"#);
     let gen1n1 = root.add_new_child().unwrap();
     gen1n1.set_name(r#"cat"#);

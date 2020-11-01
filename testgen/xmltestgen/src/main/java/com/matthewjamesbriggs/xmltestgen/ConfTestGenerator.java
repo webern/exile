@@ -99,6 +99,7 @@ class ConfTestGenerator {
         F.writeln(mod, "");
         F.closeStream(modRs, mod);
         Cmd.fmt(rustWorkspaceDir);
+        Cmd.clippy(rustWorkspaceDir);
     }
 
     private void generateValidTest(ConfTest t, FileOutputStream mod) throws TestGenException {
@@ -155,7 +156,7 @@ class ConfTestGenerator {
         F.writeln(os, "        .join(INPUT_DATA)");
         F.writeln(os, "        .join(FILENAME);");
         F.writeln(os, "    p.canonicalize()");
-        F.writeln(os, "        .expect(format!(\"bad path: {}\", p.display()).as_str())");
+        F.writeln(os, "        .unwrap_or_else(|e| panic!(\"bad path: {}: {}\", p.display(), e))");
         F.writeln(os, "}");
     }
 
@@ -197,7 +198,7 @@ class ConfTestGenerator {
     private static void writeExpectedContents(ConfTest t, Document doc, FileOutputStream os) throws TestGenException {
         Element root = doc.getDocumentElement();
         String name = root.getNodeName();
-        F.writeln(os, "let mut root = doc.root_mut();");
+        F.writeln(os, "let root = doc.root_mut();");
         F.writeln(os, "root.set_name(r#\"%s\"#);", name);
         NamedNodeMap attributes = root.getAttributes();
         int numAttributes = attributes.getLength();
