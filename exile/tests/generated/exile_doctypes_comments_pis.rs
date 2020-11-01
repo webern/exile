@@ -45,11 +45,15 @@ fn expected() -> Document {
     root.set_name(r#"note"#);
     let gen1n3 = root.add_new_child().unwrap();
     gen1n3.set_name(r#"to"#);
+    gen1n3.add_text(r#"Tove"#);
     let gen1n5 = root.add_new_child().unwrap();
     gen1n5.set_name(r#"from"#);
+    gen1n5.add_text(r#"Jani"#);
     let gen1n7 = root.add_new_child().unwrap();
     gen1n7.set_name(r#"heading"#);
+    gen1n7.add_text(r#"Reminder"#);
     let gen1n9 = root.add_new_child().unwrap();
     gen1n9.set_name(r#"body"#);
+    gen1n9.add_text(r#"Don't forget me this weekend"#);
     doc
 }

@@ -132,6 +132,11 @@ impl Element {
         }
     }
 
+    /// Append a text node to this elements nodes.
+    pub fn add_text<S: AsRef<str>>(&mut self, text: S) {
+        self.nodes.push(Node::Text(text.as_ref().into()))
+    }
+
     /// Does this element have any sub elements. For example, if the element is empty or contains
     /// only text and/or pis and/or comments, then false. if the element has elements, then true.
     pub fn has_children(&self) -> bool {

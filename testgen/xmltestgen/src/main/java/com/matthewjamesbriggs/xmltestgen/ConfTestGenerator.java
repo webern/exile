@@ -227,7 +227,10 @@ class ConfTestGenerator {
                     writeElementChild(parentVariableName, parentGeneration, i, (Element) child, t, doc, os);
                     break;
                 case Attribute:
+                    throw new TestGenException("We should not encounter an attribute node.");
                 case Text:
+                    writeTextChild(parentVariableName, parentGeneration, i, (Text) child, t, doc, os);
+                    break;
                 case CData:
                 case EntityReference:
                 case Entity:
@@ -243,6 +246,26 @@ class ConfTestGenerator {
                     break;
             }
         }
+    }
+
+    private static void writeTextChild(String parentVariableName,
+                                       int parentGeneration,
+                                       int i,
+                                       Text child,
+                                       ConfTest t,
+                                       Document doc,
+                                       FileOutputStream os) throws TestGenException {
+        // TODO - if we start to support ignorable whitespace nodes or preserve directives, this will not work
+        if (child.isElementContentWhitespace()) {
+            return;
+        }
+        // HACK - this is a super-funky way of figuring out whether the text node is ignoreable whitespace
+        if (child.getWholeText().trim().isEmpty()) {
+            return;
+        }
+        // TODO - this probably not work once we get into more complicated test cases (e.g. CData and entities, etc)
+        String text = child.getWholeText();
+        F.writeln(os, "%s.add_text(r#\"%s\"#);", parentVariableName, text);
     }
 
     private static void writeElementChild(String parentVariableName,
@@ -301,54 +324,6 @@ class ConfTestGenerator {
             return;
         }
         F.writeln(os, "// TODO - write doctype information");
-    }
-
-    private static void writeNamedNodeMap(NamedNodeMap nnm, FileOutputStream os) throws TestGenException {
-        if (nnm == null) {
-            return;
-        }
-        int len = nnm.getLength();
-        for (int i = 0; i < len; ++i) {
-            Node node = nnm.item(i);
-            switch (node.getNodeType()) {
-                case Node.ELEMENT_NODE:
-                    F.writeln(os, "// ELEMENT_NODE: %s", node.getLocalName());
-                    break;
-                case Node.ATTRIBUTE_NODE:
-                    F.writeln(os, "// ATTRIBUTE_NODE: %s", node.getLocalName());
-                    break;
-                case Node.TEXT_NODE:
-                    F.writeln(os, "// TEXT_NODE: %s", node.getLocalName());
-                    break;
-                case Node.CDATA_SECTION_NODE:
-                    F.writeln(os, "// CDATA_SECTION_NODE: %s", node.getLocalName());
-                    break;
-                case Node.ENTITY_REFERENCE_NODE:
-                    F.writeln(os, "// ENTITY_REFERENCE_NODE: %s", node.getLocalName());
-                    break;
-                case Node.ENTITY_NODE:
-                    F.writeln(os, "// ENTITY_NODE: %s", node.getLocalName());
-                    break;
-                case Node.PROCESSING_INSTRUCTION_NODE:
-                    F.writeln(os, "// PROCESSING_INSTRUCTION_NODE: %s", node.getLocalName());
-                    break;
-                case Node.COMMENT_NODE:
-                    F.writeln(os, "// COMMENT_NODE: %s", node.getLocalName());
-                    break;
-                case Node.DOCUMENT_NODE:
-                    F.writeln(os, "// DOCUMENT_NODE: %s", node.getLocalName());
-                    break;
-                case Node.DOCUMENT_TYPE_NODE:
-                    F.writeln(os, "// DOCUMENT_TYPE_NODE: %s", node.getLocalName());
-                    break;
-                case Node.DOCUMENT_FRAGMENT_NODE:
-                    F.writeln(os, "// DOCUMENT_FRAGMENT_NODE: %s", node.getLocalName());
-                    break;
-                case Node.NOTATION_NODE:
-                    F.writeln(os, "// NOTATION_NODE: %s", node.getLocalName());
-                    break;
-            }
-        }
     }
 
     private void copyXmlTestFile(ConfTest t) throws TestGenException {

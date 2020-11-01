@@ -51,6 +51,7 @@ fn expected() -> Document {
     gen2n1.add_attribute(r#"id"#, r#"P1"#);
     let gen3n1 = gen2n1.add_new_child().unwrap();
     gen3n1.set_name(r#"part-name"#);
+    gen3n1.add_text(r#"No Name"#);
     let gen1n3 = root.add_new_child().unwrap();
     gen1n3.set_name(r#"part"#);
     gen1n3.add_attribute(r#"id"#, r#"P1"#);

@@ -48,5 +48,6 @@ fn expected() -> Document {
     let gen1n3 = root.add_new_child().unwrap();
     gen1n3.set_name(r#"_b"#);
     gen1n3.add_attribute(r#"x"#, r#"&"#);
+    gen1n3.add_text(r#"'"&"#);
     doc
 }
