@@ -11,6 +11,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -181,19 +182,62 @@ class ConfTestGenerator {
     private static void writeExpectedFunction(ConfTest t,
                                               FoundDecl foundDecl,
                                               FileOutputStream os) throws TestGenException {
-        //        F.writeln(os, "// Creates a document that matches %s", t.getFileRename());
+
         F.writeln(os, "fn expected() -> Document {");
         Document doc = X.loadShallow(t.getPath().toFile());
-        DocumentType doctype = doc.getDoctype();
         F.writeln(os, "let mut doc = Document::new();");
         writeExpectedXmlDeclaration(foundDecl, os);
+        List<Node> prelude = findPrelude(doc);
+        List<Node> postlude = findPostlude(doc);
+        DocumentType doctype = doc.getDoctype();
         if (doctype != null) {
             writeExpectedDoctype(doctype, os);
         }
+        writeExpectedPrelude(prelude, os);
         writeExpectedContents(t, doc, os);
+        writeExpectedPostlude(prelude, os);
         F.writeln(os, "doc");
         F.writeln(os, "}");
     }
+
+
+    private static void writeExpectedPrelude(List<Node> prelude, FileOutputStream os) throws TestGenException {
+        for (Node node : prelude) {
+            XType xtype = XType.fromNode(node);
+            if (xtype == XType.ProcessingInstruction) {
+                ProcessingInstruction pi = (ProcessingInstruction) node;
+                String target = pi.getTarget();
+                String data = pi.getData();
+                String[] split = data.split("\\s");
+                List<String> instructions = new ArrayList<>();
+                for (String s : split) {
+                    String trimmed = s.trim();
+                    if (!trimmed.isEmpty()) {
+                        instructions.add(trimmed);
+                    }
+                }
+                F.writeln(os, "doc.push_prolog_misc(xdoc::Misc::PI(xdoc::PI {");
+                F.writeln(os, "target: r#\"%s\"#.into(),", target);
+                F.writeln(os, "instructions: vec![");
+                for (String instruction : instructions) {
+                    F.writeln(os, "r#\"%s\"#.to_owned(),", instruction);
+                }
+                F.writeln(os, "],");
+                F.writeln(os, "}));");
+            }
+
+        }
+        /*
+            doc.push_prolog_misc(xdoc::Misc::PI(PI {
+                target: "foo".into(),
+                instructions: vec!["".to_owned()],
+            }));
+         */
+    }
+
+    private static void writeExpectedPostlude(List<Node> prelude, FileOutputStream os) throws TestGenException {
+    }
+
 
     private static void writeExpectedContents(ConfTest t, Document doc, FileOutputStream os) throws TestGenException {
         Element root = doc.getDocumentElement();
@@ -364,4 +408,35 @@ class ConfTestGenerator {
         return new FoundDecl(version, encoding);
     }
 
+    private static List<Node> findPrelude(Document doc) throws TestGenException {
+        List<Node> result = new ArrayList<>();
+        NodeList children = doc.getChildNodes();
+        int len = children.getLength();
+        for (int i = 0; i < len; ++i) {
+            Node node = children.item(i);
+            if (XType.fromNode(node) == XType.Element) {
+                // we reached the root node of the document, prelude is done
+                return result;
+            } else {
+                result.add(node);
+            }
+        }
+        return result;
+    }
+
+    private static List<Node> findPostlude(Document doc) throws TestGenException {
+        List<Node> result = new ArrayList<>();
+        NodeList children = doc.getChildNodes();
+        int len = children.getLength();
+        boolean foundRoot = false;
+        for (int i = 0; i < len; ++i) {
+            Node node = children.item(i);
+            if (XType.fromNode(node) == XType.Element) {
+                foundRoot = true;
+            } else if (foundRoot) {
+                result.add(node);
+            }
+        }
+        return result;
+    }
 }

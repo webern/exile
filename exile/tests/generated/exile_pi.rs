@@ -41,6 +41,10 @@ fn expected() -> Document {
         version: Some(Version::V11),
         encoding: Some(Encoding::Utf8),
     });
+    doc.push_prolog_misc(xdoc::Misc::PI(xdoc::PI {
+        target: r#"a"#.into(),
+        instructions: vec![r#"b"#.to_owned()],
+    }));
     let root = doc.root_mut();
     root.set_name(r#"c"#);
     let gen1n3 = root.add_new_child().unwrap();

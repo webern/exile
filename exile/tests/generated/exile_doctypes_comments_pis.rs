@@ -41,6 +41,14 @@ fn expected() -> Document {
         encoding: None,
     });
     // TODO - write doctype information
+    doc.push_prolog_misc(xdoc::Misc::PI(xdoc::PI {
+        target: r#"pi"#.into(),
+        instructions: vec![r#"before"#.to_owned(), r#"doctype"#.to_owned()],
+    }));
+    doc.push_prolog_misc(xdoc::Misc::PI(xdoc::PI {
+        target: r#"pi"#.into(),
+        instructions: vec![r#"after"#.to_owned(), r#"doctype"#.to_owned()],
+    }));
     let root = doc.root_mut();
     root.set_name(r#"note"#);
     let gen1n3 = root.add_new_child().unwrap();
