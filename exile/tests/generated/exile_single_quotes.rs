@@ -4,6 +4,7 @@ use exile::Document;
 use std::path::PathBuf;
 use xdoc::Declaration;
 use xdoc::Encoding;
+use xdoc::Version;
 
 const MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
 const INPUT_DATA: &str = "input_data";
@@ -37,7 +38,7 @@ fn single_quotes() {
 fn expected() -> Document {
     let mut doc = Document::new();
     doc.set_declaration(Declaration {
-        version: None,
+        version: Some(Version::V11),
         encoding: Some(Encoding::Utf8),
     });
     let root = doc.root_mut();

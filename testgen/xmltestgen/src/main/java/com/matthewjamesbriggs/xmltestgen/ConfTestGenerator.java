@@ -336,8 +336,8 @@ class ConfTestGenerator {
 
     private static FoundDecl findDecl(ConfTest t) throws TestGenException {
         List<String> lines = readAllLines(t.getPath(), StandardCharsets.UTF_8);
-        Pattern rxVersion = Pattern.compile("version=\"([0-9]+.[0-9]+)\"", 0);
-        Pattern rxEncoding = Pattern.compile("encoding=\"(.+)\"", 0);
+        Pattern rxVersion = Pattern.compile("version=[\"']([0-9]+.[0-9]+)[\"']", 0);
+        Pattern rxEncoding = Pattern.compile("encoding=[\"'](.+)[\"']", 0);
         String version = null;
         String encoding = null;
         for (String line : lines) {
