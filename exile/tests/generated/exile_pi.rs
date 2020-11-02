@@ -47,7 +47,19 @@ fn expected() -> Document {
     }));
     let root = doc.root_mut();
     root.set_name(r#"c"#);
+    root.add_pi(xdoc::PI {
+        target: r#"d"#.into(),
+        instructions: vec![r#"e"#.to_owned()],
+    });
     let gen1n3 = root.add_new_child().unwrap();
     gen1n3.set_name(r#"f"#);
+    root.add_pi(xdoc::PI {
+        target: r#"g"#.into(),
+        instructions: vec![r#"h"#.to_owned()],
+    });
+    doc.push_epilog_misc(xdoc::Misc::PI(xdoc::PI {
+        target: r#"i"#.into(),
+        instructions: vec![r#"j"#.to_owned()],
+    }));
     doc
 }

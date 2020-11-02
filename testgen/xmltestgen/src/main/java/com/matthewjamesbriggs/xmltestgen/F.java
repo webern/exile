@@ -163,7 +163,7 @@ class F {
     }
 
 
-    private static void write(FileOutputStream os, String format, Object... args) throws TestGenException {
+    static void write(FileOutputStream os, String format, Object... args) throws TestGenException {
         String line = String.format(format, args);
         try {
             os.write(line.getBytes());

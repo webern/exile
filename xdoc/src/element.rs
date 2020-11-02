@@ -2,7 +2,7 @@ use std::io::Write;
 
 use crate::error::{Result, XErr};
 use crate::write_ops::write_attribute_value;
-use crate::{Node, OrdMap, WriteOpts};
+use crate::{Misc, Node, OrdMap, WriteOpts, PI};
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
 #[cfg_attr(
@@ -132,9 +132,14 @@ impl Element {
         }
     }
 
-    /// Append a text node to this elements nodes.
+    /// Append a text node to this element's nodes.
     pub fn add_text<S: AsRef<str>>(&mut self, text: S) {
         self.nodes.push(Node::Text(text.as_ref().into()))
+    }
+
+    /// Append a processing instruction to this element's nodes.
+    pub fn add_pi(&mut self, pi: PI) {
+        self.nodes.push(Node::Misc(Misc::PI(pi)))
     }
 
     /// Does this element have any sub elements. For example, if the element is empty or contains

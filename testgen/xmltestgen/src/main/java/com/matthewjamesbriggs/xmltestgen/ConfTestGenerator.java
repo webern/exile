@@ -71,6 +71,12 @@ class ConfTestGenerator {
         }
     }
 
+    @AllArgsConstructor private static class PI {
+        @Getter
+        private final String target;
+        @Getter
+        private final List<String> instructions;
+    }
 
     void generateTests(int maxTests) throws TestGenException {
         F.createOrReplaceDir(generatedDir);
@@ -195,35 +201,20 @@ class ConfTestGenerator {
         }
         writeExpectedPrelude(prelude, os);
         writeExpectedContents(t, doc, os);
-        writeExpectedPostlude(prelude, os);
+        writeExpectedPostlude(postlude, os);
         F.writeln(os, "doc");
         F.writeln(os, "}");
     }
-
 
     private static void writeExpectedPrelude(List<Node> prelude, FileOutputStream os) throws TestGenException {
         for (Node node : prelude) {
             XType xtype = XType.fromNode(node);
             if (xtype == XType.ProcessingInstruction) {
-                ProcessingInstruction pi = (ProcessingInstruction) node;
-                String target = pi.getTarget();
-                String data = pi.getData();
-                String[] split = data.split("\\s");
-                List<String> instructions = new ArrayList<>();
-                for (String s : split) {
-                    String trimmed = s.trim();
-                    if (!trimmed.isEmpty()) {
-                        instructions.add(trimmed);
-                    }
-                }
-                F.writeln(os, "doc.push_prolog_misc(xdoc::Misc::PI(xdoc::PI {");
-                F.writeln(os, "target: r#\"%s\"#.into(),", target);
-                F.writeln(os, "instructions: vec![");
-                for (String instruction : instructions) {
-                    F.writeln(os, "r#\"%s\"#.to_owned(),", instruction);
-                }
-                F.writeln(os, "],");
-                F.writeln(os, "}));");
+                ProcessingInstruction piNode = (ProcessingInstruction) node;
+                PI pi = parseProcessingInstruction(piNode);
+                F.write(os, "doc.push_prolog_misc(xdoc::Misc::PI(");
+                constructProcessingInstruction(pi, os);
+                F.writeln(os, "));");
             }
 
         }
@@ -235,9 +226,53 @@ class ConfTestGenerator {
          */
     }
 
-    private static void writeExpectedPostlude(List<Node> prelude, FileOutputStream os) throws TestGenException {
+    private static void writeExpectedPostlude(List<Node> postlude, FileOutputStream os) throws TestGenException {
+        for (Node node : postlude) {
+            XType xtype = XType.fromNode(node);
+            if (xtype == XType.ProcessingInstruction) {
+                ProcessingInstruction piNode = (ProcessingInstruction) node;
+                PI pi = parseProcessingInstruction(piNode);
+                F.write(os, "doc.push_epilog_misc(xdoc::Misc::PI(");
+                constructProcessingInstruction(pi, os);
+                F.writeln(os, "));");
+            }
+
+        }
     }
 
+    private static PI parseProcessingInstruction(ProcessingInstruction pi) throws TestGenException {
+        String target = pi.getTarget();
+        String data = pi.getData();
+        String[] split = data.split("\\s");
+        List<String> instructions = new ArrayList<>();
+        for (String s : split) {
+            String trimmed = s.trim();
+            if (!trimmed.isEmpty()) {
+                instructions.add(trimmed);
+            }
+        }
+        return new PI(target, instructions);
+    }
+
+    private static void constructProcessingInstruction(PI pi, FileOutputStream os) throws TestGenException {
+        F.writeln(os, "xdoc::PI {");
+        F.writeln(os, "target: r#\"%s\"#.into(),", pi.getTarget());
+        F.writeln(os, "instructions: vec![");
+        for (String instruction : pi.getInstructions()) {
+            F.writeln(os, "r#\"%s\"#.to_owned(),", instruction);
+        }
+        F.writeln(os, "],");
+        F.writeln(os, "}");
+    }
+
+    private static void writeProcessingInstruction(ProcessingInstruction pi,
+                                                   String parentVariableName,
+                                                   FileOutputStream os) throws TestGenException {
+        F.write(os, "%s.add_pi(", parentVariableName);
+        PI parsed = parseProcessingInstruction(pi);
+        constructProcessingInstruction(parsed, os);
+        F.writeln(os, ");");
+    }
 
     private static void writeExpectedContents(ConfTest t, Document doc, FileOutputStream os) throws TestGenException {
         Element root = doc.getDocumentElement();
@@ -275,10 +310,12 @@ class ConfTestGenerator {
                 case Text:
                     writeTextChild(parentVariableName, parentGeneration, i, (Text) child, t, doc, os);
                     break;
+                case ProcessingInstruction:
+                    writeProcessingInstruction((ProcessingInstruction) child, parentVariableName, os);
+                    break;
                 case CData:
                 case EntityReference:
                 case Entity:
-                case ProcessingInstruction:
                 case Comment:
                 case Document:
                 case DocumentType:
