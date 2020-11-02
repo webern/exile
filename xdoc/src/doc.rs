@@ -132,6 +132,11 @@ impl Document {
         self.root = element_data;
     }
 
+    /// Get a mutable reference to the root `Element`.
+    pub fn root_mut(&mut self) -> &mut Element {
+        &mut self.root
+    }
+
     /// Get the `Declaration` object.
     pub fn declaration(&self) -> &Declaration {
         &self.declaration

@@ -7,10 +7,12 @@ import org.w3c.dom.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -70,12 +72,18 @@ class ConfTestGenerator {
         }
     }
 
+    @AllArgsConstructor private static class PI {
+        @Getter
+        private final String target;
+        @Getter
+        private final List<String> instructions;
+    }
 
     void generateTests(int maxTests) throws TestGenException {
         F.createOrReplaceDir(generatedDir);
 
         // create the mod.rs file
-        FileOutputStream mod = F.createAndOpen(modRs);
+        OutputStreamWriter mod = F.createAndOpen(modRs);
         writeCodeFileHeader(mod);
         F.writeln(mod, "");
 
@@ -102,12 +110,12 @@ class ConfTestGenerator {
         Cmd.clippy(rustWorkspaceDir);
     }
 
-    private void generateValidTest(ConfTest t, FileOutputStream mod) throws TestGenException {
+    private void generateValidTest(ConfTest t, OutputStreamWriter mod) throws TestGenException {
         if (t.getConfType() != ConfType.Valid) {
             throw new TestGenException("wrong test type, expected 'valid', got " + t.getConfType().toString());
         }
         File testFile = new File(generatedDir, t.getTestName() + ".rs");
-        FileOutputStream os = F.createAndOpen(testFile);
+        OutputStreamWriter os = F.createAndOpen(testFile);
         F.writeln(mod, "mod %s;", t.getTestName());
         writeCodeFileHeader(os);
         F.writeln(os, "");
@@ -127,11 +135,11 @@ class ConfTestGenerator {
         F.closeStream(testFile, os);
     }
 
-    private static void writeCodeFileHeader(FileOutputStream os) throws TestGenException {
+    private static void writeCodeFileHeader(OutputStreamWriter os) throws TestGenException {
         F.writeln(os, "// generated file, do not edit");
     }
 
-    private static void writeUseStatements(FoundDecl foundDecl, FileOutputStream os) throws TestGenException {
+    private static void writeUseStatements(FoundDecl foundDecl, OutputStreamWriter os) throws TestGenException {
         F.writeln(os, "use exile::Document;");
         F.writeln(os, "use std::path::PathBuf;");
         F.writeln(os, "use xdoc::Declaration;");
@@ -143,13 +151,13 @@ class ConfTestGenerator {
         }
     }
 
-    private static void writeConstDeclarations(ConfTest t, FileOutputStream os) throws TestGenException {
+    private static void writeConstDeclarations(ConfTest t, OutputStreamWriter os) throws TestGenException {
         F.writeln(os, "const MANIFEST_DIR: &str = env!(\"CARGO_MANIFEST_DIR\");");
         F.writeln(os, "const INPUT_DATA: &str = \"input_data\";");
         F.writeln(os, "const FILENAME: &str = \"%s\";", t.getFileRename());
     }
 
-    private static void writePathFunction(ConfTest t, FileOutputStream os) throws TestGenException {
+    private static void writePathFunction(ConfTest t, OutputStreamWriter os) throws TestGenException {
         F.writeln(os, "fn path() -> PathBuf {");
         F.writeln(os, "    let p = PathBuf::from(MANIFEST_DIR)");
         F.writeln(os, "        .join(\"tests\")");
@@ -160,7 +168,7 @@ class ConfTestGenerator {
         F.writeln(os, "}");
     }
 
-    private static void writeTestFunction(ConfTest t, FileOutputStream os) throws TestGenException {
+    private static void writeTestFunction(ConfTest t, OutputStreamWriter os) throws TestGenException {
         F.writeln(os, "#[test]");
         F.writeln(os, "fn %s() {", t.getSnakeCase());
         F.writeln(os, "    let path = path();");
@@ -180,22 +188,94 @@ class ConfTestGenerator {
 
     private static void writeExpectedFunction(ConfTest t,
                                               FoundDecl foundDecl,
-                                              FileOutputStream os) throws TestGenException {
-        //        F.writeln(os, "// Creates a document that matches %s", t.getFileRename());
+                                              OutputStreamWriter os) throws TestGenException {
+
         F.writeln(os, "fn expected() -> Document {");
         Document doc = X.loadShallow(t.getPath().toFile());
-        DocumentType doctype = doc.getDoctype();
         F.writeln(os, "let mut doc = Document::new();");
         writeExpectedXmlDeclaration(foundDecl, os);
+        List<Node> prelude = findPrelude(doc);
+        List<Node> postlude = findPostlude(doc);
+        DocumentType doctype = doc.getDoctype();
         if (doctype != null) {
             writeExpectedDoctype(doctype, os);
         }
+        writeExpectedPrelude(prelude, os);
         writeExpectedContents(t, doc, os);
+        writeExpectedPostlude(postlude, os);
         F.writeln(os, "doc");
         F.writeln(os, "}");
     }
 
-    private static void writeExpectedContents(ConfTest t, Document doc, FileOutputStream os) throws TestGenException {
+    private static void writeExpectedPrelude(List<Node> prelude, OutputStreamWriter os) throws TestGenException {
+        for (Node node : prelude) {
+            XType xtype = XType.fromNode(node);
+            if (xtype == XType.ProcessingInstruction) {
+                ProcessingInstruction piNode = (ProcessingInstruction) node;
+                PI pi = parseProcessingInstruction(piNode);
+                F.write(os, "doc.push_prolog_misc(xdoc::Misc::PI(");
+                constructProcessingInstruction(pi, os);
+                F.writeln(os, "));");
+            }
+
+        }
+        /*
+            doc.push_prolog_misc(xdoc::Misc::PI(PI {
+                target: "foo".into(),
+                instructions: vec!["".to_owned()],
+            }));
+         */
+    }
+
+    private static void writeExpectedPostlude(List<Node> postlude, OutputStreamWriter os) throws TestGenException {
+        for (Node node : postlude) {
+            XType xtype = XType.fromNode(node);
+            if (xtype == XType.ProcessingInstruction) {
+                ProcessingInstruction piNode = (ProcessingInstruction) node;
+                PI pi = parseProcessingInstruction(piNode);
+                F.write(os, "doc.push_epilog_misc(xdoc::Misc::PI(");
+                constructProcessingInstruction(pi, os);
+                F.writeln(os, "));");
+            }
+
+        }
+    }
+
+    private static PI parseProcessingInstruction(ProcessingInstruction pi) throws TestGenException {
+        String target = pi.getTarget();
+        String data = pi.getData();
+        String[] split = data.split("\\s");
+        List<String> instructions = new ArrayList<>();
+        for (String s : split) {
+            String trimmed = s.trim();
+            if (!trimmed.isEmpty()) {
+                instructions.add(trimmed);
+            }
+        }
+        return new PI(target, instructions);
+    }
+
+    private static void constructProcessingInstruction(PI pi, OutputStreamWriter os) throws TestGenException {
+        F.writeln(os, "xdoc::PI {");
+        F.writeln(os, "target: r#\"%s\"#.into(),", pi.getTarget());
+        F.writeln(os, "instructions: vec![");
+        for (String instruction : pi.getInstructions()) {
+            F.writeln(os, "r#\"%s\"#.to_owned(),", instruction);
+        }
+        F.writeln(os, "],");
+        F.writeln(os, "}");
+    }
+
+    private static void writeProcessingInstruction(ProcessingInstruction pi,
+                                                   String parentVariableName,
+                                                   OutputStreamWriter os) throws TestGenException {
+        F.write(os, "%s.add_pi(", parentVariableName);
+        PI parsed = parseProcessingInstruction(pi);
+        constructProcessingInstruction(parsed, os);
+        F.writeln(os, ");");
+    }
+
+    private static void writeExpectedContents(ConfTest t, Document doc, OutputStreamWriter os) throws TestGenException {
         Element root = doc.getDocumentElement();
         String name = root.getNodeName();
         F.writeln(os, "let root = doc.root_mut();");
@@ -216,7 +296,7 @@ class ConfTestGenerator {
                                       int parentGeneration,
                                       ConfTest t,
                                       Document doc,
-                                      FileOutputStream os) throws TestGenException {
+                                      OutputStreamWriter os) throws TestGenException {
         NodeList children = parent.getChildNodes();
         int childCount = children.getLength();
         for (int i = 0; i < childCount; ++i) {
@@ -231,10 +311,12 @@ class ConfTestGenerator {
                 case Text:
                     writeTextChild(parentVariableName, parentGeneration, i, (Text) child, t, doc, os);
                     break;
+                case ProcessingInstruction:
+                    writeProcessingInstruction((ProcessingInstruction) child, parentVariableName, os);
+                    break;
                 case CData:
                 case EntityReference:
                 case Entity:
-                case ProcessingInstruction:
                 case Comment:
                 case Document:
                 case DocumentType:
@@ -254,7 +336,7 @@ class ConfTestGenerator {
                                        Text child,
                                        ConfTest t,
                                        Document doc,
-                                       FileOutputStream os) throws TestGenException {
+                                       OutputStreamWriter os) throws TestGenException {
         // TODO - if we start to support ignorable whitespace nodes or preserve directives, this will not work
         if (child.isElementContentWhitespace()) {
             return;
@@ -274,7 +356,7 @@ class ConfTestGenerator {
                                           Element child,
                                           ConfTest t,
                                           Document doc,
-                                          FileOutputStream os) throws TestGenException {
+                                          OutputStreamWriter os) throws TestGenException {
         int myGeneration = parentGeneration + 1;
         String varName = String.format("gen%dn%d", myGeneration, childIndex);
         F.writeln(os, "let %s = %s.add_new_child().unwrap();", varName, parentVariableName);
@@ -298,7 +380,8 @@ class ConfTestGenerator {
         }
     }
 
-    private static void writeExpectedXmlDeclaration(FoundDecl foundDecl, FileOutputStream os) throws TestGenException {
+    private static void writeExpectedXmlDeclaration(FoundDecl foundDecl,
+                                                    OutputStreamWriter os) throws TestGenException {
         String rsVersion = "None";
         if (foundDecl.hasVersion()) {
             XmlVersion version = foundDecl.getVersion();
@@ -319,7 +402,7 @@ class ConfTestGenerator {
         F.writeln(os, "doc.set_declaration(Declaration{ version: %s, encoding: %s });", rsVersion, rsEncoding);
     }
 
-    private static void writeExpectedDoctype(DocumentType dt, FileOutputStream os) throws TestGenException {
+    private static void writeExpectedDoctype(DocumentType dt, OutputStreamWriter os) throws TestGenException {
         if (dt == null) {
             return;
         }
@@ -364,4 +447,35 @@ class ConfTestGenerator {
         return new FoundDecl(version, encoding);
     }
 
+    private static List<Node> findPrelude(Document doc) throws TestGenException {
+        List<Node> result = new ArrayList<>();
+        NodeList children = doc.getChildNodes();
+        int len = children.getLength();
+        for (int i = 0; i < len; ++i) {
+            Node node = children.item(i);
+            if (XType.fromNode(node) == XType.Element) {
+                // we reached the root node of the document, prelude is done
+                return result;
+            } else {
+                result.add(node);
+            }
+        }
+        return result;
+    }
+
+    private static List<Node> findPostlude(Document doc) throws TestGenException {
+        List<Node> result = new ArrayList<>();
+        NodeList children = doc.getChildNodes();
+        int len = children.getLength();
+        boolean foundRoot = false;
+        for (int i = 0; i < len; ++i) {
+            Node node = children.item(i);
+            if (XType.fromNode(node) == XType.Element) {
+                foundRoot = true;
+            } else if (foundRoot) {
+                result.add(node);
+            }
+        }
+        return result;
+    }
 }

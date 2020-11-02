@@ -3,6 +3,8 @@ package com.matthewjamesbriggs.xmltestgen;
 import org.apache.commons.io.FileUtils;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.Formatter;
 
 /**
  * File and path related helper functions.
@@ -132,12 +134,12 @@ class F {
      * @return The stream to the new file.
      * @throws TestGenException if the file could not be created or opened.
      */
-    static FileOutputStream createAndOpen(File file) throws TestGenException {
+    static OutputStreamWriter createAndOpen(File file) throws TestGenException {
         createFile(file);
         return openFile(file);
     }
 
-    static void closeStream(File file, FileOutputStream stream) throws TestGenException {
+    static void closeStream(File file, OutputStreamWriter stream) throws TestGenException {
         try {
             stream.close();
         } catch (IOException e) {
@@ -146,9 +148,9 @@ class F {
     }
 
 
-    private static FileOutputStream openFile(File file) throws TestGenException {
+    private static OutputStreamWriter openFile(File file) throws TestGenException {
         try {
-            return FileUtils.openOutputStream(file);
+            return new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new TestGenException("could not open for writing: " + file.getPath(), e);
         }
@@ -163,17 +165,21 @@ class F {
     }
 
 
-    private static void write(FileOutputStream os, String format, Object... args) throws TestGenException {
+    static void write(OutputStreamWriter os, String format, Object... args) throws TestGenException {
+        //        String x = new String(new byte[], StandardCharsets.UTF_8);
+
+
+        //        new Formatter()
         String line = String.format(format, args);
         try {
-            os.write(line.getBytes());
+            os.write(line);
             os.flush();
         } catch (IOException e) {
             throw new TestGenException("unable to write to stream: " + os.toString(), e);
         }
     }
 
-    static void writeln(FileOutputStream os, String format, Object... args) throws TestGenException {
+    static void writeln(OutputStreamWriter os, String format, Object... args) throws TestGenException {
         write(os, format + "\n", args);
     }
 }
