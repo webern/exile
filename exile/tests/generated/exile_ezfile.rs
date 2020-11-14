@@ -8,7 +8,7 @@ use xdoc::Version;
 
 const MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
 const INPUT_DATA: &str = "input_data";
-const FILENAME: &str = "exile_e_file.xml";
+const FILENAME: &str = "exile_ezfile.xml";
 
 fn path() -> PathBuf {
     let p = PathBuf::from(MANIFEST_DIR)
@@ -20,7 +20,7 @@ fn path() -> PathBuf {
 }
 
 #[test]
-fn e_file() {
+fn ezfile() {
     let path = path();
     let loaded = exile::load(&path).unwrap();
     let expected = expected();

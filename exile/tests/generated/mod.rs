@@ -2,8 +2,8 @@
 
 mod exile_cd_catalog;
 mod exile_doctypes_comments_pis;
-mod exile_e_file;
 mod exile_escapes;
+mod exile_ezfile;
 mod exile_pi;
 mod exile_simple_musicxml;
 mod exile_single_quotes;
