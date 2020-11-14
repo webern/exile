@@ -124,16 +124,16 @@ class ConfTestParser {
     }
 
     static List<ConfTest> parseExileTests(File dir) throws TestGenException {
-        List<ExileTestLocation> locations = listExileTestFiles(dir);
+        List<ExileFiles> locations = listExileTestFiles(dir);
         List<ConfTest> exileTests = new ArrayList<>();
-        for (ExileTestLocation location : locations) {
+        for (ExileFiles location : locations) {
             ConfTest confTest = makeExileConfTest(location);
             exileTests.add(confTest);
         }
         return exileTests;
     }
 
-    private static List<ExileTestLocation> listExileTestFiles(File dir) throws TestGenException {
+    private static List<ExileFiles> listExileTestFiles(File dir) throws TestGenException {
         List<File> files = new ArrayList<>();
         try {
             Files.list(dir.toPath()).forEach(path -> {
@@ -152,21 +152,25 @@ class ConfTestParser {
         return listExileTestFiles(files);
     }
 
-    private static List<ExileTestLocation> listExileTestFiles(List<File> xmlFiles) throws TestGenException {
-        List<ExileTestLocation> exiles = new ArrayList<>();
+    private static List<ExileFiles> listExileTestFiles(List<File> xmlFiles) throws TestGenException {
+        List<ExileFiles> exiles = new ArrayList<>();
         for (File file : xmlFiles) {
-            exiles.add(new ExileTestLocation(file));
+            ExileFiles ef = new ExileFiles(file);
+            F.checkDir(ef.getDirectory());
+            F.checkFile(ef.getInputFile());
+            F.checkFile(ef.getMetadataFile());
+            exiles.add(ef);
         }
         return exiles;
     }
 
-    private static ConfTest makeExileConfTest(ExileTestLocation location) throws TestGenException {
+    private static ConfTest makeExileConfTest(ExileFiles location) throws TestGenException {
         Gson gson = new Gson();
-        ExileTestMetadata metadata = gson.fromJson(F.readFile(location.metadata), ExileTestMetadata.class);
+        ExileTestMetadata metadata = gson.fromJson(F.readFile(location.getMetadataFile()), ExileTestMetadata.class);
         ConfTestCases confTestCases = new ConfTestCases(ExileConstants.EXILE, ExileConstants.EXILE);
-        Path path = location.getXml().toPath();
+        Path path = location.getInputFile().toPath();
         Entities entities = ExileTestMetadata.getEntities();
-        String id = location.getTestName();
+        String id = location.getCoreName();
         Recommendation recommendation = metadata.getRecommendation();
         final String sections = "N/A";
         boolean namespace = ExileTestMetadata.getNamespace();
