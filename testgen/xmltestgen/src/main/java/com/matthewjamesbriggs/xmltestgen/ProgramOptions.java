@@ -24,6 +24,7 @@ class ProgramOptions {
     @Getter
     private final File customSchema;
     @Getter
+    // TODO - rename, this is confusing
     private final File xmlOutdir;
     @Getter
     private final File schemaOutdir;
@@ -158,5 +159,16 @@ class ProgramOptions {
                 schemaOutdir,
                 rustRoot,
                 exileTests);
+    }
+
+    /**
+     * This is the directory into which W3C test XML files will be copied, and in which custom Exile test files live
+     * permanently.
+     *
+     * @return The directory explained above.
+     * @throws TestGenException
+     */
+    File getRustDataDir() throws TestGenException {
+        return F.canonicalize(new File(xmlOutdir, ExileConstants.DIRECTORY));
     }
 }
