@@ -166,10 +166,6 @@ class F {
 
 
     static void write(OutputStreamWriter os, String format, Object... args) throws TestGenException {
-        //        String x = new String(new byte[], StandardCharsets.UTF_8);
-
-
-        //        new Formatter()
         String line = String.format(format, args);
         try {
             os.write(line);
