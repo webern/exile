@@ -7,7 +7,7 @@ import java.io.File;
 
 /**
  * The data filenames associated with a custom exile test, e.g. exile_foo.xml, exile_foo.output.xml,
- * exile_foo.metaddata.json.
+ * exile_foo.metadata.json.
  */
 @AllArgsConstructor public class ExileFiles {
     @Getter

@@ -16,23 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 class ConfTestParser {
-    @Getter private static class ExileTestLocation {
-        private final String testName;
-        private final File xml;
-        private final File metadata;
-        private final File expected;
-
-        ExileTestLocation(File mainFile) throws TestGenException {
-            F.checkFile(mainFile);
-            xml = F.canonicalize(mainFile);
-            ExileFiles ef = new ExileFiles(xml);
-            testName = ef.getCoreName();
-            metadata = ef.getMetadataFile();
-            F.checkFile(metadata);
-            expected = ef.getOutputFile();
-        }
-    }
-
     static List<ConfTest> parse(String w3cXmlFilepath) throws TestGenException {
         Document doc = X.loadComplete(new File(w3cXmlFilepath));
         return parseDocument(doc);
