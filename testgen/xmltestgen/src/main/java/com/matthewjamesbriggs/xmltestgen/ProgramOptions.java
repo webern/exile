@@ -13,7 +13,6 @@ class ProgramOptions {
     private static final String OPT_XML_OUTDIR = "xml-outdir";
     private static final String OPT_SCHEMA_OUTDIR = "schema-outdir";
     private static final String OPT_RUST_ROOT = "rust-root";
-    private static final String OPT_EXILE_TESTS = "exile-tests";
 
     @Getter
     private final File w3cXml;
@@ -24,13 +23,12 @@ class ProgramOptions {
     @Getter
     private final File customSchema;
     @Getter
+    // TODO - rename, this is confusing
     private final File xmlOutdir;
     @Getter
     private final File schemaOutdir;
     @Getter
     private final File rustRoot;
-    @Getter
-    private final File exileTests;
 
     /**
      * Private all-args constructor. Use the static parse function to construct from command line arguments.
@@ -42,7 +40,6 @@ class ProgramOptions {
      * @param xmlOutdir:    the directory into which rust xml tests will be written.
      * @param schemaOutdir: the directory into which rust schema tests will be written.
      * @param rustRoot:     the path to the root of the Rust workspace containing the exile crate.
-     * @param exileTests:   the path to the to the custom XML tests created for the exile library.
      */
     private ProgramOptions(File w3cXml,
                            File w3cSchema,
@@ -50,8 +47,7 @@ class ProgramOptions {
                            File customSchema,
                            File xmlOutdir,
                            File schemaOutdir,
-                           File rustRoot,
-                           File exileTests) {
+                           File rustRoot) {
         this.w3cXml = w3cXml;
         this.w3cSchema = w3cSchema;
         this.customXml = customXml;
@@ -59,7 +55,6 @@ class ProgramOptions {
         this.xmlOutdir = xmlOutdir;
         this.schemaOutdir = schemaOutdir;
         this.rustRoot = rustRoot;
-        this.exileTests = exileTests;
     }
 
     /**
@@ -100,13 +95,6 @@ class ProgramOptions {
         rr.setRequired(true);
         options.addOption(rr);
 
-        Option exile = new Option("h",
-                OPT_EXILE_TESTS,
-                true,
-                "directory where the custom XML tests, created for the exile library, reside");
-        exile.setRequired(true);
-        options.addOption(exile);
-
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
         CommandLine cmd;
@@ -126,7 +114,6 @@ class ProgramOptions {
         File xmlOutdir = new File(cmd.getOptionValue(OPT_XML_OUTDIR));
         File schemaOutdir = new File(cmd.getOptionValue(OPT_SCHEMA_OUTDIR));
         File rustRoot = new File(cmd.getOptionValue(OPT_RUST_ROOT));
-        File exileTests = new File(cmd.getOptionValue(OPT_EXILE_TESTS));
 
         try {
             if (!w3cXml.exists() || !w3cXml.isFile()) {
@@ -141,22 +128,23 @@ class ProgramOptions {
                 throw new TestGenException("Unable to verify " + OPT_XML_OUTDIR + ", " + xmlOutdir.getPath());
             }
             // TODO - verify schemaOutdir
-            if (!exileTests.exists() || !exileTests.isDirectory()) {
-                throw new TestGenException("Unable to verify " + OPT_EXILE_TESTS + ", " + exileTests.getPath());
-            }
         } catch (TestGenException e) {
             System.out.println(e.getMessage());
             formatter.printHelp("xmltestgen", options);
             throw e;
         }
 
-        return new ProgramOptions(w3cXml,
-                w3cSchema,
-                customXml,
-                customSchema,
-                xmlOutdir,
-                schemaOutdir,
-                rustRoot,
-                exileTests);
+        return new ProgramOptions(w3cXml, w3cSchema, customXml, customSchema, xmlOutdir, schemaOutdir, rustRoot);
+    }
+
+    /**
+     * This is the directory into which W3C test XML files will be copied, and in which custom Exile test files live
+     * permanently.
+     *
+     * @return The directory explained above.
+     * @throws TestGenException
+     */
+    File getRustDataDir() throws TestGenException {
+        return F.canonicalize(new File(xmlOutdir, ExileConstants.DIRECTORY));
     }
 }
