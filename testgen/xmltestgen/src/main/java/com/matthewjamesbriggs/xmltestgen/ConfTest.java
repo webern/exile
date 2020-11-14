@@ -53,25 +53,6 @@ import java.nio.file.Path;
         prefix = confTestCases.getPrefix();
     }
 
-    private static boolean isLetter(char c) {
-        return isLetterUpper(c) || isLetterLower(c);
-    }
-
-    public static boolean isAlphanumeric(char c) {
-        return isLetter(c) || isDigit(c);
-    }
-
-    private static boolean isLetterUpper(char c) {
-        return c >= 65 && c <= 90;
-    }
-
-    private static boolean isLetterLower(char c) {
-        return c >= 97 && c <= 121;
-    }
-
-    private static boolean isDigit(char c) {
-        return c >= 48 && c <= 57;
-    }
 
     @Override
     public String toString() {
@@ -93,35 +74,26 @@ import java.nio.file.Path;
      * @return The ID in snake case.
      */
     String getSnakeCase() {
-        String s = getId();
-        StringBuilder result = new StringBuilder(s.length() + 4);
-        boolean wasUnderscore = false;
-        for (int i = 0, n = s.length(); i < n; i++) {
-            char c = s.charAt(i);
-            if (i == 0 && !isLetter(c)) {
-                result.append('x');
-                result.append('_');
-                wasUnderscore = true;
-            }
-            if (isLetter(c)) {
-                result.append(Character.toLowerCase(c));
-                wasUnderscore = false;
-            } else if (isDigit(c)) {
-                result.append(c);
-                wasUnderscore = false;
-            } else if (!wasUnderscore) {
-                result.append('_');
-                wasUnderscore = true;
-            }
-        }
-        return result.toString();
+        return S.getSnakeCase(getId());
     }
 
     String getTestName() {
-        return getPrefix() + "_" + getSnakeCase();
+        return getPrefix() + ExileConstants.SEPARATOR + getSnakeCase();
     }
 
-    String getFileRename() {
+    /**
+     * The name of the XML imput file as it will be in the exile/tests/input_data directory.
+     *
+     * @return The filename.
+     */
+    String getXmlFilename() {
         return getTestName() + ".xml";
+    }
+
+    /**
+     * Returns true if this test is a 'custom' exile test, i.e. an exile test, and did not come from W3C.
+     */
+    boolean isExileTest() {
+        return getPrefix().equals(ExileConstants.EXILE);
     }
 }

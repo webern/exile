@@ -30,7 +30,7 @@ public class App {
 
     private static void generateConfTests(ProgramOptions opts) throws TestGenException {
         List<ConfTest> confTests = ConfTestParser.parse(opts.getW3cXml().getPath());
-        List<ConfTest> exileTests = ConfTestParser.parseExileTests(opts.getExileTests());
+        List<ConfTest> exileTests = ConfTestParser.parseExileTests(opts.getRustDataDir());
         confTests.addAll(exileTests);
         ConfTestGenerator confTestGenerator = new ConfTestGenerator(confTests, opts);
         confTestGenerator.generateTests(NUM_TESTS);
