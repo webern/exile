@@ -18,6 +18,7 @@ cargo-readme = "3.2.0"
 xtest = { path = "../xtest", version = "0.0.2" }
 
 [dev-dependencies]
-xtest = { path = "../xtest", version = "0.0.2" }
+lazy_static = "1.4.0"
 serde_json = "1.0.48"
 serde_plain = "0.3.0"
+xtest = { path = "../xtest", version = "0.0.2" }

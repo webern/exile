@@ -1,8 +1,8 @@
 use std::io::Write;
 
-use crate::error::Result;
+use crate::error::{Result, XErr};
 use crate::write_ops::write_attribute_value;
-use crate::{Node, OrdMap, WriteOpts};
+use crate::{Misc, Node, OrdMap, WriteOpts, PI};
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
 #[cfg_attr(
@@ -86,6 +86,60 @@ impl Element {
             }
         }
         self.name.clone()
+    }
+
+    // TODO - fullname? figure out namespace stuff
+    /// Sets the name of this element.
+    pub fn set_name<S: AsRef<str>>(&mut self, name: S) {
+        self.name = name.as_ref().into()
+    }
+
+    /// Inserts a key-value pair into the attributes map.
+    ///
+    /// If the map did not have this key present, `None` is returned.
+    ///
+    /// If the map did have this key present, the value is updated, and the old
+    /// value is returned.
+    ///
+    pub fn add_attribute<K, V>(&mut self, key: K, value: V) -> Option<String>
+    where
+        K: AsRef<str>,
+        V: AsRef<str>,
+    {
+        self.attributes
+            .mut_map()
+            .insert(key.as_ref().into(), value.as_ref().into())
+    }
+
+    /// Creates a new element as the last child of this element and returns a mut ref to it.
+    pub fn add_new_child(&mut self) -> Result<&mut Element> {
+        self.nodes.push(Node::Element(Element::default()));
+        let new_node = self.nodes.last_mut().ok_or_else(|| XErr {
+            message: "the sky is falling".to_string(),
+            file: "".to_string(),
+            line: 0,
+            source: None,
+        })?;
+        if let Node::Element(new_element) = new_node {
+            Ok(new_element)
+        } else {
+            Err(XErr {
+                message: "the sky is still falling".to_string(),
+                file: "".to_string(),
+                line: 0,
+                source: None,
+            })
+        }
+    }
+
+    /// Append a text node to this element's nodes.
+    pub fn add_text<S: AsRef<str>>(&mut self, text: S) {
+        self.nodes.push(Node::Text(text.as_ref().into()))
+    }
+
+    /// Append a processing instruction to this element's nodes.
+    pub fn add_pi(&mut self, pi: PI) {
+        self.nodes.push(Node::Misc(Misc::PI(pi)))
     }
 
     /// Does this element have any sub elements. For example, if the element is empty or contains

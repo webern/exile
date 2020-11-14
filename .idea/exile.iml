@@ -6,7 +6,13 @@
       <sourceFolder url="file://$MODULE_DIR$/xdoc/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/exile/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/exile/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/bin" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/exile" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/xdoc" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/xtest" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
+      <excludeFolder url="file://$MODULE_DIR$/data" />
+      <excludeFolder url="file://$MODULE_DIR$/java" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

@@ -70,6 +70,7 @@ name = "exile"
 version = "0.0.2"
 dependencies = [
  "cargo-readme",
+ "lazy_static",
  "serde_json",
  "serde_plain",
  "xdoc",
