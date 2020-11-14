@@ -3,7 +3,6 @@ package com.matthewjamesbriggs.xmltestgen;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.w3c.dom.*;
 
 import java.io.*;
@@ -36,7 +35,7 @@ class ConfTestGenerator {
         F.checkDir(outDir);
         generatedDir = F.canonicalize(new File(opts.getXmlOutdir(), "generated"));
         F.checkDir(generatedDir);
-        testDataDir = F.canonicalize(new File(opts.getXmlOutdir(), "input_data"));
+        testDataDir = opts.getRustDataDir();
         F.checkDir(testDataDir);
         rustWorkspaceDir = F.canonicalize(opts.getRustRoot());
         F.checkDir(rustWorkspaceDir);
@@ -86,12 +85,12 @@ class ConfTestGenerator {
         @Override
         public boolean accept(File dir, String name) {
             File f = new File(name);
-            if (!ExileFileNames.isExile(f)) {
+            if (!ExileConstants.isExile(f)) {
                 return false;
             }
-            boolean isMetadata = ExileFileNames.isExileMetadata(f);
-            boolean isOutput = ExileFileNames.isExileOutput(f);
-            boolean isInput = ExileFileNames.isExileInput(f);
+            boolean isMetadata = ExileConstants.isExileMetadata(f);
+            boolean isOutput = ExileConstants.isExileOutput(f);
+            boolean isInput = ExileConstants.isExileInput(f);
             return !isInput && !isOutput && !isMetadata;
         }
     }
@@ -189,7 +188,7 @@ class ConfTestGenerator {
     private static void writeConstDeclarations(ConfTest t, OutputStreamWriter os) throws TestGenException {
         F.writeln(os, "const MANIFEST_DIR: &str = env!(\"CARGO_MANIFEST_DIR\");");
         F.writeln(os, "const INPUT_DATA: &str = \"input_data\";");
-        F.writeln(os, "const FILENAME: &str = \"%s\";", t.getFileRename());
+        F.writeln(os, "const FILENAME: &str = \"%s\";", t.getXmlFilename());
     }
 
     private static void writePathFunction(ConfTest t, OutputStreamWriter os) throws TestGenException {
@@ -448,7 +447,7 @@ class ConfTestGenerator {
         F.checkDir(testDataDir);
         File original = new File(t.getPath().toString());
         F.checkFile(original);
-        File copied = new File(testDataDir, t.getFileRename());
+        File copied = new File(testDataDir, t.getXmlFilename());
         F.copy(original, copied);
     }
 

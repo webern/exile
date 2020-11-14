@@ -1,16 +1,13 @@
 package com.matthewjamesbriggs.xmltestgen;
 
 import lombok.AllArgsConstructor;
-import org.apache.commons.io.FilenameUtils;
 import org.w3c.dom.Element;
 import lombok.Getter;
 
-import java.io.File;
 import java.nio.file.Path;
 
 
 @AllArgsConstructor class ConfTest {
-    private static final String SEPARATOR = "_";
     @Getter
     private final ConfTestCases confTestCases;
     @Getter
@@ -103,7 +100,7 @@ import java.nio.file.Path;
             char c = s.charAt(i);
             if (i == 0 && !isLetter(c)) {
                 result.append('x');
-                result.append(SEPARATOR);
+                result.append(ExileConstants.SEPARATOR);
                 wasUnderscore = true;
             }
             if (isLetter(c)) {
@@ -113,7 +110,7 @@ import java.nio.file.Path;
                 result.append(c);
                 wasUnderscore = false;
             } else if (!wasUnderscore) {
-                result.append(SEPARATOR);
+                result.append(ExileConstants.SEPARATOR);
                 wasUnderscore = true;
             }
         }
@@ -121,10 +118,15 @@ import java.nio.file.Path;
     }
 
     String getTestName() {
-        return getPrefix() + SEPARATOR + getSnakeCase();
+        return getPrefix() + ExileConstants.SEPARATOR + getSnakeCase();
     }
 
-    String getFileRename() {
+    /**
+     * The name of the XML imput file as it will be in the exile/tests/input_data directory.
+     *
+     * @return The filename.
+     */
+    String getXmlFilename() {
         return getTestName() + ".xml";
     }
 
@@ -132,6 +134,6 @@ import java.nio.file.Path;
      * Returns true if this test is a 'custom' exile test, i.e. an exile test, and did not come from W3C.
      */
     boolean isExileTest() {
-        return getPrefix().equals(ExileFileNames.EXILE_PREFIX);
+        return getPrefix().equals(ExileConstants.EXILE);
     }
 }

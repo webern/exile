@@ -4,14 +4,16 @@ import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
 
-class ExileFileNames {
-    static final String EXILE_PREFIX = "exile";
-    private static final String DISABLED = "disabled";
-    private static final String SEPARATOR = "_";
-    static final String EXILE_FILE_PREFIX = EXILE_PREFIX + SEPARATOR;
-    private static final String EXILE_DISABLED_FILE_PREFIX = EXILE_FILE_PREFIX + DISABLED;
-    private static final String EXILE_METADATA_FILE_SUFFIX = ".metadata.json";
-    private static final String EXILE_OUTPUT_FILE_SUFFIX = ".output.xml";
+class ExileConstants {
+    static final String DIRECTORY = "input_data";
+    static final String EXILE = "exile";
+    static final String METADATA_FILE_SUFFIX = ".metadata.json";
+    static final String OUTPUT_FILE_SUFFIX = ".output.xml";
+    static final String DISABLED = "disabled";
+    static final String SEPARATOR = "_";
+    static final String EXILE_FILE_PREFIX = EXILE + SEPARATOR;
+    static final String EXILE_DISABLED = EXILE_FILE_PREFIX + DISABLED;
+    static final String EXILE_DISABLED_FILE_PREFIX = EXILE_DISABLED + ".";
 
     /**
      * Returns true if this file starts with the exile file prefix.
@@ -84,7 +86,7 @@ class ExileFileNames {
         if (!file.getName().startsWith(EXILE_FILE_PREFIX)) {
             return false;
         }
-        return file.getName().endsWith(EXILE_METADATA_FILE_SUFFIX);
+        return file.getName().endsWith(METADATA_FILE_SUFFIX);
     }
 
     /**
@@ -97,6 +99,25 @@ class ExileFileNames {
         if (!file.getName().startsWith(EXILE_FILE_PREFIX)) {
             return false;
         }
-        return file.getName().endsWith(EXILE_OUTPUT_FILE_SUFFIX);
+        return file.getName().endsWith(OUTPUT_FILE_SUFFIX);
+    }
+
+    /**
+     * Given a valid exile test input filename, e.g. exile_foo.xml or exile_disabled.foo.xml, return `foo`.
+     *
+     * @param file The file to parse the core name from.
+     * @return The core name.
+     */
+    static String getCoreName(File file) throws TestGenException {
+        if (!isExileInput(file)) {
+            throw new TestGenException("not an exile input file '%s'", file.getName());
+        }
+        String coreName = file.getName();
+        if (isEnabledExileInput(file)) {
+            coreName = coreName.replaceFirst(EXILE_FILE_PREFIX, "");
+        } else {
+            coreName = coreName.replaceFirst(EXILE_DISABLED_FILE_PREFIX, "");
+        }
+        return FilenameUtils.removeExtension(coreName);
     }
 }

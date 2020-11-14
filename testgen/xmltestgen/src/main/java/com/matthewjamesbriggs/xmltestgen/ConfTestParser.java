@@ -25,13 +25,11 @@ class ConfTestParser {
         ExileTestLocation(File mainFile) throws TestGenException {
             F.checkFile(mainFile);
             xml = F.canonicalize(mainFile);
-            String filename = xml.toPath().getFileName().toString();
-            // remove .xml extension
-            testName = filename.substring(0, filename.length() - 4);
-            Path parent = xml.toPath().getParent();
-            metadata = new File(Paths.get(parent.toString(), testName + ".metadata.json").toString());
+            ExileFiles ef = new ExileFiles(xml);
+            testName = ef.getCoreName();
+            metadata = ef.getMetadataFile();
             F.checkFile(metadata);
-            expected = new File(Paths.get(parent.toString(), testName + ".expected.xml").toString());
+            expected = ef.getOutputFile();
         }
     }
 
@@ -155,14 +153,15 @@ class ConfTestParser {
     private static List<ExileTestLocation> listExileTestFiles(File dir) throws TestGenException {
         List<File> files = new ArrayList<>();
         try {
-            Files.list(dir.toPath()).limit(9999999).forEach(path -> {
-                if (!path.getFileName().toString().startsWith("disabled.") &&
-                        !path.toString().endsWith(".expected.xml") &&
-                        !path.toString().endsWith("metadata.json") &&
-                        path.toString().endsWith(".xml")) {
+            Files.list(dir.toPath()).forEach(path -> {
+                File f = path.getFileName().toFile();
+                if (ExileConstants.isEnabledExileInput(f)) {
                     files.add(new File(path.toString()));
-                    System.out.println(path);
+                    System.out.println(path + " is an exile input file.");
+                } else {
+                    System.out.println(path + " is NOT exile input file or is DISABLED.");
                 }
+
             });
         } catch (IOException e) {
             throw new TestGenException("Unable to list dir: " + dir.toString(), e);
@@ -181,7 +180,7 @@ class ConfTestParser {
     private static ConfTest makeExileConfTest(ExileTestLocation location) throws TestGenException {
         Gson gson = new Gson();
         ExileTestMetadata metadata = gson.fromJson(F.readFile(location.metadata), ExileTestMetadata.class);
-        ConfTestCases confTestCases = new ConfTestCases(ExileFileNames.EXILE_PREFIX, ExileFileNames.EXILE_PREFIX);
+        ConfTestCases confTestCases = new ConfTestCases(ExileConstants.EXILE, ExileConstants.EXILE);
         Path path = location.getXml().toPath();
         Entities entities = ExileTestMetadata.getEntities();
         String id = location.getTestName();
