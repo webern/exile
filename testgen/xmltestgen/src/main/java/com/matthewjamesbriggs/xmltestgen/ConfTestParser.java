@@ -181,7 +181,7 @@ class ConfTestParser {
     private static ConfTest makeExileConfTest(ExileTestLocation location) throws TestGenException {
         Gson gson = new Gson();
         ExileTestMetadata metadata = gson.fromJson(F.readFile(location.metadata), ExileTestMetadata.class);
-        ConfTestCases confTestCases = new ConfTestCases("exile", "exile");
+        ConfTestCases confTestCases = new ConfTestCases(ExileFileNames.EXILE_PREFIX, ExileFileNames.EXILE_PREFIX);
         Path path = location.getXml().toPath();
         Entities entities = ExileTestMetadata.getEntities();
         String id = location.getTestName();

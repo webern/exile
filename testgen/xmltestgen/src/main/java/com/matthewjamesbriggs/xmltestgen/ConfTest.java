@@ -1,13 +1,16 @@
 package com.matthewjamesbriggs.xmltestgen;
 
 import lombok.AllArgsConstructor;
+import org.apache.commons.io.FilenameUtils;
 import org.w3c.dom.Element;
 import lombok.Getter;
 
+import java.io.File;
 import java.nio.file.Path;
 
 
 @AllArgsConstructor class ConfTest {
+    private static final String SEPARATOR = "_";
     @Getter
     private final ConfTestCases confTestCases;
     @Getter
@@ -100,7 +103,7 @@ import java.nio.file.Path;
             char c = s.charAt(i);
             if (i == 0 && !isLetter(c)) {
                 result.append('x');
-                result.append('_');
+                result.append(SEPARATOR);
                 wasUnderscore = true;
             }
             if (isLetter(c)) {
@@ -110,7 +113,7 @@ import java.nio.file.Path;
                 result.append(c);
                 wasUnderscore = false;
             } else if (!wasUnderscore) {
-                result.append('_');
+                result.append(SEPARATOR);
                 wasUnderscore = true;
             }
         }
@@ -118,10 +121,17 @@ import java.nio.file.Path;
     }
 
     String getTestName() {
-        return getPrefix() + "_" + getSnakeCase();
+        return getPrefix() + SEPARATOR + getSnakeCase();
     }
 
     String getFileRename() {
         return getTestName() + ".xml";
+    }
+
+    /**
+     * Returns true if this test is a 'custom' exile test, i.e. an exile test, and did not come from W3C.
+     */
+    boolean isExileTest() {
+        return getPrefix().equals(ExileFileNames.EXILE_PREFIX);
     }
 }

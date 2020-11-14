@@ -2,12 +2,11 @@ package com.matthewjamesbriggs.xmltestgen;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.w3c.dom.*;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -79,8 +78,27 @@ class ConfTestGenerator {
         private final List<String> instructions;
     }
 
+    /**
+     * Filters the file list to include only those that are *non* permanent, custom, exile files. That is, a list of
+     * files that we should delete each time we generate tests.
+     */
+    private static class FilesToDelete implements FilenameFilter {
+        @Override
+        public boolean accept(File dir, String name) {
+            File f = new File(name);
+            if (!ExileFileNames.isExile(f)) {
+                return false;
+            }
+            boolean isMetadata = ExileFileNames.isExileMetadata(f);
+            boolean isOutput = ExileFileNames.isExileOutput(f);
+            boolean isInput = ExileFileNames.isExileInput(f);
+            return !isInput && !isOutput && !isMetadata;
+        }
+    }
+
     void generateTests(int maxTests) throws TestGenException {
         F.createOrReplaceDir(generatedDir);
+        deleteNonExileXmlFiles(testDataDir);
 
         // create the mod.rs file
         OutputStreamWriter mod = F.createAndOpen(modRs);
@@ -110,6 +128,17 @@ class ConfTestGenerator {
         Cmd.clippy(rustWorkspaceDir);
     }
 
+    private static void deleteNonExileXmlFiles(File testDataDir) throws TestGenException {
+        F.checkDir(testDataDir);
+        File[] files = testDataDir.listFiles(new FilesToDelete());
+        if (files == null) {
+            throw new TestGenException("null file list");
+        }
+        for (File file : files) {
+            FileUtils.deleteQuietly(file);
+        }
+    }
+
     private void generateValidTest(ConfTest t, OutputStreamWriter mod) throws TestGenException {
         if (t.getConfType() != ConfType.Valid) {
             throw new TestGenException("wrong test type, expected 'valid', got " + t.getConfType().toString());
@@ -129,7 +158,13 @@ class ConfTestGenerator {
         writeTestFunction(t, os);
         F.writeln(os, "");
         writeExpectedFunction(t, foundDecl, os);
-        copyXmlTestFile(t);
+
+        // Copy W3C tests to the 'generated' directory.
+        if (!t.isExileTest()) {
+            copyXmlTestFile(t);
+        } else {
+            System.out.println("not copying the exile test " + t.getId());
+        }
 
         // close the stream, we are done writing to the test file
         F.closeStream(testFile, os);
