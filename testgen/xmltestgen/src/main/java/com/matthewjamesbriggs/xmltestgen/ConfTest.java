@@ -35,6 +35,8 @@ import java.nio.file.Path;
     /// This is an XML file that represents the serialization outcome that we expect. It might be null because we only
     /// have these for a few tests.
     private final File outputFile;
+    /// This is a JSON file that represents the metadata for an exile test.
+    private final File metdataFile;
 
     ConfTest(Element element, Path path, ConfTestCases confTestCases) throws TestGenException {
         this.path = path;
@@ -56,8 +58,9 @@ import java.nio.file.Path;
             xmlVersion = XmlVersion.V10;
         }
         prefix = confTestCases.getPrefix();
-        // this constructor is for w3c tests, none of which currently have output serialization assertion files
+        // this constructor is for w3c tests, none of which currently have output assertion files or metadata files
         outputFile = null;
+        metdataFile = null;
     }
 
 
@@ -124,5 +127,27 @@ import java.nio.file.Path;
             throw new TestGenException("%s has no outputFile", getId());
         }
         return outputFile;
+    }
+
+    /**
+     * True if there is an JSON metadata file for this test.
+     *
+     * @return whether there is an output file.
+     */
+    public boolean hasMetadataFile() {
+        return metdataFile != null;
+    }
+
+    /**
+     * This will throw an exception if there is no JSON metdata file. Call `hasMetadataFile` first to check.
+     *
+     * @return the output file.
+     * @throws TestGenException if there is no output file.
+     */
+    public File getMetadataFile() throws TestGenException {
+        if (metdataFile == null) {
+            throw new TestGenException("%s has no metdataFile", getId());
+        }
+        return metdataFile;
     }
 }

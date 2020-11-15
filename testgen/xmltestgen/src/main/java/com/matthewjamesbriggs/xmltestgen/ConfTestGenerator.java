@@ -1,5 +1,6 @@
 package com.matthewjamesbriggs.xmltestgen;
 
+import com.google.gson.Gson;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.apache.commons.io.FileUtils;
@@ -134,6 +135,12 @@ class ConfTestGenerator {
     }
 
     private void generateTest(ConfTest t, OutputStreamWriter mod) throws TestGenException {
+        // Copy W3C tests to the 'generated' directory.
+        if (!isMaxedOut(t) && !t.isExileTest()) {
+            copyXmlTestFile(t);
+        } else {
+            System.out.println("not copying the exile test " + t.getId());
+        }
         switch (t.getConfType()) {
             case Valid:
                 generateValidTest(t, mod);
@@ -175,8 +182,10 @@ class ConfTestGenerator {
         switch (t.getConfType()) {
             case NotWellFormed:
                 notWellFormedTestCount++;
+                break;
             case Valid:
                 validTestCount++;
+                break;
             case Error:
             case Invalid:
             default:
@@ -184,13 +193,61 @@ class ConfTestGenerator {
         }
     }
 
-    private static void generateNotWellFormedTest(ConfTest t, OutputStreamWriter mod) throws TestGenException {
-        return;
-        //        if (isMaxedOut(t)) {
-        //            return;
-        //        }
-        //        incrementCount(t);
-        //        throw new TestGenException("not implemented %s", t.getId());
+    private void generateNotWellFormedTest(ConfTest t, OutputStreamWriter mod) throws TestGenException {
+        if (isMaxedOut(t)) {
+            return;
+        }
+        incrementCount(t);
+        if (t.getConfType() != ConfType.NotWellFormed) {
+            throw new TestGenException("wrong test type, expected '%s', got '%s'",
+                    ConfType.NotWellFormed,
+                    t.getConfType().toString());
+        }
+        File testFile = new File(generatedDir, t.getTestName() + ".rs");
+        OutputStreamWriter os = F.createAndOpen(testFile);
+        F.writeln(mod, "mod %s;", t.getTestName());
+        writeCodeFileHeader(os);
+        F.writeln(os, "");
+        F.writeln(os, "use std::path::PathBuf;");
+        //        F.writeln(os, "use exile::Document;");
+        F.writeln(os, "");
+        writeConstDeclarations(t, os);
+        F.writeln(os, "");
+        writePathFunction(t, os);
+        F.writeln(os, "");
+        F.writeln(os, "#[test]");
+        F.writeln(os, "fn %s_test() {", t.getSnakeCase());
+        F.writeln(os, "    let result = exile::load(path(INPUT_FILE));");
+        F.writeln(os, "    assert!(result.is_err());");
+        F.writeln(os, "    let e = result.err().unwrap();");
+        F.writeln(os, "match e {");
+        boolean positionAsserted = false;
+        if (t.hasMetadataFile()) {
+            File m = t.getMetadataFile();
+            Gson gson = new Gson();
+            ExileTestMetadata metadata = null;
+            try {
+                Reader reader = Files.newBufferedReader(m.toPath());
+                metadata = gson.fromJson(reader, ExileTestMetadata.class);
+            } catch (IOException e) {
+                throw new TestGenException(e, "unable to load %s", m.getPath());
+            }
+            ExileTestMetadataBad bad = metadata.getSyntax().getBad();
+            if (bad != null) {
+                positionAsserted = true;
+                F.writeln(os, "exile::error::Error::Parse(parse_error) => {");
+                F.writeln(os, "assert_eq!(%d, parse_error.xml_site.position);", bad.getCharacterPosition());
+                F.writeln(os, "assert_eq!(%d, parse_error.xml_site.line);", bad.getLine());
+                F.writeln(os, "assert_eq!(%d, parse_error.xml_site.column);", bad.getColumn());
+            }
+        }
+        if (!positionAsserted) {
+            F.writeln(os, "exile::error::Error::Parse(_) => {");
+        }
+        F.writeln(os, "}");
+        F.writeln(os, "_ => panic!(\"expected parse error.\"),");
+        F.writeln(os, "}");
+        F.writeln(os, "}");
     }
 
     private void generateValidTest(ConfTest t, OutputStreamWriter mod) throws TestGenException {
@@ -199,7 +256,9 @@ class ConfTestGenerator {
         }
         incrementCount(t);
         if (t.getConfType() != ConfType.Valid) {
-            throw new TestGenException("wrong test type, expected 'valid', got " + t.getConfType().toString());
+            throw new TestGenException("wrong test type, expected '%s', got '%s'",
+                    ConfType.Valid,
+                    t.getConfType().toString());
         }
         File testFile = new File(generatedDir, t.getTestName() + ".rs");
         OutputStreamWriter os = F.createAndOpen(testFile);
@@ -207,7 +266,7 @@ class ConfTestGenerator {
         writeCodeFileHeader(os);
         F.writeln(os, "");
         FoundDecl foundDecl = findDecl(t);
-        writeUseStatements(foundDecl, os);
+        writeUseStatements(t, foundDecl, os);
         F.writeln(os, "");
         writeConstDeclarations(t, os);
         F.writeln(os, "");
@@ -221,13 +280,6 @@ class ConfTestGenerator {
         F.writeln(os, "");
         writeExpectedFunction(t, foundDecl, os);
 
-        // Copy W3C tests to the 'generated' directory.
-        if (!t.isExileTest()) {
-            copyXmlTestFile(t);
-        } else {
-            System.out.println("not copying the exile test " + t.getId());
-        }
-
         // close the stream, we are done writing to the test file
         F.closeStream(testFile, os);
     }
@@ -236,10 +288,14 @@ class ConfTestGenerator {
         F.writeln(os, "// generated file, do not edit");
     }
 
-    private static void writeUseStatements(FoundDecl foundDecl, OutputStreamWriter os) throws TestGenException {
+    private static void writeUseStatements(ConfTest t,
+                                           FoundDecl foundDecl,
+                                           OutputStreamWriter os) throws TestGenException {
         F.writeln(os, "use exile::Document;");
         F.writeln(os, "use std::path::PathBuf;");
-        F.writeln(os, "use xdoc::Declaration;");
+        if (t.getConfType() != ConfType.NotWellFormed) {
+            F.writeln(os, "use xdoc::Declaration;");
+        }
         if (foundDecl.hasVersion()) {
             F.writeln(os, "use xdoc::Version;");
         }
