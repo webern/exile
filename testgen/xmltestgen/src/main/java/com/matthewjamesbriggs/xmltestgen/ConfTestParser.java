@@ -177,6 +177,10 @@ class ConfTestParser {
         ConfType confType = metadata.getSyntax().getConfType();
         XmlVersion xmlVersion = metadata.getXmlVersion();
         String prefix = confTestCases.getPrefix();
+        File outputFile = location.getOutputFile();
+        if (!outputFile.exists() || !outputFile.isFile()) {
+            outputFile = null;
+        }
         return new ConfTest(confTestCases,
                 path,
                 entities,
@@ -187,6 +191,7 @@ class ConfTestParser {
                 namespace,
                 confType,
                 xmlVersion,
-                prefix);
+                prefix,
+                outputFile);
     }
 }
