@@ -333,7 +333,24 @@ class ConfTestGenerator {
     }
 
     private static void writeTestFunction(ConfTest t, OutputStreamWriter os) throws TestGenException {
+        ExileTestMetadata metadata = null;
+        if (t.hasMetadataFile()) {
+            File m = t.getMetadataFile();
+            Gson gson = new Gson();
+
+            try {
+                Reader reader = Files.newBufferedReader(m.toPath());
+                metadata = gson.fromJson(reader, ExileTestMetadata.class);
+            } catch (IOException e) {
+                throw new TestGenException(e, "unable to load %s", m.getPath());
+            }
+        }
+        String description = String.format("A valid XML file from the W3C conformance test suite: %s", t.getId());
+        if (metadata != null) {
+            description = metadata.getDescription();
+        }
         F.writeln(os, "#[test]");
+        F.writeln(os, "/// %s", description);
         F.writeln(os, "fn %s_parse() {", t.getSnakeCase());
         F.writeln(os, "    let path = path(INPUT_FILE);");
         F.writeln(os, "    let actual = exile::load(&path).unwrap();");

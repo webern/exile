@@ -20,6 +20,7 @@ fn path(filename: &str) -> PathBuf {
 }
 
 #[test]
+/// escape sequences
 fn escapes_parse() {
     let path = path(INPUT_FILE);
     let actual = exile::load(&path).unwrap();

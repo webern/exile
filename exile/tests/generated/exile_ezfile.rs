@@ -21,6 +21,7 @@ fn path(filename: &str) -> PathBuf {
 }
 
 #[test]
+/// a simple, small, well-formed xml file
 fn ezfile_parse() {
     let path = path(INPUT_FILE);
     let actual = exile::load(&path).unwrap();

@@ -18,6 +18,7 @@ fn path(filename: &str) -> PathBuf {
 }
 
 #[test]
+/// A valid XML file from the W3C conformance test suite: valid-sa-005
 fn valid_sa_005_parse() {
     let path = path(INPUT_FILE);
     let actual = exile::load(&path).unwrap();

@@ -20,6 +20,7 @@ fn path(filename: &str) -> PathBuf {
 }
 
 #[test]
+/// a simple file with processing instructions
 fn pi_parse() {
     let path = path(INPUT_FILE);
     let actual = exile::load(&path).unwrap();

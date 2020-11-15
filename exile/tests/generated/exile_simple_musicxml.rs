@@ -21,6 +21,7 @@ fn path(filename: &str) -> PathBuf {
 }
 
 #[test]
+/// cd_catalog example from https://www.w3schools.com/xml/xml_examples.asp
 fn simple_musicxml_parse() {
     let path = path(INPUT_FILE);
     let actual = exile::load(&path).unwrap();
