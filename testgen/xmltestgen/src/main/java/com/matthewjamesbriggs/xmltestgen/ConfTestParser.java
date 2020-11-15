@@ -181,6 +181,10 @@ class ConfTestParser {
         if (!outputFile.exists() || !outputFile.isFile()) {
             outputFile = null;
         }
+        File metdataFile = location.getMetadataFile();
+        if (!metdataFile.exists() || !metdataFile.isFile()) {
+            metdataFile = null;
+        }
         return new ConfTest(confTestCases,
                 path,
                 entities,
@@ -192,6 +196,7 @@ class ConfTestParser {
                 confType,
                 xmlVersion,
                 prefix,
-                outputFile);
+                outputFile,
+                metdataFile);
     }
 }

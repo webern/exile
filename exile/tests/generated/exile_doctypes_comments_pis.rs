@@ -19,6 +19,7 @@ fn path(filename: &str) -> PathBuf {
 }
 
 #[test]
+/// a file with doctypes, processing instructions and comments
 fn doctypes_comments_pis_parse() {
     let path = path(INPUT_FILE);
     let actual = exile::load(&path).unwrap();

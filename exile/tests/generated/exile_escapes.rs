@@ -20,6 +20,7 @@ fn path(filename: &str) -> PathBuf {
 }
 
 #[test]
+/// escape sequences
 fn escapes_parse() {
     let path = path(INPUT_FILE);
     let actual = exile::load(&path).unwrap();
@@ -36,6 +37,7 @@ fn escapes_parse() {
 }
 
 #[test]
+/// Check that the serialization of this XML document matches what we expect.
 fn escapes_serialize() {
     let doc = expected();
     let actual = doc.to_string();

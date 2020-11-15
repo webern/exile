@@ -21,6 +21,7 @@ fn path(filename: &str) -> PathBuf {
 }
 
 #[test]
+/// cd_catalog example from https://www.w3schools.com/xml/xml_examples.asp
 fn simple_musicxml_parse() {
     let path = path(INPUT_FILE);
     let actual = exile::load(&path).unwrap();
@@ -37,6 +38,7 @@ fn simple_musicxml_parse() {
 }
 
 #[test]
+/// Check that the serialization of this XML document matches what we expect.
 fn simple_musicxml_serialize() {
     let doc = expected();
     let actual = doc.to_string();

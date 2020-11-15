@@ -9,7 +9,6 @@ public class App {
     private static final int SUCCESS = 0;
     private static final int FAILURE = 1;
     private static final int BAD_USAGE = 2;
-    private static final int NUM_TESTS = 5;
 
     public static void main(String[] args) {
         ProgramOptions opts = null;
@@ -33,6 +32,6 @@ public class App {
         List<ConfTest> exileTests = ConfTestParser.parseExileTests(opts.getRustDataDir());
         confTests.addAll(exileTests);
         ConfTestGenerator confTestGenerator = new ConfTestGenerator(confTests, opts);
-        confTestGenerator.generateTests(NUM_TESTS);
+        confTestGenerator.generateTests();
     }
 }

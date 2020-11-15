@@ -1,5 +1,6 @@
 package com.matthewjamesbriggs.xmltestgen;
 
+import com.google.gson.Gson;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.apache.commons.io.FileUtils;
@@ -16,6 +17,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 class ConfTestGenerator {
+    /// The maximum number of W3C tests of ConfType.Valid that will be generated.
+    private static final int MAX_VALID = 5;
+    /// The maximum number of W3C tests of ConfType.NotWellFormed that will be generated.
+    private static final int MAX_NOT_WELL_FORMED = 5;
     /// The tests directory, e.g. exile_repo/exile/tests
     private final File outDir;
     /// The root of the generated tests, e.g. exile_repo/exile/tests/generated
@@ -28,7 +33,10 @@ class ConfTestGenerator {
     private final List<ConfTest> tests;
     /// The mod.rs file for our generated rust tests to be compiled, e.g. exile_repo/exile/tests/generated/mod.rs
     private final File modRs;
-
+    /// The number of W3C tests of ConfType.Valid that have been generated.
+    private int validTestCount;
+    /// The number of W3C tests of ConfType.NotWellFormed that have been generated.
+    private int notWellFormedTestCount;
 
     ConfTestGenerator(List<ConfTest> tests, ProgramOptions opts) throws TestGenException {
         outDir = F.canonicalize(opts.getXmlOutdir());
@@ -95,7 +103,7 @@ class ConfTestGenerator {
         }
     }
 
-    void generateTests(int maxTests) throws TestGenException {
+    void generateTests() throws TestGenException {
         F.createOrReplaceDir(generatedDir);
         deleteNonExileXmlFiles(testDataDir);
 
@@ -105,20 +113,8 @@ class ConfTestGenerator {
         F.writeln(mod, "");
 
         // create test files
-        int testCount = 0;
-        for (int i = 0; i < tests.size(); ++i) {
-            ConfTest t = tests.get(i);
-            if (t.getConfType() != ConfType.Valid) {
-                continue;
-            }
-            // we always generate all of our own custom tests, but if is a w3c test then we increment the testCount to
-            // ensure we only generate as many w3c tests as specified by 'maxTests'.
-            if (t.getPrefix() == "exile" && t.getConfType() == ConfType.Valid) {
-                generateValidTest(t, mod);
-            } else if (t.getConfType() == ConfType.Valid && testCount < maxTests) {
-                ++testCount;
-                generateValidTest(t, mod);
-            }
+        for (ConfTest t : tests) {
+            generateTest(t, mod);
         }
 
         F.writeln(mod, "");
@@ -138,9 +134,139 @@ class ConfTestGenerator {
         }
     }
 
+    private void generateTest(ConfTest t, OutputStreamWriter mod) throws TestGenException {
+        // Copy W3C tests to the 'generated' directory.
+        if (!isMaxedOut(t) && !t.isExileTest()) {
+            copyXmlTestFile(t);
+        } else {
+            System.out.println("not copying the exile test " + t.getId());
+        }
+        switch (t.getConfType()) {
+            case Valid:
+                generateValidTest(t, mod);
+                break;
+            case NotWellFormed:
+                generateNotWellFormedTest(t, mod);
+                break;
+            case Invalid:
+            case Error:
+            default:
+                System.out.println(String.format("unsupported test type %s in %s",
+                        t.getConfType().toString(),
+                        t.getId()));
+        }
+    }
+
+    private boolean isMaxedOut(ConfTest t) {
+        if (t.isExileTest()) {
+            // we always generate all of the exile tests
+            return false;
+        }
+        switch (t.getConfType()) {
+            case Valid:
+                return validTestCount >= MAX_VALID;
+            case NotWellFormed:
+                return notWellFormedTestCount >= MAX_NOT_WELL_FORMED;
+            case Error:
+            case Invalid:
+            default:
+                return true;
+        }
+    }
+
+    private void incrementCount(ConfTest t) {
+        if (t.isExileTest()) {
+            // we generate all exile test and they don't could toward the max W3C test counts
+            return;
+        }
+        switch (t.getConfType()) {
+            case NotWellFormed:
+                notWellFormedTestCount++;
+                break;
+            case Valid:
+                validTestCount++;
+                break;
+            case Error:
+            case Invalid:
+            default:
+                break;
+        }
+    }
+
+    private void generateNotWellFormedTest(ConfTest t, OutputStreamWriter mod) throws TestGenException {
+        if (isMaxedOut(t)) {
+            return;
+        }
+        incrementCount(t);
+        if (t.getConfType() != ConfType.NotWellFormed) {
+            throw new TestGenException("wrong test type, expected '%s', got '%s'",
+                    ConfType.NotWellFormed,
+                    t.getConfType().toString());
+        }
+        ExileTestMetadata metadata = null;
+        if (t.hasMetadataFile()) {
+            File m = t.getMetadataFile();
+            Gson gson = new Gson();
+
+            try {
+                Reader reader = Files.newBufferedReader(m.toPath());
+                metadata = gson.fromJson(reader, ExileTestMetadata.class);
+            } catch (IOException e) {
+                throw new TestGenException(e, "unable to load %s", m.getPath());
+            }
+        }
+        String description =
+                String.format("A not-well-formed test file from the W3C conformance test suite: %s", t.getId());
+        if (metadata != null) {
+            description = metadata.getDescription();
+        }
+        File testFile = new File(generatedDir, t.getTestName() + ".rs");
+        OutputStreamWriter os = F.createAndOpen(testFile);
+        F.writeln(mod, "mod %s;", t.getTestName());
+        writeCodeFileHeader(os);
+        F.writeln(os, "");
+        F.writeln(os, "use std::path::PathBuf;");
+        F.writeln(os, "");
+        writeConstDeclarations(t, os);
+        F.writeln(os, "");
+        writePathFunction(t, os);
+        F.writeln(os, "");
+        F.writeln(os, "#[test]");
+        F.writeln(os, "/// %s", description);
+        F.writeln(os, "fn %s_test() {", t.getSnakeCase());
+        F.writeln(os, "    let result = exile::load(path(INPUT_FILE));");
+        F.writeln(os, "    assert!(result.is_err());");
+        F.writeln(os, "    let e = result.err().unwrap();");
+        F.writeln(os, "match e {");
+        boolean positionAsserted = false;
+        if (metadata != null) {
+            ExileTestMetadataBad bad = metadata.getSyntax().getBad();
+            if (bad != null) {
+                positionAsserted = true;
+                F.writeln(os, "exile::error::Error::Parse(parse_error) => {");
+                F.writeln(os, "assert_eq!(%d, parse_error.xml_site.position);", bad.getCharacterPosition());
+                F.writeln(os, "assert_eq!(%d, parse_error.xml_site.line);", bad.getLine());
+                F.writeln(os, "assert_eq!(%d, parse_error.xml_site.column);", bad.getColumn());
+            }
+        }
+        if (!positionAsserted) {
+            F.writeln(os, "exile::error::Error::Parse(_) => {");
+        }
+        F.writeln(os, "}");
+        F.writeln(os, "_ => panic!(\"expected parse error.\"),");
+        F.writeln(os, "}");
+        F.writeln(os, "}");
+    }
+
     private void generateValidTest(ConfTest t, OutputStreamWriter mod) throws TestGenException {
+        if (isMaxedOut(t)) {
+            return;
+        }
+        incrementCount(t);
         if (t.getConfType() != ConfType.Valid) {
-            throw new TestGenException("wrong test type, expected 'valid', got " + t.getConfType().toString());
+            throw new TestGenException("wrong test type, expected '%s', got '%s'",
+                    ConfType.Valid,
+                    t.getConfType().toString());
         }
         File testFile = new File(generatedDir, t.getTestName() + ".rs");
         OutputStreamWriter os = F.createAndOpen(testFile);
@@ -148,7 +274,7 @@ class ConfTestGenerator {
         writeCodeFileHeader(os);
         F.writeln(os, "");
         FoundDecl foundDecl = findDecl(t);
-        writeUseStatements(foundDecl, os);
+        writeUseStatements(t, foundDecl, os);
         F.writeln(os, "");
         writeConstDeclarations(t, os);
         F.writeln(os, "");
@@ -162,13 +288,6 @@ class ConfTestGenerator {
         F.writeln(os, "");
         writeExpectedFunction(t, foundDecl, os);
 
-        // Copy W3C tests to the 'generated' directory.
-        if (!t.isExileTest()) {
-            copyXmlTestFile(t);
-        } else {
-            System.out.println("not copying the exile test " + t.getId());
-        }
-
         // close the stream, we are done writing to the test file
         F.closeStream(testFile, os);
     }
@@ -177,10 +296,14 @@ class ConfTestGenerator {
         F.writeln(os, "// generated file, do not edit");
     }
 
-    private static void writeUseStatements(FoundDecl foundDecl, OutputStreamWriter os) throws TestGenException {
+    private static void writeUseStatements(ConfTest t,
+                                           FoundDecl foundDecl,
+                                           OutputStreamWriter os) throws TestGenException {
         F.writeln(os, "use exile::Document;");
         F.writeln(os, "use std::path::PathBuf;");
-        F.writeln(os, "use xdoc::Declaration;");
+        if (t.getConfType() != ConfType.NotWellFormed) {
+            F.writeln(os, "use xdoc::Declaration;");
+        }
         if (foundDecl.hasVersion()) {
             F.writeln(os, "use xdoc::Version;");
         }
@@ -210,7 +333,24 @@ class ConfTestGenerator {
     }
 
     private static void writeTestFunction(ConfTest t, OutputStreamWriter os) throws TestGenException {
+        ExileTestMetadata metadata = null;
+        if (t.hasMetadataFile()) {
+            File m = t.getMetadataFile();
+            Gson gson = new Gson();
+
+            try {
+                Reader reader = Files.newBufferedReader(m.toPath());
+                metadata = gson.fromJson(reader, ExileTestMetadata.class);
+            } catch (IOException e) {
+                throw new TestGenException(e, "unable to load %s", m.getPath());
+            }
+        }
+        String description = String.format("A valid XML file from the W3C conformance test suite: %s", t.getId());
+        if (metadata != null) {
+            description = metadata.getDescription();
+        }
         F.writeln(os, "#[test]");
+        F.writeln(os, "/// %s", description);
         F.writeln(os, "fn %s_parse() {", t.getSnakeCase());
         F.writeln(os, "    let path = path(INPUT_FILE);");
         F.writeln(os, "    let actual = exile::load(&path).unwrap();");
@@ -230,6 +370,7 @@ class ConfTestGenerator {
 
     private static void writeSerializationTestFunction(ConfTest t, OutputStreamWriter os) throws TestGenException {
         F.writeln(os, "#[test]");
+        F.writeln(os, "/// Check that the serialization of this XML document matches what we expect.");
         F.writeln(os, "fn %s_serialize() {", t.getSnakeCase());
         F.writeln(os, "    let doc = expected();");
         F.writeln(os, "    let actual = doc.to_string();");

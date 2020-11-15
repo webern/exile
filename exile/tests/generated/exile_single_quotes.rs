@@ -20,6 +20,7 @@ fn path(filename: &str) -> PathBuf {
 }
 
 #[test]
+/// a simple file with single-quoted attributes
 fn single_quotes_parse() {
     let path = path(INPUT_FILE);
     let actual = exile::load(&path).unwrap();
