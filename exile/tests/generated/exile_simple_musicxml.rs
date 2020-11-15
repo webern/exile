@@ -38,6 +38,7 @@ fn simple_musicxml_parse() {
 }
 
 #[test]
+/// Check that the serialization of this XML document matches what we expect.
 fn simple_musicxml_serialize() {
     let doc = expected();
     let actual = doc.to_string();

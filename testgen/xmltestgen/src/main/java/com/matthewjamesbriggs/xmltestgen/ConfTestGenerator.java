@@ -370,6 +370,7 @@ class ConfTestGenerator {
 
     private static void writeSerializationTestFunction(ConfTest t, OutputStreamWriter os) throws TestGenException {
         F.writeln(os, "#[test]");
+        F.writeln(os, "/// Check that the serialization of this XML document matches what we expect.");
         F.writeln(os, "fn %s_serialize() {", t.getSnakeCase());
         F.writeln(os, "    let doc = expected();");
         F.writeln(os, "    let actual = doc.to_string();");

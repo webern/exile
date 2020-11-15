@@ -38,6 +38,7 @@ fn cd_catalog_parse() {
 }
 
 #[test]
+/// Check that the serialization of this XML document matches what we expect.
 fn cd_catalog_serialize() {
     let doc = expected();
     let actual = doc.to_string();
