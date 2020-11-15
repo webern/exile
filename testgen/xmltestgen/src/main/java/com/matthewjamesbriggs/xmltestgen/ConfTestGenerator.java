@@ -16,6 +16,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 class ConfTestGenerator {
+    /// The maximum number of W3C tests of ConfType.Valid that will be generated.
+    private static final int MAX_VALID = 5;
+    /// The maximum number of W3C tests of ConfType.NotWellFormed that will be generated.
+    private static final int MAX_NOT_WELL_FORMED = 5;
     /// The tests directory, e.g. exile_repo/exile/tests
     private final File outDir;
     /// The root of the generated tests, e.g. exile_repo/exile/tests/generated
@@ -28,7 +32,10 @@ class ConfTestGenerator {
     private final List<ConfTest> tests;
     /// The mod.rs file for our generated rust tests to be compiled, e.g. exile_repo/exile/tests/generated/mod.rs
     private final File modRs;
-
+    /// The number of W3C tests of ConfType.Valid that have been generated.
+    private int validTestCount;
+    /// The number of W3C tests of ConfType.NotWellFormed that have been generated.
+    private int notWellFormedTestCount;
 
     ConfTestGenerator(List<ConfTest> tests, ProgramOptions opts) throws TestGenException {
         outDir = F.canonicalize(opts.getXmlOutdir());
@@ -95,7 +102,7 @@ class ConfTestGenerator {
         }
     }
 
-    void generateTests(int maxTests) throws TestGenException {
+    void generateTests() throws TestGenException {
         F.createOrReplaceDir(generatedDir);
         deleteNonExileXmlFiles(testDataDir);
 
@@ -105,20 +112,8 @@ class ConfTestGenerator {
         F.writeln(mod, "");
 
         // create test files
-        int testCount = 0;
-        for (int i = 0; i < tests.size(); ++i) {
-            ConfTest t = tests.get(i);
-            if (t.getConfType() != ConfType.Valid) {
-                continue;
-            }
-            // we always generate all of our own custom tests, but if is a w3c test then we increment the testCount to
-            // ensure we only generate as many w3c tests as specified by 'maxTests'.
-            if (t.getPrefix() == "exile" && t.getConfType() == ConfType.Valid) {
-                generateValidTest(t, mod);
-            } else if (t.getConfType() == ConfType.Valid && testCount < maxTests) {
-                ++testCount;
-                generateValidTest(t, mod);
-            }
+        for (ConfTest t : tests) {
+            generateTest(t, mod);
         }
 
         F.writeln(mod, "");
@@ -138,7 +133,71 @@ class ConfTestGenerator {
         }
     }
 
+    private void generateTest(ConfTest t, OutputStreamWriter mod) throws TestGenException {
+        switch (t.getConfType()) {
+            case Valid:
+                generateValidTest(t, mod);
+                break;
+            case NotWellFormed:
+                generateNotWellFormedTest(t, mod);
+                break;
+            case Invalid:
+            case Error:
+            default:
+                System.out.println(String.format("unsupported test type %s in %s",
+                        t.getConfType().toString(),
+                        t.getId()));
+        }
+    }
+
+    private boolean isMaxedOut(ConfTest t) {
+        if (t.isExileTest()) {
+            // we always generate all of the exile tests
+            return false;
+        }
+        switch (t.getConfType()) {
+            case Valid:
+                return validTestCount >= MAX_VALID;
+            case NotWellFormed:
+                return notWellFormedTestCount >= MAX_NOT_WELL_FORMED;
+            case Error:
+            case Invalid:
+            default:
+                return true;
+        }
+    }
+
+    private void incrementCount(ConfTest t) {
+        if (t.isExileTest()) {
+            // we generate all exile test and they don't could toward the max W3C test counts
+            return;
+        }
+        switch (t.getConfType()) {
+            case NotWellFormed:
+                notWellFormedTestCount++;
+            case Valid:
+                validTestCount++;
+            case Error:
+            case Invalid:
+            default:
+                break;
+        }
+    }
+
+    private static void generateNotWellFormedTest(ConfTest t, OutputStreamWriter mod) throws TestGenException {
+        return;
+        //        if (isMaxedOut(t)) {
+        //            return;
+        //        }
+        //        incrementCount(t);
+        //        throw new TestGenException("not implemented %s", t.getId());
+    }
+
     private void generateValidTest(ConfTest t, OutputStreamWriter mod) throws TestGenException {
+        if (isMaxedOut(t)) {
+            return;
+        }
+        incrementCount(t);
         if (t.getConfType() != ConfType.Valid) {
             throw new TestGenException("wrong test type, expected 'valid', got " + t.getConfType().toString());
         }
