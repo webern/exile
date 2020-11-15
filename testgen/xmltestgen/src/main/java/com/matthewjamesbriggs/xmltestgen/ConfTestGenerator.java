@@ -192,9 +192,9 @@ class ConfTestGenerator {
     private static void writeConstDeclarations(ConfTest t, OutputStreamWriter os) throws TestGenException {
         F.writeln(os, "const MANIFEST_DIR: &str = env!(\"CARGO_MANIFEST_DIR\");");
         F.writeln(os, "const INPUT_DATA: &str = \"input_data\";");
-        F.writeln(os, "const INPUT_FILENAME: &str = \"%s\";", t.getXmlFilename());
+        F.writeln(os, "const INPUT_FILE: &str = \"%s\";", t.getXmlFilename());
         if (t.hasOutputFile()) {
-            F.writeln(os, "const OUTPUT_FILENAME: &str = \"%s\";", t.getOutputFile().getName());
+            F.writeln(os, "const OUTPUT_FILE: &str = \"%s\";", t.getOutputFile().getName());
         }
     }
 
@@ -212,16 +212,16 @@ class ConfTestGenerator {
     private static void writeTestFunction(ConfTest t, OutputStreamWriter os) throws TestGenException {
         F.writeln(os, "#[test]");
         F.writeln(os, "fn %s_parse() {", t.getSnakeCase());
-        F.writeln(os, "    let path = path(INPUT_FILENAME);");
-        F.writeln(os, "    let loaded = exile::load(&path).unwrap();");
+        F.writeln(os, "    let path = path(INPUT_FILE);");
+        F.writeln(os, "    let actual = exile::load(&path).unwrap();");
         F.writeln(os, "    let expected = expected();");
-        F.writeln(os, "    if loaded != expected {");
-        F.writeln(os, "        let loaded_str = loaded.to_string();");
+        F.writeln(os, "    if actual != expected {");
+        F.writeln(os, "        let actual_str = actual.to_string();");
         F.writeln(os, "        let expected_str = expected.to_string();");
-        F.writeln(os, "        if loaded_str != expected_str {");
-        F.writeln(os, "            assert_eq!(loaded_str, expected_str);");
+        F.writeln(os, "        if actual_str != expected_str {");
+        F.writeln(os, "            assert_eq!(expected_str, actual_str);");
         F.writeln(os, "        } else {");
-        F.writeln(os, "            assert_eq!(loaded, expected);");
+        F.writeln(os, "            assert_eq!(expected, actual);");
         F.writeln(os, "        }");
         F.writeln(os, "    }");
         F.writeln(os, "}");
@@ -233,7 +233,7 @@ class ConfTestGenerator {
         F.writeln(os, "fn %s_serialize() {", t.getSnakeCase());
         F.writeln(os, "    let doc = expected();");
         F.writeln(os, "    let actual = doc.to_string();");
-        F.writeln(os, "    let expected = std::fs::read_to_string(path(OUTPUT_FILENAME)).unwrap();");
+        F.writeln(os, "    let expected = std::fs::read_to_string(path(OUTPUT_FILE)).unwrap();");
         F.writeln(os, "    assert_eq!(expected, actual);");
         F.writeln(os, "}");
     }

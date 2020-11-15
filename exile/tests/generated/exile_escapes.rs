@@ -7,8 +7,8 @@ use xdoc::Version;
 
 const MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
 const INPUT_DATA: &str = "input_data";
-const INPUT_FILENAME: &str = "exile_escapes.xml";
-const OUTPUT_FILENAME: &str = "exile_escapes.output.xml";
+const INPUT_FILE: &str = "exile_escapes.xml";
+const OUTPUT_FILE: &str = "exile_escapes.output.xml";
 
 fn path(filename: &str) -> PathBuf {
     let p = PathBuf::from(MANIFEST_DIR)
@@ -21,16 +21,16 @@ fn path(filename: &str) -> PathBuf {
 
 #[test]
 fn escapes_parse() {
-    let path = path(INPUT_FILENAME);
-    let loaded = exile::load(&path).unwrap();
+    let path = path(INPUT_FILE);
+    let actual = exile::load(&path).unwrap();
     let expected = expected();
-    if loaded != expected {
-        let loaded_str = loaded.to_string();
+    if actual != expected {
+        let actual_str = actual.to_string();
         let expected_str = expected.to_string();
-        if loaded_str != expected_str {
-            assert_eq!(loaded_str, expected_str);
+        if actual_str != expected_str {
+            assert_eq!(expected_str, actual_str);
         } else {
-            assert_eq!(loaded, expected);
+            assert_eq!(expected, actual);
         }
     }
 }
@@ -39,7 +39,7 @@ fn escapes_parse() {
 fn escapes_serialize() {
     let doc = expected();
     let actual = doc.to_string();
-    let expected = std::fs::read_to_string(path(OUTPUT_FILENAME)).unwrap();
+    let expected = std::fs::read_to_string(path(OUTPUT_FILE)).unwrap();
     assert_eq!(expected, actual);
 }
 
