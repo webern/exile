@@ -8,29 +8,30 @@ use xdoc::Version;
 
 const MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
 const INPUT_DATA: &str = "input_data";
-const FILENAME: &str = "exile_pi.xml";
+const INPUT_FILE: &str = "exile_pi.xml";
 
-fn path() -> PathBuf {
+fn path(filename: &str) -> PathBuf {
     let p = PathBuf::from(MANIFEST_DIR)
         .join("tests")
         .join(INPUT_DATA)
-        .join(FILENAME);
+        .join(filename);
     p.canonicalize()
         .unwrap_or_else(|e| panic!("bad path: {}: {}", p.display(), e))
 }
 
 #[test]
-fn pi() {
-    let path = path();
-    let loaded = exile::load(&path).unwrap();
+/// a simple file with processing instructions
+fn pi_parse() {
+    let path = path(INPUT_FILE);
+    let actual = exile::load(&path).unwrap();
     let expected = expected();
-    if loaded != expected {
-        let loaded_str = loaded.to_string();
+    if actual != expected {
+        let actual_str = actual.to_string();
         let expected_str = expected.to_string();
-        if loaded_str != expected_str {
-            assert_eq!(loaded_str, expected_str);
+        if actual_str != expected_str {
+            assert_eq!(expected_str, actual_str);
         } else {
-            assert_eq!(loaded, expected);
+            assert_eq!(expected, actual);
         }
     }
 }

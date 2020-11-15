@@ -16,25 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 class ConfTestParser {
-    @Getter private static class ExileTestLocation {
-        private final String testName;
-        private final File xml;
-        private final File metadata;
-        private final File expected;
-
-        ExileTestLocation(File mainFile) throws TestGenException {
-            F.checkFile(mainFile);
-            xml = F.canonicalize(mainFile);
-            String filename = xml.toPath().getFileName().toString();
-            // remove .xml extension
-            testName = filename.substring(0, filename.length() - 4);
-            Path parent = xml.toPath().getParent();
-            metadata = new File(Paths.get(parent.toString(), testName + ".metadata.json").toString());
-            F.checkFile(metadata);
-            expected = new File(Paths.get(parent.toString(), testName + ".expected.xml").toString());
-        }
-    }
-
     static List<ConfTest> parse(String w3cXmlFilepath) throws TestGenException {
         Document doc = X.loadComplete(new File(w3cXmlFilepath));
         return parseDocument(doc);
@@ -143,26 +124,27 @@ class ConfTestParser {
     }
 
     static List<ConfTest> parseExileTests(File dir) throws TestGenException {
-        List<ExileTestLocation> locations = listExileTestFiles(dir);
+        List<ExileFiles> locations = listExileTestFiles(dir);
         List<ConfTest> exileTests = new ArrayList<>();
-        for (ExileTestLocation location : locations) {
+        for (ExileFiles location : locations) {
             ConfTest confTest = makeExileConfTest(location);
             exileTests.add(confTest);
         }
         return exileTests;
     }
 
-    private static List<ExileTestLocation> listExileTestFiles(File dir) throws TestGenException {
+    private static List<ExileFiles> listExileTestFiles(File dir) throws TestGenException {
         List<File> files = new ArrayList<>();
         try {
-            Files.list(dir.toPath()).limit(9999999).forEach(path -> {
-                if (!path.getFileName().toString().startsWith("disabled.") &&
-                        !path.toString().endsWith(".expected.xml") &&
-                        !path.toString().endsWith("metadata.json") &&
-                        path.toString().endsWith(".xml")) {
+            Files.list(dir.toPath()).forEach(path -> {
+                File f = path.getFileName().toFile();
+                if (ExileConstants.isEnabledExileInput(f)) {
                     files.add(new File(path.toString()));
-                    System.out.println(path);
+                    System.out.println(path + " is an exile input file.");
+                } else {
+                    System.out.println(path + " is NOT exile input file or is DISABLED.");
                 }
+
             });
         } catch (IOException e) {
             throw new TestGenException("Unable to list dir: " + dir.toString(), e);
@@ -170,27 +152,39 @@ class ConfTestParser {
         return listExileTestFiles(files);
     }
 
-    private static List<ExileTestLocation> listExileTestFiles(List<File> xmlFiles) throws TestGenException {
-        List<ExileTestLocation> exiles = new ArrayList<>();
+    private static List<ExileFiles> listExileTestFiles(List<File> xmlFiles) throws TestGenException {
+        List<ExileFiles> exiles = new ArrayList<>();
         for (File file : xmlFiles) {
-            exiles.add(new ExileTestLocation(file));
+            ExileFiles ef = new ExileFiles(file);
+            F.checkDir(ef.getDirectory());
+            F.checkFile(ef.getInputFile());
+            F.checkFile(ef.getMetadataFile());
+            exiles.add(ef);
         }
         return exiles;
     }
 
-    private static ConfTest makeExileConfTest(ExileTestLocation location) throws TestGenException {
+    private static ConfTest makeExileConfTest(ExileFiles location) throws TestGenException {
         Gson gson = new Gson();
-        ExileTestMetadata metadata = gson.fromJson(F.readFile(location.metadata), ExileTestMetadata.class);
-        ConfTestCases confTestCases = new ConfTestCases("exile", "exile");
-        Path path = location.getXml().toPath();
+        ExileTestMetadata metadata = gson.fromJson(F.readFile(location.getMetadataFile()), ExileTestMetadata.class);
+        ConfTestCases confTestCases = new ConfTestCases(ExileConstants.EXILE, ExileConstants.EXILE);
+        Path path = location.getInputFile().toPath();
         Entities entities = ExileTestMetadata.getEntities();
-        String id = location.getTestName();
+        String id = location.getCoreName();
         Recommendation recommendation = metadata.getRecommendation();
         final String sections = "N/A";
         boolean namespace = ExileTestMetadata.getNamespace();
         ConfType confType = metadata.getSyntax().getConfType();
         XmlVersion xmlVersion = metadata.getXmlVersion();
         String prefix = confTestCases.getPrefix();
+        File outputFile = location.getOutputFile();
+        if (!outputFile.exists() || !outputFile.isFile()) {
+            outputFile = null;
+        }
+        File metdataFile = location.getMetadataFile();
+        if (!metdataFile.exists() || !metdataFile.isFile()) {
+            metdataFile = null;
+        }
         return new ConfTest(confTestCases,
                 path,
                 entities,
@@ -201,6 +195,8 @@ class ConfTestParser {
                 namespace,
                 confType,
                 xmlVersion,
-                prefix);
+                prefix,
+                outputFile,
+                metdataFile);
     }
 }

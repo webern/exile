@@ -1,9 +1,11 @@
 package com.matthewjamesbriggs.xmltestgen;
 
 import lombok.AllArgsConstructor;
+import org.junit.Test;
 import org.w3c.dom.Element;
 import lombok.Getter;
 
+import java.io.File;
 import java.nio.file.Path;
 
 
@@ -30,6 +32,11 @@ import java.nio.file.Path;
     private final XmlVersion xmlVersion;
     @Getter
     private final String prefix;
+    /// This is an XML file that represents the serialization outcome that we expect. It might be null because we only
+    /// have these for a few tests.
+    private final File outputFile;
+    /// This is a JSON file that represents the metadata for an exile test.
+    private final File metdataFile;
 
     ConfTest(Element element, Path path, ConfTestCases confTestCases) throws TestGenException {
         this.path = path;
@@ -51,27 +58,11 @@ import java.nio.file.Path;
             xmlVersion = XmlVersion.V10;
         }
         prefix = confTestCases.getPrefix();
+        // this constructor is for w3c tests, none of which currently have output assertion files or metadata files
+        outputFile = null;
+        metdataFile = null;
     }
 
-    private static boolean isLetter(char c) {
-        return isLetterUpper(c) || isLetterLower(c);
-    }
-
-    public static boolean isAlphanumeric(char c) {
-        return isLetter(c) || isDigit(c);
-    }
-
-    private static boolean isLetterUpper(char c) {
-        return c >= 65 && c <= 90;
-    }
-
-    private static boolean isLetterLower(char c) {
-        return c >= 97 && c <= 121;
-    }
-
-    private static boolean isDigit(char c) {
-        return c >= 48 && c <= 57;
-    }
 
     @Override
     public String toString() {
@@ -93,35 +84,70 @@ import java.nio.file.Path;
      * @return The ID in snake case.
      */
     String getSnakeCase() {
-        String s = getId();
-        StringBuilder result = new StringBuilder(s.length() + 4);
-        boolean wasUnderscore = false;
-        for (int i = 0, n = s.length(); i < n; i++) {
-            char c = s.charAt(i);
-            if (i == 0 && !isLetter(c)) {
-                result.append('x');
-                result.append('_');
-                wasUnderscore = true;
-            }
-            if (isLetter(c)) {
-                result.append(Character.toLowerCase(c));
-                wasUnderscore = false;
-            } else if (isDigit(c)) {
-                result.append(c);
-                wasUnderscore = false;
-            } else if (!wasUnderscore) {
-                result.append('_');
-                wasUnderscore = true;
-            }
-        }
-        return result.toString();
+        return S.getSnakeCase(getId());
     }
 
     String getTestName() {
-        return getPrefix() + "_" + getSnakeCase();
+        return getPrefix() + ExileConstants.SEPARATOR + getSnakeCase();
     }
 
-    String getFileRename() {
+    /**
+     * The name of the XML imput file as it will be in the exile/tests/input_data directory.
+     *
+     * @return The filename.
+     */
+    String getXmlFilename() {
         return getTestName() + ".xml";
+    }
+
+    /**
+     * Returns true if this test is a 'custom' exile test, i.e. an exile test, and did not come from W3C.
+     */
+    boolean isExileTest() {
+        return getPrefix().equals(ExileConstants.EXILE);
+    }
+
+    /**
+     * True if there is an XML file that represents the expected serialization outcome for a test
+     *
+     * @return whether there is an output file.
+     */
+    public boolean hasOutputFile() {
+        return outputFile != null;
+    }
+
+    /**
+     * This will throw an exception if there is no XML output file. Call `hasOutputFile` first to check.
+     *
+     * @return the output file.
+     * @throws TestGenException if there is no output file.
+     */
+    public File getOutputFile() throws TestGenException {
+        if (outputFile == null) {
+            throw new TestGenException("%s has no outputFile", getId());
+        }
+        return outputFile;
+    }
+
+    /**
+     * True if there is an JSON metadata file for this test.
+     *
+     * @return whether there is an output file.
+     */
+    public boolean hasMetadataFile() {
+        return metdataFile != null;
+    }
+
+    /**
+     * This will throw an exception if there is no JSON metdata file. Call `hasMetadataFile` first to check.
+     *
+     * @return the output file.
+     * @throws TestGenException if there is no output file.
+     */
+    public File getMetadataFile() throws TestGenException {
+        if (metdataFile == null) {
+            throw new TestGenException("%s has no metdataFile", getId());
+        }
+        return metdataFile;
     }
 }
