@@ -156,6 +156,10 @@ class ConfTestGenerator {
         F.writeln(os, "");
         writeTestFunction(t, os);
         F.writeln(os, "");
+        if (t.isExileTest() && t.hasOutputFile()) {
+            writeSerializationTestFunction(t, os);
+        }
+        F.writeln(os, "");
         writeExpectedFunction(t, foundDecl, os);
 
         // Copy W3C tests to the 'generated' directory.
@@ -188,15 +192,18 @@ class ConfTestGenerator {
     private static void writeConstDeclarations(ConfTest t, OutputStreamWriter os) throws TestGenException {
         F.writeln(os, "const MANIFEST_DIR: &str = env!(\"CARGO_MANIFEST_DIR\");");
         F.writeln(os, "const INPUT_DATA: &str = \"input_data\";");
-        F.writeln(os, "const FILENAME: &str = \"%s\";", t.getXmlFilename());
+        F.writeln(os, "const INPUT_FILENAME: &str = \"%s\";", t.getXmlFilename());
+        if (t.hasOutputFile()) {
+            F.writeln(os, "const OUTPUT_FILENAME: &str = \"%s\";", t.getOutputFile().getName());
+        }
     }
 
     private static void writePathFunction(ConfTest t, OutputStreamWriter os) throws TestGenException {
-        F.writeln(os, "fn path() -> PathBuf {");
+        F.writeln(os, "fn path(filename: &str) -> PathBuf {");
         F.writeln(os, "    let p = PathBuf::from(MANIFEST_DIR)");
         F.writeln(os, "        .join(\"tests\")");
         F.writeln(os, "        .join(INPUT_DATA)");
-        F.writeln(os, "        .join(FILENAME);");
+        F.writeln(os, "        .join(filename);");
         F.writeln(os, "    p.canonicalize()");
         F.writeln(os, "        .unwrap_or_else(|e| panic!(\"bad path: {}: {}\", p.display(), e))");
         F.writeln(os, "}");
@@ -204,8 +211,8 @@ class ConfTestGenerator {
 
     private static void writeTestFunction(ConfTest t, OutputStreamWriter os) throws TestGenException {
         F.writeln(os, "#[test]");
-        F.writeln(os, "fn %s() {", t.getSnakeCase());
-        F.writeln(os, "    let path = path();");
+        F.writeln(os, "fn %s_parse() {", t.getSnakeCase());
+        F.writeln(os, "    let path = path(INPUT_FILENAME);");
         F.writeln(os, "    let loaded = exile::load(&path).unwrap();");
         F.writeln(os, "    let expected = expected();");
         F.writeln(os, "    if loaded != expected {");
@@ -217,6 +224,17 @@ class ConfTestGenerator {
         F.writeln(os, "            assert_eq!(loaded, expected);");
         F.writeln(os, "        }");
         F.writeln(os, "    }");
+        F.writeln(os, "}");
+    }
+
+
+    private static void writeSerializationTestFunction(ConfTest t, OutputStreamWriter os) throws TestGenException {
+        F.writeln(os, "#[test]");
+        F.writeln(os, "fn %s_serialize() {", t.getSnakeCase());
+        F.writeln(os, "    let doc = expected();");
+        F.writeln(os, "    let actual = doc.to_string();");
+        F.writeln(os, "    let expected = std::fs::read_to_string(path(OUTPUT_FILENAME)).unwrap();");
+        F.writeln(os, "    assert_eq!(expected, actual);");
         F.writeln(os, "}");
     }
 
@@ -253,12 +271,6 @@ class ConfTestGenerator {
             }
 
         }
-        /*
-            doc.push_prolog_misc(xdoc::Misc::PI(PI {
-                target: "foo".into(),
-                instructions: vec!["".to_owned()],
-            }));
-         */
     }
 
     private static void writeExpectedPostlude(List<Node> postlude, OutputStreamWriter os) throws TestGenException {

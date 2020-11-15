@@ -6,20 +6,20 @@ use xdoc::Declaration;
 
 const MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
 const INPUT_DATA: &str = "input_data";
-const FILENAME: &str = "jclark_valid_sa_001.xml";
+const INPUT_FILENAME: &str = "jclark_valid_sa_001.xml";
 
-fn path() -> PathBuf {
+fn path(filename: &str) -> PathBuf {
     let p = PathBuf::from(MANIFEST_DIR)
         .join("tests")
         .join(INPUT_DATA)
-        .join(FILENAME);
+        .join(filename);
     p.canonicalize()
         .unwrap_or_else(|e| panic!("bad path: {}: {}", p.display(), e))
 }
 
 #[test]
-fn valid_sa_001() {
-    let path = path();
+fn valid_sa_001_parse() {
+    let path = path(INPUT_FILENAME);
     let loaded = exile::load(&path).unwrap();
     let expected = expected();
     if loaded != expected {

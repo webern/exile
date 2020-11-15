@@ -7,20 +7,21 @@ use xdoc::Version;
 
 const MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
 const INPUT_DATA: &str = "input_data";
-const FILENAME: &str = "exile_escapes.xml";
+const INPUT_FILENAME: &str = "exile_escapes.xml";
+const OUTPUT_FILENAME: &str = "exile_escapes.output.xml";
 
-fn path() -> PathBuf {
+fn path(filename: &str) -> PathBuf {
     let p = PathBuf::from(MANIFEST_DIR)
         .join("tests")
         .join(INPUT_DATA)
-        .join(FILENAME);
+        .join(filename);
     p.canonicalize()
         .unwrap_or_else(|e| panic!("bad path: {}: {}", p.display(), e))
 }
 
 #[test]
-fn escapes() {
-    let path = path();
+fn escapes_parse() {
+    let path = path(INPUT_FILENAME);
     let loaded = exile::load(&path).unwrap();
     let expected = expected();
     if loaded != expected {
@@ -32,6 +33,14 @@ fn escapes() {
             assert_eq!(loaded, expected);
         }
     }
+}
+
+#[test]
+fn escapes_serialize() {
+    let doc = expected();
+    let actual = doc.to_string();
+    let expected = std::fs::read_to_string(path(OUTPUT_FILENAME)).unwrap();
+    assert_eq!(expected, actual);
 }
 
 fn expected() -> Document {
