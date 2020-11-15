@@ -203,35 +203,43 @@ class ConfTestGenerator {
                     ConfType.NotWellFormed,
                     t.getConfType().toString());
         }
-        File testFile = new File(generatedDir, t.getTestName() + ".rs");
-        OutputStreamWriter os = F.createAndOpen(testFile);
-        F.writeln(mod, "mod %s;", t.getTestName());
-        writeCodeFileHeader(os);
-        F.writeln(os, "");
-        F.writeln(os, "use std::path::PathBuf;");
-        //        F.writeln(os, "use exile::Document;");
-        F.writeln(os, "");
-        writeConstDeclarations(t, os);
-        F.writeln(os, "");
-        writePathFunction(t, os);
-        F.writeln(os, "");
-        F.writeln(os, "#[test]");
-        F.writeln(os, "fn %s_test() {", t.getSnakeCase());
-        F.writeln(os, "    let result = exile::load(path(INPUT_FILE));");
-        F.writeln(os, "    assert!(result.is_err());");
-        F.writeln(os, "    let e = result.err().unwrap();");
-        F.writeln(os, "match e {");
-        boolean positionAsserted = false;
+        ExileTestMetadata metadata = null;
         if (t.hasMetadataFile()) {
             File m = t.getMetadataFile();
             Gson gson = new Gson();
-            ExileTestMetadata metadata = null;
+
             try {
                 Reader reader = Files.newBufferedReader(m.toPath());
                 metadata = gson.fromJson(reader, ExileTestMetadata.class);
             } catch (IOException e) {
                 throw new TestGenException(e, "unable to load %s", m.getPath());
             }
+        }
+        String description =
+                String.format("A not-well-formed test file from the W3C conformance test suite: %s", t.getId());
+        if (metadata != null) {
+            description = metadata.getDescription();
+        }
+        File testFile = new File(generatedDir, t.getTestName() + ".rs");
+        OutputStreamWriter os = F.createAndOpen(testFile);
+        F.writeln(mod, "mod %s;", t.getTestName());
+        writeCodeFileHeader(os);
+        F.writeln(os, "");
+        F.writeln(os, "use std::path::PathBuf;");
+        F.writeln(os, "");
+        writeConstDeclarations(t, os);
+        F.writeln(os, "");
+        writePathFunction(t, os);
+        F.writeln(os, "");
+        F.writeln(os, "#[test]");
+        F.writeln(os, "/// %s", description);
+        F.writeln(os, "fn %s_test() {", t.getSnakeCase());
+        F.writeln(os, "    let result = exile::load(path(INPUT_FILE));");
+        F.writeln(os, "    assert!(result.is_err());");
+        F.writeln(os, "    let e = result.err().unwrap();");
+        F.writeln(os, "match e {");
+        boolean positionAsserted = false;
+        if (metadata != null) {
             ExileTestMetadataBad bad = metadata.getSyntax().getBad();
             if (bad != null) {
                 positionAsserted = true;

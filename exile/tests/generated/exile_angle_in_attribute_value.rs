@@ -16,6 +16,7 @@ fn path(filename: &str) -> PathBuf {
 }
 
 #[test]
+/// unescaped angle bracket in an attribute value
 fn angle_in_attribute_value_test() {
     let result = exile::load(path(INPUT_FILE));
     assert!(result.is_err());

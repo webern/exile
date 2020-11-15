@@ -16,6 +16,7 @@ fn path(filename: &str) -> PathBuf {
 }
 
 #[test]
+/// A not-well-formed test file from the W3C conformance test suite: not-wf-sa-004
 fn not_wf_sa_004_test() {
     let result = exile::load(path(INPUT_FILE));
     assert!(result.is_err());
