@@ -1,0 +1,39 @@
+FROM debian:buster-slim
+ENV CARGO_HOME=/rust/cargo_home
+ENV RUSTUP_HOME=/rust/rustup_home
+ENV PATH=$PATH:$CARGO_HOME/bin
+RUN mkdir -p /usr/share/man/man1 && \
+    apt-get update && apt-get install -y \
+        build-essential \
+        bash \
+        curl \
+        tar \
+        ca-certificates \
+        apt-transport-https \
+        wget \
+    && \
+    curl https://sh.rustup.rs -sSf | sh -s -- -y && \
+    cargo version
+
+ENV JDK_DIR=jdk-15.0.1
+ENV JDK_TAR=openjdk-15.0.1_linux-x64_bin.tar.gz
+ENV JDK_INSTALL_DIR=/usr/java
+ENV JAVA_HOME=$JDK_INSTALL_DIR/$JDK_DIR
+ENV PATH=$JAVA_HOME/bin:/usr/java/apache-maven-3.6.3/bin:$PATH
+
+RUN mkdir -p $JDK_INSTALL_DIR && \
+    cd /tmp && \
+    curl -L \
+    https://download.java.net/java/GA/jdk15.0.1/51f4f36ad4ef43e39d0dfdbaf6549e32/9/GPL/openjdk-15.0.1_linux-x64_bin.tar.gz \
+    -o $JDK_TAR \
+    && \
+    tar -xvf $JDK_TAR -C $JDK_INSTALL_DIR && \
+    rm $JDK_TAR
+
+RUN cd /tmp && \
+    curl -L \
+    https://archive.apache.org/dist/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz \
+    -o apache-maven-3.6.3-bin.tar.gz \
+    && \
+    tar -xvf apache-maven-3.6.3-bin.tar.gz -C /usr/java && \
+    rm apache-maven-3.6.3-bin.tar.gz

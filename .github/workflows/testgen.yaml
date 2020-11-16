@@ -1,0 +1,21 @@
+name: testgen
+
+on:
+  push:
+    branches: [ 'master' ]
+  pull_request:
+    branches: [ '*' ]
+
+jobs:
+  testgen:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: download test data and generate tests
+        run: make testgen
+      - name: assert downloaded files exist
+        run: test -f data/xmlconf/xmlconf.xml && test -f data/xmlschema/suite.xml
+      - name: assert git is clean
+        run: git diff --quiet && [[ -z $(git status -s) ]]

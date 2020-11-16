@@ -1,0 +1,11 @@
+{
+  "description": "unescaped angle bracket inside element text",
+  "syntax": {
+    "bad": {
+      "line": 4,
+      "column": 39,
+      "position": 95,
+      "character": " "
+    }
+  }
+}

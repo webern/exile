@@ -1,0 +1,19 @@
+name: exile ci
+
+on:
+  push:
+    branches: [ 'master' ]
+  pull_request:
+    branches: [ '*' ]
+
+jobs:
+  test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - run: rustup update stable
+      - run: export EXILE_GENERATE_README=yes && make check
+      - name: assert git is clean
+        run: git diff --quiet && [[ -z $(git status -s) ]]
