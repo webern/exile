@@ -1,10 +1,10 @@
-use xdoc::{Element, Misc, Node, OrdMap};
-
 use crate::error::Result;
 use crate::parser::chars::is_name_start_char;
 use crate::parser::pi::parse_pi;
 use crate::parser::string::{parse_string, StringType};
 use crate::parser::{parse_name, skip_comment, Iter};
+use crate::xdoc::OrdMap;
+use crate::{Element, Misc, Node};
 
 pub(crate) fn parse_element(iter: &mut Iter<'_>) -> Result<Element> {
     expect!(iter, '<')?;

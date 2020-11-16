@@ -12,7 +12,6 @@ repository = "https://github.com/webern/exile/"
 version = "0.0.2"
 
 [dependencies]
-xdoc = { path = "../xdoc", version = "0.0.2" }
 
 [build-dependencies]
 cargo-readme = "3.2.0"

@@ -1,8 +1,9 @@
 use std::io::Write;
 
-use crate::error::{Result, XErr};
-use crate::write_ops::write_attribute_value;
-use crate::{Misc, Node, OrdMap, WriteOpts, PI};
+use crate::xdoc::error::{Result, XErr};
+use crate::xdoc::write_ops::write_attribute_value;
+use crate::xdoc::OrdMap;
+use crate::{Misc, Node, WriteOpts, PI};
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
 /// Represents an Element in an XML Document.

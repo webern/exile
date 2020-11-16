@@ -489,8 +489,8 @@ fn parse_result_test_message() {
 
 #[test]
 fn parse_result_test_message_fmt() {
+    use super::*;
     use crate::parser::Position;
-    use xdoc::Element;
     let iter = crate::parser::Iter {
         it: "".chars().peekable(),
         st: ParserState {

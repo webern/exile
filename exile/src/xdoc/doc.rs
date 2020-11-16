@@ -1,9 +1,8 @@
+use crate::xdoc::error::Result;
+use crate::{Element, Misc, WriteOpts};
 use std::borrow::Cow;
 use std::default::Default;
 use std::io::{Cursor, Write};
-
-use crate::error::Result;
-use crate::{Element, Misc, WriteOpts};
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
 /// Represents the XML Version being used.
@@ -267,10 +266,10 @@ macro_rules! map (
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use crate::xdoc::OrdMap;
+    use crate::Node;
     use std::io::Cursor;
-
-    use crate::doc::{Declaration, Encoding, Version};
-    use crate::*;
 
     fn assert_ezfile(doc: &Document) {
         let root = doc.root();

@@ -20,7 +20,7 @@ pub use ord_map::OrdMap;
 pub use pi::PI;
 pub use write_ops::{Newline, WriteOpts};
 
-pub use crate::error::Result;
+pub use crate::xdoc::error::Result;
 
 /// The public error type for this library. Macros are for internal use.
 #[macro_use]

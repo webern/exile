@@ -294,14 +294,17 @@ class ConfTestGenerator {
         } else {
             F.writeln(os, "use crate::test_utils::run_parse_test;");
         }
-        F.writeln(os, "use exile::Document;");
-        F.writeln(os, "use xdoc::Declaration;");
+        List<String> structs = new ArrayList<>();
+        structs.add("Document");
+        structs.add("Declaration");
         if (foundDecl.hasVersion()) {
-            F.writeln(os, "use xdoc::Version;");
+            structs.add("Version");
         }
         if (foundDecl.hasEncoding()) {
-            F.writeln(os, "use xdoc::Encoding;");
+            structs.add("Encoding");
         }
+        String importThese = String.join(",", structs);
+        F.writeln(os, "use exile::{%s};", importThese);
     }
 
     private static void writeConstDeclarations(ConfTest t, OutputStreamWriter os) throws TestGenException {
@@ -371,7 +374,7 @@ class ConfTestGenerator {
             if (xtype == XType.ProcessingInstruction) {
                 ProcessingInstruction piNode = (ProcessingInstruction) node;
                 PI pi = parseProcessingInstruction(piNode);
-                F.write(os, "doc.push_prolog_misc(xdoc::Misc::PI(");
+                F.write(os, "doc.push_prolog_misc(exile::Misc::PI(");
                 constructProcessingInstruction(pi, os);
                 F.writeln(os, "));");
             }
@@ -385,7 +388,7 @@ class ConfTestGenerator {
             if (xtype == XType.ProcessingInstruction) {
                 ProcessingInstruction piNode = (ProcessingInstruction) node;
                 PI pi = parseProcessingInstruction(piNode);
-                F.write(os, "doc.push_epilog_misc(xdoc::Misc::PI(");
+                F.write(os, "doc.push_epilog_misc(exile::Misc::PI(");
                 constructProcessingInstruction(pi, os);
                 F.writeln(os, "));");
             }
@@ -408,7 +411,7 @@ class ConfTestGenerator {
     }
 
     private static void constructProcessingInstruction(PI pi, OutputStreamWriter os) throws TestGenException {
-        F.writeln(os, "xdoc::PI {");
+        F.writeln(os, "exile::PI {");
         F.writeln(os, "target: r#\"%s\"#.into(),", pi.getTarget());
         F.writeln(os, "instructions: vec![");
         for (String instruction : pi.getInstructions()) {

@@ -1,9 +1,7 @@
 // generated file, do not edit
 
 use crate::test_utils::run_parse_test;
-use exile::Document;
-use xdoc::Declaration;
-use xdoc::Version;
+use exile::{Declaration, Document, Version};
 
 const INPUT_FILE: &str = "exile_doctypes_comments_pis.xml";
 
@@ -20,11 +18,11 @@ fn expected() -> Document {
         encoding: None,
     });
     // TODO - write doctype information
-    doc.push_prolog_misc(xdoc::Misc::PI(xdoc::PI {
+    doc.push_prolog_misc(exile::Misc::PI(exile::PI {
         target: r#"pi"#.into(),
         instructions: vec![r#"before"#.to_owned(), r#"doctype"#.to_owned()],
     }));
-    doc.push_prolog_misc(xdoc::Misc::PI(xdoc::PI {
+    doc.push_prolog_misc(exile::Misc::PI(exile::PI {
         target: r#"pi"#.into(),
         instructions: vec![r#"after"#.to_owned(), r#"doctype"#.to_owned()],
     }));
@@ -36,7 +34,7 @@ fn expected() -> Document {
     let gen1n5 = root.add_new_child().unwrap();
     gen1n5.set_name(r#"from"#);
     gen1n5.add_text(r#"Jani"#);
-    gen1n5.add_pi(xdoc::PI {
+    gen1n5.add_pi(exile::PI {
         target: r#"pi"#.into(),
         instructions: vec![r#"in"#.to_owned(), r#"element"#.to_owned()],
     });
@@ -46,7 +44,7 @@ fn expected() -> Document {
     let gen1n9 = root.add_new_child().unwrap();
     gen1n9.set_name(r#"body"#);
     gen1n9.add_text(r#"Don't forget me this weekend"#);
-    doc.push_epilog_misc(xdoc::Misc::PI(xdoc::PI {
+    doc.push_epilog_misc(exile::Misc::PI(exile::PI {
         target: r#"pi"#.into(),
         instructions: vec![r#"at"#.to_owned(), r#"the"#.to_owned(), r#"end"#.to_owned()],
     }));

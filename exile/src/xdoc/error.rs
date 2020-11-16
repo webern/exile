@@ -45,19 +45,19 @@ impl Error for XErr {
 
 macro_rules! wrap {
     // Base case:
-    ($err:expr) => (Err($crate::error::XErr {
+    ($err:expr) => (Err($crate::xdoc::error::XErr {
         message: "an error occurred".to_string(),
         file: file!().to_string(),
         line: line!() as u64,
         source: Some($err.into()),
     }));
-    ($err:expr, $msg:expr) => (Err($crate::error::XErr {
+    ($err:expr, $msg:expr) => (Err($crate::xdoc::error::XErr {
         message: $msg.to_string(),
         file: file!().to_string(),
         line: line!() as u64,
         source: Some($err.into()),
     }));
-    ($err:expr, $fmt:expr, $($arg:expr),+) => (Err($crate::error::XErr {
+    ($err:expr, $fmt:expr, $($arg:expr),+) => (Err($crate::xdoc::error::XErr {
         message: format!($fmt, $($arg),+),
         file: file!().to_string(),
         line: line!() as u64,
@@ -77,13 +77,13 @@ macro_rules! better_wrap {
 // a convenience macro for creating a Result::Err
 macro_rules! raise {
     // Base case:
-    ($msg:expr) => (Err($crate::error::XErr {
+    ($msg:expr) => (Err($crate::xdoc::error::XErr {
         message: $msg.to_string(),
         file: file!().to_string(),
         line: line!() as u64,
         source: None,
     }));
-    ($fmt:expr, $($arg:expr),+) => ($Err($crate::error::XErr {
+    ($fmt:expr, $($arg:expr),+) => ($Err($crate::xdoc::error::XErr {
         message: format!($fmt, $($arg),+),
         file: file!().to_string(),
         line: line!() as u64,
