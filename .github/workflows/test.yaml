@@ -14,4 +14,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: rustup update stable
-      - run: make check
+      - run: export EXILE_GENERATE_README=yes && make check
+      - name: assert git is clean
+        run: git diff --quiet && [[ -z $(git status -s) ]]
