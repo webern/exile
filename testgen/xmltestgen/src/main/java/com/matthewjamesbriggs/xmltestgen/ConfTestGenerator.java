@@ -138,8 +138,6 @@ class ConfTestGenerator {
         // Copy W3C tests to the 'generated' directory.
         if (!isMaxedOut(t) && !t.isExileTest()) {
             copyXmlTestFile(t);
-        } else {
-            System.out.println("not copying the exile test " + t.getId());
         }
         switch (t.getConfType()) {
             case Valid:
@@ -151,9 +149,6 @@ class ConfTestGenerator {
             case Invalid:
             case Error:
             default:
-                System.out.println(String.format("unsupported test type %s in %s",
-                        t.getConfType().toString(),
-                        t.getId()));
         }
     }
 
@@ -217,44 +212,41 @@ class ConfTestGenerator {
         }
         String description =
                 String.format("A not-well-formed test file from the W3C conformance test suite: %s", t.getId());
+        ExileTestMetadataBad bad = null;
         if (metadata != null) {
             description = metadata.getDescription();
+            bad = metadata.getSyntax().getBad();
         }
         File testFile = new File(generatedDir, t.getTestName() + ".rs");
         OutputStreamWriter os = F.createAndOpen(testFile);
         F.writeln(mod, "mod %s;", t.getTestName());
         writeCodeFileHeader(os);
         F.writeln(os, "");
-        F.writeln(os, "use std::path::PathBuf;");
+        F.writeln(os, "use crate::test_utils::run_not_well_formed_test;");
+        if (bad != null) {
+            F.writeln(os, "use exile::error::XmlSite;");
+        }
         F.writeln(os, "");
         writeConstDeclarations(t, os);
-        F.writeln(os, "");
-        writePathFunction(t, os);
         F.writeln(os, "");
         F.writeln(os, "#[test]");
         F.writeln(os, "/// %s", description);
         F.writeln(os, "fn %s_test() {", t.getSnakeCase());
-        F.writeln(os, "    let result = exile::load(path(INPUT_FILE));");
-        F.writeln(os, "    assert!(result.is_err());");
-        F.writeln(os, "    let e = result.err().unwrap();");
-        F.writeln(os, "match e {");
-        boolean positionAsserted = false;
-        if (metadata != null) {
-            ExileTestMetadataBad bad = metadata.getSyntax().getBad();
-            if (bad != null) {
-                positionAsserted = true;
-                F.writeln(os, "exile::error::Error::Parse(parse_error) => {");
-                F.writeln(os, "assert_eq!(%d, parse_error.xml_site.position);", bad.getCharacterPosition());
-                F.writeln(os, "assert_eq!(%d, parse_error.xml_site.line);", bad.getLine());
-                F.writeln(os, "assert_eq!(%d, parse_error.xml_site.column);", bad.getColumn());
-            }
+        F.writeln(os, "    run_not_well_formed_test(");
+        F.writeln(os, "        INPUT_FILE,");
+        if (bad != null) {
+            F.writeln(os, "           Some(XmlSite{");
+            F.writeln(os, "                   line: %d,", bad.getLine());
+            F.writeln(os, "                   column: %d,", bad.getColumn());
+            F.writeln(os, "                   position: %d,", bad.getPosition());
+            F.writeln(os, "                   character: '%s',", bad.getCharacter());
+            F.writeln(os, "                   }"); // closes the XmlSite struct
+            F.writeln(os, "                ),"); // closes the Some variant
+            F.writeln(os, "           );"); // closes the function call
+        } else {
+            F.writeln(os, "    None);");
         }
-        if (!positionAsserted) {
-            F.writeln(os, "exile::error::Error::Parse(_) => {");
-        }
-        F.writeln(os, "}");
-        F.writeln(os, "_ => panic!(\"expected parse error.\"),");
-        F.writeln(os, "}");
+        final boolean positionAsserted = false;
         F.writeln(os, "}");
     }
 
@@ -278,11 +270,9 @@ class ConfTestGenerator {
         F.writeln(os, "");
         writeConstDeclarations(t, os);
         F.writeln(os, "");
-        writePathFunction(t, os);
-        F.writeln(os, "");
         writeTestFunction(t, os);
         F.writeln(os, "");
-        if (t.isExileTest() && t.hasOutputFile()) {
+        if (t.hasOutputFile()) {
             writeSerializationTestFunction(t, os);
         }
         F.writeln(os, "");
@@ -299,11 +289,13 @@ class ConfTestGenerator {
     private static void writeUseStatements(ConfTest t,
                                            FoundDecl foundDecl,
                                            OutputStreamWriter os) throws TestGenException {
-        F.writeln(os, "use exile::Document;");
-        F.writeln(os, "use std::path::PathBuf;");
-        if (t.getConfType() != ConfType.NotWellFormed) {
-            F.writeln(os, "use xdoc::Declaration;");
+        if (t.hasOutputFile()) {
+            F.writeln(os, "use crate::test_utils::{run_output_test, run_parse_test};");
+        } else {
+            F.writeln(os, "use crate::test_utils::run_parse_test;");
         }
+        F.writeln(os, "use exile::Document;");
+        F.writeln(os, "use xdoc::Declaration;");
         if (foundDecl.hasVersion()) {
             F.writeln(os, "use xdoc::Version;");
         }
@@ -313,23 +305,10 @@ class ConfTestGenerator {
     }
 
     private static void writeConstDeclarations(ConfTest t, OutputStreamWriter os) throws TestGenException {
-        F.writeln(os, "const MANIFEST_DIR: &str = env!(\"CARGO_MANIFEST_DIR\");");
-        F.writeln(os, "const INPUT_DATA: &str = \"input_data\";");
         F.writeln(os, "const INPUT_FILE: &str = \"%s\";", t.getXmlFilename());
         if (t.hasOutputFile()) {
             F.writeln(os, "const OUTPUT_FILE: &str = \"%s\";", t.getOutputFile().getName());
         }
-    }
-
-    private static void writePathFunction(ConfTest t, OutputStreamWriter os) throws TestGenException {
-        F.writeln(os, "fn path(filename: &str) -> PathBuf {");
-        F.writeln(os, "    let p = PathBuf::from(MANIFEST_DIR)");
-        F.writeln(os, "        .join(\"tests\")");
-        F.writeln(os, "        .join(INPUT_DATA)");
-        F.writeln(os, "        .join(filename);");
-        F.writeln(os, "    p.canonicalize()");
-        F.writeln(os, "        .unwrap_or_else(|e| panic!(\"bad path: {}: {}\", p.display(), e))");
-        F.writeln(os, "}");
     }
 
     private static void writeTestFunction(ConfTest t, OutputStreamWriter os) throws TestGenException {
@@ -352,18 +331,7 @@ class ConfTestGenerator {
         F.writeln(os, "#[test]");
         F.writeln(os, "/// %s", description);
         F.writeln(os, "fn %s_parse() {", t.getSnakeCase());
-        F.writeln(os, "    let path = path(INPUT_FILE);");
-        F.writeln(os, "    let actual = exile::load(&path).unwrap();");
-        F.writeln(os, "    let expected = expected();");
-        F.writeln(os, "    if actual != expected {");
-        F.writeln(os, "        let actual_str = actual.to_string();");
-        F.writeln(os, "        let expected_str = expected.to_string();");
-        F.writeln(os, "        if actual_str != expected_str {");
-        F.writeln(os, "            assert_eq!(expected_str, actual_str);");
-        F.writeln(os, "        } else {");
-        F.writeln(os, "            assert_eq!(expected, actual);");
-        F.writeln(os, "        }");
-        F.writeln(os, "    }");
+        F.writeln(os, "    run_parse_test(INPUT_FILE, &expected());");
         F.writeln(os, "}");
     }
 
@@ -372,10 +340,7 @@ class ConfTestGenerator {
         F.writeln(os, "#[test]");
         F.writeln(os, "/// Check that the serialization of this XML document matches what we expect.");
         F.writeln(os, "fn %s_serialize() {", t.getSnakeCase());
-        F.writeln(os, "    let doc = expected();");
-        F.writeln(os, "    let actual = doc.to_string();");
-        F.writeln(os, "    let expected = std::fs::read_to_string(path(OUTPUT_FILE)).unwrap();");
-        F.writeln(os, "    assert_eq!(expected, actual);");
+        F.writeln(os, "    run_output_test(OUTPUT_FILE, &expected());");
         F.writeln(os, "}");
     }
 
@@ -511,7 +476,10 @@ class ConfTestGenerator {
                 case Notation:
                 case Unknown:
                 default:
-                    System.out.println(String.format("%s: %s", xtype.toString(), child.getNodeName()));
+                    System.out.println(String.format("Unhandled node in '%s' %s: %s",
+                            t.getXmlFilename(),
+                            xtype.toString(),
+                            child.getNodeName()));
                     break;
             }
         }

@@ -2,9 +2,10 @@
   "description": "unescaped angle bracket in an attribute value",
   "syntax": {
     "bad": {
-      "character_position": 51,
       "line": 2,
-      "column": 12
+      "column": 12,
+      "position": 51,
+      "character": "<"
     }
   }
 }

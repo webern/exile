@@ -1,37 +1,15 @@
 // generated file, do not edit
 
+use crate::test_utils::run_parse_test;
 use exile::Document;
-use std::path::PathBuf;
 use xdoc::Declaration;
 
-const MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
-const INPUT_DATA: &str = "input_data";
 const INPUT_FILE: &str = "jclark_valid_sa_003.xml";
-
-fn path(filename: &str) -> PathBuf {
-    let p = PathBuf::from(MANIFEST_DIR)
-        .join("tests")
-        .join(INPUT_DATA)
-        .join(filename);
-    p.canonicalize()
-        .unwrap_or_else(|e| panic!("bad path: {}: {}", p.display(), e))
-}
 
 #[test]
 /// A valid XML file from the W3C conformance test suite: valid-sa-003
 fn valid_sa_003_parse() {
-    let path = path(INPUT_FILE);
-    let actual = exile::load(&path).unwrap();
-    let expected = expected();
-    if actual != expected {
-        let actual_str = actual.to_string();
-        let expected_str = expected.to_string();
-        if actual_str != expected_str {
-            assert_eq!(expected_str, actual_str);
-        } else {
-            assert_eq!(expected, actual);
-        }
-    }
+    run_parse_test(INPUT_FILE, &expected());
 }
 
 fn expected() -> Document {
