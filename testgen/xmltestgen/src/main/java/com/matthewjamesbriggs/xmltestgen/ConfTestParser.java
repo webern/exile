@@ -140,9 +140,6 @@ class ConfTestParser {
                 File f = path.getFileName().toFile();
                 if (ExileConstants.isEnabledExileInput(f)) {
                     files.add(new File(path.toString()));
-                    System.out.println(path + " is an exile input file.");
-                } else {
-                    System.out.println(path + " is NOT exile input file or is DISABLED.");
                 }
 
             });

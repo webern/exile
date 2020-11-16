@@ -138,8 +138,6 @@ class ConfTestGenerator {
         // Copy W3C tests to the 'generated' directory.
         if (!isMaxedOut(t) && !t.isExileTest()) {
             copyXmlTestFile(t);
-        } else {
-            System.out.println("not copying the exile test " + t.getId());
         }
         switch (t.getConfType()) {
             case Valid:
@@ -151,9 +149,6 @@ class ConfTestGenerator {
             case Invalid:
             case Error:
             default:
-                System.out.println(String.format("unsupported test type %s in %s",
-                        t.getConfType().toString(),
-                        t.getId()));
         }
     }
 
@@ -315,17 +310,6 @@ class ConfTestGenerator {
             F.writeln(os, "const OUTPUT_FILE: &str = \"%s\";", t.getOutputFile().getName());
         }
     }
-
-    //    private static void writePathFunction(ConfTest t, OutputStreamWriter os) throws TestGenException {
-    //        F.writeln(os, "fn path(filename: &str) -> PathBuf {");
-    //        F.writeln(os, "    let p = PathBuf::from(MANIFEST_DIR)");
-    //        F.writeln(os, "        .join(\"tests\")");
-    //        F.writeln(os, "        .join(INPUT_DATA)");
-    //        F.writeln(os, "        .join(filename);");
-    //        F.writeln(os, "    p.canonicalize()");
-    //        F.writeln(os, "        .unwrap_or_else(|e| panic!(\"bad path: {}: {}\", p.display(), e))");
-    //        F.writeln(os, "}");
-    //    }
 
     private static void writeTestFunction(ConfTest t, OutputStreamWriter os) throws TestGenException {
         ExileTestMetadata metadata = null;
@@ -492,7 +476,10 @@ class ConfTestGenerator {
                 case Notation:
                 case Unknown:
                 default:
-                    System.out.println(String.format("%s: %s", xtype.toString(), child.getNodeName()));
+                    System.out.println(String.format("Unhandled node in '%s' %s: %s",
+                            t.getXmlFilename(),
+                            xtype.toString(),
+                            child.getNodeName()));
                     break;
             }
         }
