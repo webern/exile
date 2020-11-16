@@ -29,13 +29,6 @@ fn generate_readme() {
         true,  // indent headings
     )
     .unwrap();
-    let this_readme_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("README.md");
     let mut readme = File::create("README.md").unwrap();
     readme.write_all(content.as_bytes()).unwrap();
-    let top_readme_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("..")
-        .join("README.md");
-    if env::var_os("EXILE_GENERATE_TOP_README").is_some() {
-        std::fs::copy(&this_readme_path, &top_readme_path).unwrap();
-    }
 }

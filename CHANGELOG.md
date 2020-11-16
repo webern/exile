@@ -6,16 +6,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Currently we are using v0.0.x where every version can and will contain breaking changes.
 
-## [Unreleased]
+## [v0.0.2] - 2020-11-15
 ### Added
 - Support for single-quoted attributes [#58]
 - `exile::load` for loading files [#58]
+- A lot of work on generating test cases with Java [#67], [#70], [#72]
+
 
 ### Changed
 - The `xdoc` `Version` and `Encoding` enums were weird, changed to remove `None` [#59]
+- Added some mutating functions to `Document`, `Element`, and maybe others
+- Eliminated the `xdoc` and `xtest` crates [#67], [#70], [#72]
 
 [#58]: https://github.com/webern/exile/pull/58
 [#59]: https://github.com/webern/exile/pull/59
+[#67]: https://github.com/webern/exile/pull/67
+[#70]: https://github.com/webern/exile/pull/70
+[#72]: https://github.com/webern/exile/pull/72
 
 ## [v0.0.1] - 2020-07-18
 ### Added
@@ -47,6 +54,7 @@ Currently we are using v0.0.x where every version can and will contain breaking 
 
 <!-- version diff links -->
 [Unreleased]: https://github.com/webern/exile/compare/v0.0.1...HEAD
+[v0.0.2]: https://github.com/webern/exile/compare/v0.0.1...v0.0.2
 [v0.0.1]: https://github.com/webern/exile/compare/v0.0.0...v0.0.1
 [v0.0.0]: https://github.com/webern/exile/releases/tag/v0.0.0
 [30175b0]: https://github.com/webern/exile/compare/dd000e2..30175b0

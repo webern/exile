@@ -3,9 +3,23 @@
 
 `exile` is a Rust library for reading and writing XML.
 
-The goal is to provide a useful abstraction over XML with DOM-like structs.
-The state of the library is 'pre-alpha'
-See the GitHub issues and [milestones](https://github.com/webern/exile/milestones) for work planned.
+The goal, at least initially, is to provide an abstract syntax tree of an XML file.
+As such, this is a Exile is a dom parser and loads the complete contents of the document into memory.
+
+Currently supported:
+- Elements
+- Attributes
+- Text Nodes
+- Processing Instructions
+- UTF-8
+
+Not Supported:
+- Entities
+- Entity References
+- Doctypes
+- Comment Parsing
+- Other Encodings
+- Whitespace Preservation
 
 # Example
 
@@ -49,31 +63,6 @@ The program above prints:
   <my_child>Hello World!</my_child>
 </my_root>
 ```
-
-# Crates
-
-Development is setup as a cargo workspace with three crates.
-
-  * `xdoc` is the root dependency and contains structs that represent an XML document
-  * `xtest` contains test files and helper functions for loading them.
-  * `exile` is the public-facing crate and includes the parser.
-
-# Work to Do
-
-Current status is 'pre-mvp'. v0.0.0 will be able to parse basic XML documents into DOM-like
-structures and serialize them back.
-
- * [x] [MVP]
- * [ ] [Conformance]
- * [ ] [Interface]
-
-[Issues not assigned to a milestone]
-
-[MVP]: https://github.com/webern/exile/milestone/1
-[Conformance]: https://github.com/webern/exile/milestone/3
-[Interface]: https://github.com/webern/exile/milestone/2
-[Issues not assigned to a milestone]: https://github.com/webern/exile/issues?q=is%3Aissue+is%3Aopen+no%3Amilestone
-
 */
 
 #![deny(rust_2018_idioms)]

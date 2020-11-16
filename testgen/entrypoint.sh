@@ -15,7 +15,7 @@ a="--w3c-xml /data/xmlconf/xmlconf.xml"
 b="--w3c-schema /data/xmlschema/suite.xml"
 c="--custom-xml /fake"
 d="--custom-schema /fake"
-e="--xml-outdir /workspace/exile/tests"
+e="--xml-outdir /workspace/tests"
 f="--schema-outdir /fake"
 g="--rust-root /workspace"
 
