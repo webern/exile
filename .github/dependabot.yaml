@@ -1,0 +1,16 @@
+version: 2
+updates:
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+
+  # don't care, java is for test generation only
+  - package-ecosystem: "maven"
+    directory: "/testgen"
+    schedule:
+      interval: "weekly"
+    # Overwrite any ignores created using `@dependabot ignore` commands
+    ignore:
+      # ignore all dependencies
+      - dependency-name: "*"
