@@ -1,23 +1,12 @@
 // generated file, do not edit
 
+use crate::test_utils::path;
 use exile::Document;
-use std::path::PathBuf;
 use xdoc::Declaration;
 use xdoc::Encoding;
 use xdoc::Version;
 
-const MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
-const INPUT_DATA: &str = "input_data";
 const INPUT_FILE: &str = "exile_pi.xml";
-
-fn path(filename: &str) -> PathBuf {
-    let p = PathBuf::from(MANIFEST_DIR)
-        .join("tests")
-        .join(INPUT_DATA)
-        .join(filename);
-    p.canonicalize()
-        .unwrap_or_else(|e| panic!("bad path: {}: {}", p.display(), e))
-}
 
 #[test]
 /// a simple file with processing instructions
