@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 use exile::error::XMLSite;
 #[allow(unused_imports)]
 use exile::Document;
@@ -50,4 +51,15 @@ pub fn run_not_well_formed_test(filename: &str, throw_site: Option<XMLSite>) {
         }
         _ => panic!("expected parse error."),
     }
+}
+
+/// Check that the serialization of this XML document matches what we expect. `output_filename` is
+/// an XML file in the `input_data` directory that represents the expected outcome when serializing
+/// `doc`.
+#[allow(dead_code)]
+pub fn run_output_test(output_filename: &str, doc: &exile::Document) {
+    let actual = doc.to_string();
+    let output_filepath = path(output_filename);
+    let expected = std::fs::read_to_string(output_filepath).unwrap();
+    assert_eq!(expected, actual);
 }

@@ -1,6 +1,6 @@
 // generated file, do not edit
 
-use crate::test_utils::path;
+use crate::test_utils::{path, run_output_test};
 use exile::Document;
 use xdoc::Declaration;
 use xdoc::Encoding;
@@ -29,10 +29,7 @@ fn cd_catalog_parse() {
 #[test]
 /// Check that the serialization of this XML document matches what we expect.
 fn cd_catalog_serialize() {
-    let doc = expected();
-    let actual = doc.to_string();
-    let expected = std::fs::read_to_string(path(OUTPUT_FILE)).unwrap();
-    assert_eq!(expected, actual);
+    run_output_test(OUTPUT_FILE, &expected());
 }
 
 fn expected() -> Document {
