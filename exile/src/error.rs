@@ -77,7 +77,7 @@ impl Display for ThrowSite {
 /// 1-based, i.e. line 1 is the first first line of the file, column 1 is the leftmost character of
 /// a line, and position 1 is the first character of the document.
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash, Default)]
-pub struct XMLSite {
+pub struct XmlSite {
     /// The line in the XML file where an error was encountered. 1-based indexing.
     pub line: u64,
     /// The character within the line where an error was encountered. 1-based indexing.
@@ -100,7 +100,7 @@ pub(crate) fn display_char(c: char) -> String {
     }
 }
 
-impl Display for XMLSite {
+impl Display for XmlSite {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -119,7 +119,7 @@ pub struct ParseError {
     /// The location in this library's sourcecode where the error was thrown.
     pub throw_site: ThrowSite,
     /// The location in the XML file where the syntax error was encountered.
-    pub xml_site: XMLSite,
+    pub xml_site: XmlSite,
     /// An optional error message.
     pub message: Option<String>,
     /// An optional underlying error (i.e. an optional wrapped error)
@@ -175,7 +175,7 @@ impl Display for OtherError {
 // private
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-impl XMLSite {
+impl XmlSite {
     pub(crate) fn from_parser(p: &ParserState) -> Self {
         Self {
             line: p.position.line,
@@ -208,7 +208,7 @@ where
 {
     crate::error::Error::Parse(ParseError {
         throw_site,
-        xml_site: XMLSite::from_parser(&parser_state),
+        xml_site: XmlSite::from_parser(&parser_state),
         message: match message {
             None => None,
             Some(s) => Some(s.into()),

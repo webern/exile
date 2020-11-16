@@ -4,7 +4,7 @@ use std::str::Chars;
 
 use xdoc::{Declaration, Document, Encoding, Misc, Version};
 
-use crate::error::{display_char, parse_err, Error, ParseError, Result, ThrowSite, XMLSite};
+use crate::error::{display_char, parse_err, Error, ParseError, Result, ThrowSite, XmlSite};
 use crate::parser::chars::{is_name_char, is_name_start_char};
 use crate::parser::element::parse_element;
 use crate::parser::pi::{parse_pi, parse_pi_logic};
@@ -87,7 +87,7 @@ impl<'a> Iter<'a> {
                     file: file!().to_owned(),
                     line: line!(),
                 },
-                xml_site: XMLSite::from_parser(&ParserState::default()),
+                xml_site: XmlSite::from_parser(&ParserState::default()),
                 message: Some("iter advancement was required, but not possible".to_string()),
                 source: None,
             }));

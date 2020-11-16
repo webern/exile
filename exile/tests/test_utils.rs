@@ -1,5 +1,5 @@
 #[allow(unused_imports)]
-use exile::error::XMLSite;
+use exile::error::XmlSite;
 #[allow(unused_imports)]
 use exile::Document;
 #[allow(unused_imports)]
@@ -38,7 +38,7 @@ pub fn run_parse_test(filename: &str, expected: &Document) {
 /// Loads `filename` which is expected to have bad XML syntax. If `throw_site` is given, asserts
 /// that `throw_site` is returned in the parse error.
 #[allow(dead_code)]
-pub fn run_not_well_formed_test(filename: &str, throw_site: Option<XMLSite>) {
+pub fn run_not_well_formed_test(filename: &str, throw_site: Option<XmlSite>) {
     let path = path(filename);
     let result = exile::load(path);
     assert!(result.is_err());

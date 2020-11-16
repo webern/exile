@@ -1,7 +1,7 @@
 // generated file, do not edit
 
 use crate::test_utils::run_not_well_formed_test;
-use exile::error::XMLSite;
+use exile::error::XmlSite;
 
 const INPUT_FILE: &str = "exile_unescaped_angle.xml";
 
@@ -10,7 +10,7 @@ const INPUT_FILE: &str = "exile_unescaped_angle.xml";
 fn unescaped_angle_test() {
     run_not_well_formed_test(
         INPUT_FILE,
-        Some(XMLSite {
+        Some(XmlSite {
             line: 4,
             column: 39,
             position: 95,

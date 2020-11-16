@@ -1,6 +1,6 @@
 // generated file, do not edit
 
-use crate::test_utils::path;
+use crate::test_utils::run_parse_test;
 use exile::Document;
 use xdoc::Declaration;
 
@@ -9,18 +9,7 @@ const INPUT_FILE: &str = "jclark_valid_sa_004.xml";
 #[test]
 /// A valid XML file from the W3C conformance test suite: valid-sa-004
 fn valid_sa_004_parse() {
-    let path = path(INPUT_FILE);
-    let actual = exile::load(&path).unwrap();
-    let expected = expected();
-    if actual != expected {
-        let actual_str = actual.to_string();
-        let expected_str = expected.to_string();
-        if actual_str != expected_str {
-            assert_eq!(expected_str, actual_str);
-        } else {
-            assert_eq!(expected, actual);
-        }
-    }
+    run_parse_test(INPUT_FILE, &expected());
 }
 
 fn expected() -> Document {
