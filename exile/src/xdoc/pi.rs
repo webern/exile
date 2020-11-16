@@ -2,8 +2,8 @@ use core::fmt;
 use std::fmt::{Display, Formatter};
 use std::io::{Cursor, Write};
 
-use crate::error::Result;
-use crate::{contains_whitespace, WriteOpts};
+use crate::xdoc::error::Result;
+use crate::xdoc::{contains_whitespace, WriteOpts};
 
 /// Represents a Processing Instruction (PI) in an XML document.
 ///

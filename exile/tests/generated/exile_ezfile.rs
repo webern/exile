@@ -1,10 +1,7 @@
 // generated file, do not edit
 
 use crate::test_utils::{run_output_test, run_parse_test};
-use exile::Document;
-use xdoc::Declaration;
-use xdoc::Encoding;
-use xdoc::Version;
+use exile::{Declaration, Document, Encoding, Version};
 
 const INPUT_FILE: &str = "exile_ezfile.xml";
 const OUTPUT_FILE: &str = "exile_ezfile.output.xml";

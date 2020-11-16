@@ -79,13 +79,16 @@ structures and serialize them back.
 #![deny(rust_2018_idioms)]
 #![deny(missing_docs, unused_imports)]
 
+pub use crate::xdoc::{
+    Declaration, Document, Element, Encoding, Misc, Node, Version, WriteOpts, PI,
+};
 use std::path::Path;
-pub use xdoc::{Document, Element, Node};
 
 /// The `error` module defines the error types for this library.
 #[macro_use]
 pub mod error;
 mod parser;
+mod xdoc;
 
 /// TODO - streaming https://github.com/webern/exile/issues/20
 pub fn parse(xml: &str) -> crate::error::Result<Document> {

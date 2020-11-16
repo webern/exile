@@ -1,6 +1,6 @@
 use std::io::Write;
 
-use crate::error::Result;
+use crate::xdoc::error::Result;
 
 /// The type of newline character to use when writing the XML Document
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]

@@ -1,7 +1,6 @@
-use xdoc::PI;
-
 use crate::error::Result;
 use crate::parser::Iter;
+use crate::PI;
 
 use super::chars::{is_name_char, is_name_start_char};
 

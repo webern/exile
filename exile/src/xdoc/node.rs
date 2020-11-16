@@ -1,7 +1,7 @@
 use std::io::Write;
 
-use crate::error::Result;
-use crate::write_ops::write_element_string;
+use crate::xdoc::error::Result;
+use crate::xdoc::write_ops::write_element_string;
 use crate::{Element, WriteOpts};
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
