@@ -5,11 +5,6 @@ use crate::write_ops::write_attribute_value;
 use crate::{Misc, Node, OrdMap, WriteOpts, PI};
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(rename_all = "snake_case")
-)]
 /// Represents an Element in an XML Document.
 pub struct Element {
     /// The namespace of this element. e.g. in `foo:bar`, `foo` is the namespace.

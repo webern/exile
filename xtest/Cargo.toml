@@ -11,11 +11,5 @@ repository = "https://github.com/webern/exile/"
 exclude = ["data/**/*"]
 readme = "README.md"
 
-[dependencies]
-serde = { version = "1.0.92", features = ["derive"] }
-serde_json = "1.0.48"
-serde_plain = "0.3.0"
-xdoc = { version = "0.0.2", path = "../xdoc", features = ["serde"] }
-
 [build-dependencies]
 cargo-readme = "3.2.0"

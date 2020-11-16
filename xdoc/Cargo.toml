@@ -14,9 +14,6 @@ readme = "README.md"
 default = []
 
 [dependencies]
-# TODO - include multiple serde dependencies in a single xdoc feature, e.g. 'json'
-serde = { version = "1.0.106", optional = true, features = ["derive"] }
-serde_json = { version = "1.0.48", optional = true }
 
 [build-dependencies]
 cargo-readme = "3.2.0"

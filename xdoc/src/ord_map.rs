@@ -6,7 +6,6 @@ use std::hash::{Hash, Hasher};
 // TODO - extract key and value types
 /// OrdMap implements some conveniences like Clone an PartialEq for maps so that we can compare
 /// XML Documents (and do other things).
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct OrdMap(BTreeMap<String, String>);
 
 impl OrdMap {

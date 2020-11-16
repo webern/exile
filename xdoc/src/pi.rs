@@ -26,11 +26,6 @@ use crate::{contains_whitespace, WriteOpts};
 /// > recognized within processing instructions.
 ///
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash, Default)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(rename_all = "snake_case")
-)]
 pub struct PI {
     /// The processing instruction target.
     pub target: String,
