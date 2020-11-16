@@ -1,14 +1,15 @@
 [package]
 name = "exile"
 description = "Nacent XML DOM Library"
-version = "0.0.2"
 authors = ["Matthew James Briggs <matthew.james.briggs@gmail.com>"]
+categories = ["encoding", "parser-implementations", "parsing"]
 edition = "2018"
-license = "MIT OR Apache-2.0"
+exclude = ["tests/"]
 keywords = ["xml"]
-categories = ["encoding", "parsing"]
-repository = "https://github.com/webern/exile/"
+license = "MIT OR Apache-2.0"
 readme = "README.md"
+repository = "https://github.com/webern/exile/"
+version = "0.0.2"
 
 [dependencies]
 xdoc = { path = "../xdoc", version = "0.0.2" }

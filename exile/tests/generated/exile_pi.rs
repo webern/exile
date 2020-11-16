@@ -1,6 +1,5 @@
 // generated file, do not edit
-
-use crate::test_utils::path;
+use crate::test_utils::run_parse_test;
 use exile::Document;
 use xdoc::Declaration;
 use xdoc::Encoding;
@@ -11,18 +10,7 @@ const INPUT_FILE: &str = "exile_pi.xml";
 #[test]
 /// a simple file with processing instructions
 fn pi_parse() {
-    let path = path(INPUT_FILE);
-    let actual = exile::load(&path).unwrap();
-    let expected = expected();
-    if actual != expected {
-        let actual_str = actual.to_string();
-        let expected_str = expected.to_string();
-        if actual_str != expected_str {
-            assert_eq!(expected_str, actual_str);
-        } else {
-            assert_eq!(expected, actual);
-        }
-    }
+    run_parse_test(INPUT_FILE, &expected());
 }
 
 fn expected() -> Document {

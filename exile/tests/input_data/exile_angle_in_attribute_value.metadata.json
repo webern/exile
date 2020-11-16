@@ -4,7 +4,8 @@
     "bad": {
       "character_position": 51,
       "line": 2,
-      "column": 12
+      "column": 12,
+      "char": " "
     }
   }
 }

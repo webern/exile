@@ -225,11 +225,11 @@ class ConfTestGenerator {
         F.writeln(mod, "mod %s;", t.getTestName());
         writeCodeFileHeader(os);
         F.writeln(os, "");
-        F.writeln(os, "use std::path::PathBuf;");
+        F.writeln(os, "use crate::test_utils::path;");
         F.writeln(os, "");
         writeConstDeclarations(t, os);
         F.writeln(os, "");
-        writePathFunction(t, os);
+        //        writePathFunction(t, os);
         F.writeln(os, "");
         F.writeln(os, "#[test]");
         F.writeln(os, "/// %s", description);
@@ -278,8 +278,8 @@ class ConfTestGenerator {
         F.writeln(os, "");
         writeConstDeclarations(t, os);
         F.writeln(os, "");
-        writePathFunction(t, os);
-        F.writeln(os, "");
+        //        writePathFunction(t, os);
+        //        F.writeln(os, "");
         writeTestFunction(t, os);
         F.writeln(os, "");
         if (t.isExileTest() && t.hasOutputFile()) {
@@ -299,8 +299,8 @@ class ConfTestGenerator {
     private static void writeUseStatements(ConfTest t,
                                            FoundDecl foundDecl,
                                            OutputStreamWriter os) throws TestGenException {
+        F.writeln(os, "use crate::test_utils::path;");
         F.writeln(os, "use exile::Document;");
-        F.writeln(os, "use std::path::PathBuf;");
         if (t.getConfType() != ConfType.NotWellFormed) {
             F.writeln(os, "use xdoc::Declaration;");
         }
@@ -313,24 +313,22 @@ class ConfTestGenerator {
     }
 
     private static void writeConstDeclarations(ConfTest t, OutputStreamWriter os) throws TestGenException {
-        F.writeln(os, "const MANIFEST_DIR: &str = env!(\"CARGO_MANIFEST_DIR\");");
-        F.writeln(os, "const INPUT_DATA: &str = \"input_data\";");
         F.writeln(os, "const INPUT_FILE: &str = \"%s\";", t.getXmlFilename());
         if (t.hasOutputFile()) {
             F.writeln(os, "const OUTPUT_FILE: &str = \"%s\";", t.getOutputFile().getName());
         }
     }
 
-    private static void writePathFunction(ConfTest t, OutputStreamWriter os) throws TestGenException {
-        F.writeln(os, "fn path(filename: &str) -> PathBuf {");
-        F.writeln(os, "    let p = PathBuf::from(MANIFEST_DIR)");
-        F.writeln(os, "        .join(\"tests\")");
-        F.writeln(os, "        .join(INPUT_DATA)");
-        F.writeln(os, "        .join(filename);");
-        F.writeln(os, "    p.canonicalize()");
-        F.writeln(os, "        .unwrap_or_else(|e| panic!(\"bad path: {}: {}\", p.display(), e))");
-        F.writeln(os, "}");
-    }
+    //    private static void writePathFunction(ConfTest t, OutputStreamWriter os) throws TestGenException {
+    //        F.writeln(os, "fn path(filename: &str) -> PathBuf {");
+    //        F.writeln(os, "    let p = PathBuf::from(MANIFEST_DIR)");
+    //        F.writeln(os, "        .join(\"tests\")");
+    //        F.writeln(os, "        .join(INPUT_DATA)");
+    //        F.writeln(os, "        .join(filename);");
+    //        F.writeln(os, "    p.canonicalize()");
+    //        F.writeln(os, "        .unwrap_or_else(|e| panic!(\"bad path: {}: {}\", p.display(), e))");
+    //        F.writeln(os, "}");
+    //    }
 
     private static void writeTestFunction(ConfTest t, OutputStreamWriter os) throws TestGenException {
         ExileTestMetadata metadata = null;
