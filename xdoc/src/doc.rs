@@ -6,11 +6,6 @@ use crate::error::Result;
 use crate::{Element, Misc, WriteOpts};
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(rename_all = "snake_case")
-)]
 /// Represents the XML Version being used.
 pub enum Version {
     /// The XML Version is 1.0.
@@ -26,11 +21,6 @@ impl Default for Version {
 }
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(rename_all = "snake_case")
-)]
 /// The encoding of the XML Document, currently only UTF-8 is supported.
 pub enum Encoding {
     /// The encoding is UTF-8.
@@ -44,11 +34,6 @@ impl Default for Encoding {
 }
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash, Default)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(rename_all = "snake_case")
-)]
 /// The XML declaration at the start of the XML Document.
 pub struct Declaration {
     /// The version of the XML Document. Default is `Version::V10` when `None`.
@@ -58,24 +43,13 @@ pub struct Declaration {
 }
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(rename_all = "snake_case")
-)]
 /// Represents an XML Document.
 pub struct Document {
     declaration: Declaration,
     // TODO - add doctype support https://github.com/webern/exile/issues/22
-    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
-    #[cfg_attr(feature = "serde", serde(default))]
     doctypedecl: Option<()>,
-    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Vec::is_empty"))]
-    #[cfg_attr(feature = "serde", serde(default))]
     prolog_misc: Vec<Misc>,
     root: Element,
-    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Vec::is_empty"))]
-    #[cfg_attr(feature = "serde", serde(default))]
     epilog_misc: Vec<Misc>,
 }
 

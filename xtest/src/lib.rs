@@ -6,15 +6,3 @@
  errors, and the the accompanying JSON manifest will make this apparent.
 
 */
-
-#[macro_use]
-extern crate serde;
-
-pub use metadata::Metadata;
-pub use xml_file::{Syntax, XmlFile};
-pub use {io::load, io::load_all};
-
-pub mod gen;
-mod io;
-mod metadata;
-mod xml_file;

@@ -11,10 +11,6 @@ The public concepts in `xdoc` are re-exported by `exile`.
 
 #![warn(missing_docs)]
 
-#[cfg(feature = "serde")]
-#[macro_use]
-extern crate serde;
-
 pub use chars::{contains_whitespace, is_whitespace};
 pub use doc::Document;
 pub use doc::{Declaration, Encoding, Version};
