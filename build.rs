@@ -29,7 +29,6 @@ fn generate_readme() {
         true,  // indent headings
     )
     .unwrap();
-    let this_readme_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("README.md");
     let mut readme = File::create("README.md").unwrap();
     readme.write_all(content.as_bytes()).unwrap();
 }

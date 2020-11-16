@@ -3,15 +3,11 @@
     <option name="channel" value="DEFAULT" />
     <option name="command" value="build" />
     <option name="allFeatures" value="false" />
-    <option name="nocapture" value="false" />
     <option name="emulateTerminal" value="false" />
     <option name="backtrace" value="SHORT" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <envs>
       <env name="EXILE_GENERATE_README" value="1" />
-      <env name="EXILE_GENERATE_TOP_README" value="1" />
-      <env name="XDOC_GENERATE_README" value="1" />
-      <env name="XTEST_GENERATE_README" value="1" />
     </envs>
     <method v="2">
       <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />

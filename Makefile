@@ -1,4 +1,4 @@
-.PHONY: clean testgen
+.PHONY: clean testgen check
 
 ## data/w3cdata: creates the data directory by pulling testdata from dockerhub
 data/w3cdata:
@@ -20,3 +20,12 @@ testgen: testdata
 clean:
 	rm -rf data && \
 	rm -rf target
+
+check:
+	cargo clippy -- --version && cargo fmt -- --version && \
+	cargo fmt -- --check && \
+	cargo clippy --locked -- -D warnings && \
+	cargo clippy --tests --locked -- -D warnings && \
+	cargo test --all-features && \
+	cargo build --all-features --lib
+
