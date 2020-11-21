@@ -68,10 +68,11 @@ The program above prints:
 #![deny(rust_2018_idioms)]
 #![deny(missing_docs, unused_imports)]
 
+use std::path::Path;
+
 pub use crate::xdoc::{
     Declaration, Document, Element, Encoding, Misc, Node, Version, WriteOpts, PI,
 };
-use std::path::Path;
 
 /// The `error` module defines the error types for this library.
 #[macro_use]
@@ -79,8 +80,8 @@ pub mod error;
 mod parser;
 mod xdoc;
 
-/// TODO - streaming https://github.com/webern/exile/issues/20
-pub fn parse(xml: &str) -> crate::error::Result<Document> {
+/// Parse an XML file held in string contents.
+pub fn parse<S: AsRef<str>>(xml: S) -> crate::error::Result<Document> {
     parser::document_from_string(xml)
 }
 
@@ -88,6 +89,8 @@ pub fn parse(xml: &str) -> crate::error::Result<Document> {
 pub fn load<P: AsRef<Path>>(path: P) -> crate::error::Result<Document> {
     parser::document_from_file(path)
 }
+
+// TODO - streaming https://github.com/webern/exile/issues/20
 
 #[test]
 fn simple_document_test() {
