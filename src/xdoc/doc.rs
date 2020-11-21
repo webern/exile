@@ -282,19 +282,19 @@ mod tests {
         assert_eq!("cats", root_data.name());
         assert_eq!(None, root_data.prefix());
         assert_eq!(0, root_data.attributes_len());
-        assert_eq!(2, root_data.nodes.len());
-        let bones_element = root_data.nodes.get(0).unwrap();
+        assert_eq!(2, root_data.nodes_len());
+        let bones_element = root_data.node(0).unwrap();
         if let Node::Element(bones) = bones_element {
             assert_eq!("cat", bones.name());
             assert_eq!(None, bones.prefix());
             assert_eq!(1, bones.attributes_len());
-            assert_eq!(0, bones.nodes.len());
+            assert_eq!(0, bones.nodes_len());
             let name_attribute_value = bones.attribute("name").unwrap();
             assert_eq!("bones", name_attribute_value);
         } else {
             panic!("bones was supposed to be an element but was not");
         }
-        let bishop_element = root_data.nodes.get(1).unwrap();
+        let bishop_element = root_data.node(1).unwrap();
         if let Node::Element(bishop) = bishop_element {
             assert_eq!("cat", bishop.name());
             assert_eq!(None, bishop.prefix());
@@ -302,8 +302,8 @@ mod tests {
             let name_attribute_value = bishop.attribute("name").unwrap();
             assert_eq!("bishop", name_attribute_value);
             // assert text data
-            assert_eq!(1, bishop.nodes.len());
-            if let Node::Text(text) = bishop.nodes.get(0).unwrap() {
+            assert_eq!(1, bishop.nodes_len());
+            if let Node::Text(text) = bishop.node(0).unwrap() {
                 assert_eq!("punks", text);
             } else {
                 panic!("Expected to find a text node but it was not there.");
@@ -359,7 +359,7 @@ mod tests {
         let mut root = Element::default();
         root.set_name("root");
         root.add_attribute("attr", "<&>\"🍔\"\'\'");
-        root.nodes.push(Node::Text("&&&<<<'\"🍔\"'>>>&&&".into()));
+        root.add_text("&&&<<<'\"🍔\"'>>>&&&");
         let doc = Document::from_root(root);
 
         let mut c = Cursor::new(Vec::new());

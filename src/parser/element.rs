@@ -130,12 +130,12 @@ fn parse_children(iter: &mut Iter<'_>, parent: &mut Element) -> Result<()> {
                     // do nothing
                 }
                 LTParse::Some(node) => {
-                    parent.nodes.push(node);
+                    parent.add_node(node);
                 }
             }
         } else {
             let text = parse_text(iter)?;
-            parent.nodes.push(Node::Text(text));
+            parent.add_node(Node::Text(text));
         }
         // some parsing functions may return with the iter pointing to the last thing that was part
         // of their construct, while others might advance the iter to the next char *after* the

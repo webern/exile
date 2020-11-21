@@ -14,7 +14,7 @@ pub struct Element {
     /// Attributes of this element.
     attributes: OrdMap,
     /// Children of this element.
-    pub nodes: Vec<Node>,
+    nodes: Vec<Node>,
 }
 
 impl Default for Element {
@@ -69,6 +69,26 @@ impl Element {
     /// Add an element as a child of this element.
     pub fn add_child(&mut self, element: Element) {
         self.nodes.push(Node::Element(element))
+    }
+
+    /// Add a node of any kind as a child of this element.
+    pub fn add_node(&mut self, node: Node) {
+        self.nodes.push(node)
+    }
+
+    /// Get the number of nodes (of any kind) that are children of this node.
+    pub fn nodes_len(&self) -> usize {
+        self.nodes.len()
+    }
+
+    /// Get the first child node (of any kind)
+    pub fn first_node(&self) -> Option<&Node> {
+        self.nodes.first()
+    }
+
+    /// Get the child node (of any kind) at `index`.
+    pub fn node(&self, index: usize) -> Option<&Node> {
+        self.nodes.get(index)
     }
 
     /// The fullname of the element (including both the namespace alias prefix and the name). For
