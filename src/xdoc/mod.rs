@@ -16,7 +16,6 @@ pub use doc::Document;
 pub use doc::{Declaration, Encoding, Version};
 pub use element::Element;
 pub use node::{Misc, Node};
-pub use ord_map::OrdMap;
 pub use pi::PI;
 pub use write_ops::{Newline, WriteOpts};
 
@@ -30,7 +29,7 @@ mod chars;
 mod doc;
 mod element;
 mod node;
-mod ord_map;
+pub(crate) mod ord_map;
 mod pi;
 mod write_ops;
 
@@ -42,13 +41,7 @@ mod tests {
 
     #[test]
     fn structs_test() {
-        let mut doc = Document::new();
-        doc.set_root(Element {
-            namespace: None,
-            name: "root-element".into(),
-            attributes: Default::default(),
-            nodes: vec![],
-        });
+        let doc = Document::from_root(Element::from_name("root-element"));
         let mut c = Cursor::new(Vec::new());
         let result = doc.write(&mut c);
         assert!(result.is_ok());

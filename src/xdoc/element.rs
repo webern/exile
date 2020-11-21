@@ -1,8 +1,8 @@
 use std::io::Write;
 
-use crate::xdoc::error::{Result, XErr};
+use crate::xdoc::error::{Result, XDocErr};
+use crate::xdoc::ord_map::OrdMap;
 use crate::xdoc::write_ops::write_attribute_value;
-use crate::xdoc::OrdMap;
 use crate::{Misc, Node, WriteOpts, PI};
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
@@ -13,7 +13,7 @@ pub struct Element {
     /// The name of this element. e.g. in `foo:bar`, `bar` is the name.
     pub name: String,
     /// Attributes of this element.
-    pub attributes: OrdMap,
+    attributes: OrdMap,
     /// Children of this element.
     pub nodes: Vec<Node>,
 }
@@ -87,7 +87,15 @@ impl Element {
     // TODO - fullname? figure out namespace stuff
     /// Sets the name of this element.
     pub fn set_name<S: AsRef<str>>(&mut self, name: S) {
+        // TODO check validity and return result
         self.name = name.as_ref().into()
+    }
+
+    /// Sets the prefix, e.g. `prefix:element_name`.
+    pub fn set_prefix<S: AsRef<str>>(&mut self, prefix: S) -> Result<()> {
+        // TODO check validity
+        self.namespace = Some(prefix.as_ref().into());
+        Ok(())
     }
 
     /// Inserts a key-value pair into the attributes map.
@@ -107,10 +115,20 @@ impl Element {
             .insert(key.as_ref().into(), value.as_ref().into())
     }
 
+    /// Gets the attribute value at `key`. `None` if an attribute by that name does not exist.
+    pub fn attribute<S: AsRef<str>>(&self, key: S) -> Option<&str> {
+        self.attributes.map().get(key.as_ref()).map(|s| s.as_str())
+    }
+
+    /// Gets the count of attributes.
+    pub fn attributes_len(&self) -> usize {
+        self.attributes.map().len()
+    }
+
     /// Creates a new element as the last child of this element and returns a mut ref to it.
     pub fn add_new_child(&mut self) -> Result<&mut Element> {
         self.nodes.push(Node::Element(Element::default()));
-        let new_node = self.nodes.last_mut().ok_or_else(|| XErr {
+        let new_node = self.nodes.last_mut().ok_or_else(|| XDocErr {
             message: "the sky is falling".to_string(),
             file: "".to_string(),
             line: 0,
@@ -119,7 +137,7 @@ impl Element {
         if let Node::Element(new_element) = new_node {
             Ok(new_element)
         } else {
-            Err(XErr {
+            Err(XDocErr {
                 message: "the sky is still falling".to_string(),
                 file: "".to_string(),
                 line: 0,

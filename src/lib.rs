@@ -106,8 +106,8 @@ fn simple_document_test() {
     let child = root.nodes.first().unwrap();
     if let Node::Element(element) = child {
         assert_eq!("a", element.name.as_str());
-        let attribute_value = element.attributes.map().get("b").unwrap();
-        assert_eq!("c", attribute_value.as_str());
+        let attribute_value = element.attribute("b").unwrap();
+        assert_eq!("c", attribute_value);
     } else {
         panic!("expected element but found a different type of node")
     }

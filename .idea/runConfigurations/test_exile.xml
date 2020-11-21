@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="test exile" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
     <option name="channel" value="DEFAULT" />
-    <option name="command" value="test --package exile" />
+    <option name="command" value="test --package exile --lib" />
     <option name="allFeatures" value="false" />
     <option name="emulateTerminal" value="false" />
     <option name="backtrace" value="SHORT" />
