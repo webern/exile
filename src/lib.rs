@@ -71,7 +71,7 @@ The program above prints:
 use std::path::Path;
 
 pub use crate::xdoc::{
-    Declaration, Document, Element, Encoding, Misc, Node, Version, WriteOpts, PI,
+    Declaration, Document, Element, Encoding, Misc, Name, Node, Version, WriteOpts, PI,
 };
 
 /// The `error` module defines the error types for this library.
