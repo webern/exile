@@ -35,8 +35,8 @@ let xml = r#"
 
 let doc = exile::parse(xml).unwrap();
 for child in doc.root().children() {
-    println!("element name: {}", child.name);
-    if let Some(attribute) = child.attributes.map().get("name") {
+    println!("element name: {}", child.name());
+    if let Some(attribute) = child.attribute("name") {
         println!("name attribute: {}", attribute);
     }
 }
@@ -47,8 +47,7 @@ Authoring XML looks like this.
 ```
 use exile::{Document, Element, Node};
 let mut root = Element::from_name("my_root");
-// TODO - improve the interface
-root.attributes.mut_map().insert("foo".into(), "bar".into());
+root.add_attribute("foo", "bar");
 let mut child = Element::from_name("my_child");
 child.nodes.push(Node::Text("Hello World!".into()));
 root.nodes.push(Node::Element(child));
@@ -56,13 +55,14 @@ let doc = Document::from_root(root);
 println!("{}", doc.to_string());
 ```
 
-The program above prints:
+The above program prints:
 
 ```xml
 <my_root foo="bar">
   <my_child>Hello World!</my_child>
 </my_root>
 ```
+
 */
 
 #![deny(rust_2018_idioms)]
@@ -71,7 +71,7 @@ The program above prints:
 use std::path::Path;
 
 pub use crate::xdoc::{
-    Declaration, Document, Element, Encoding, Misc, Name, Node, Version, WriteOpts, PI,
+    Declaration, Document, Element, Encoding, Misc, Node, Version, WriteOpts, PI,
 };
 
 /// The `error` module defines the error types for this library.
@@ -101,11 +101,11 @@ fn simple_document_test() {
     "#;
     let doc = parse(xml).unwrap();
     let root = doc.root();
-    assert_eq!("r", root.name.as_str());
+    assert_eq!("r", root.name());
     assert_eq!(1, root.nodes.len());
     let child = root.nodes.first().unwrap();
     if let Node::Element(element) = child {
-        assert_eq!("a", element.name.as_str());
+        assert_eq!("a", element.name());
         let attribute_value = element.attribute("b").unwrap();
         assert_eq!("c", attribute_value);
     } else {

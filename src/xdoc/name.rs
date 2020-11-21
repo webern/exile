@@ -4,7 +4,7 @@ use std::ops::Deref;
 /// Both attributes and elements can have a namespace alias prefix, such as `ns:foo`, where `ns` is
 /// the 'prefix' and 'foo' is the 'name'. The `Name` struct provides the convenience of parsing and
 /// identifying the 'prefix' part.
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Name {
     value: String,
 }
@@ -13,13 +13,13 @@ impl Name {
     /// Instantiates a new name using `full` as the fullname. For example `new("ns:foo")` creates a
     /// new name with prefix `ns` and name `foo`. `new("foo")` creates a new name with no prefix and
     /// name `foo`, etc.
-    pub fn new<S: Into<String>>(full: S) -> Self {
+    pub(crate) fn new<S: Into<String>>(full: S) -> Self {
         Self { value: full.into() }
     }
 
     /// Returns the 'name' part. For example, if the `fullname` is `ns:foo`, this function returns
     /// `foo`.
-    pub fn name(&self) -> &str {
+    pub(crate) fn name(&self) -> &str {
         match self.find() {
             None => self.value.as_str(),
             Some(pos) => {
@@ -35,7 +35,7 @@ impl Name {
 
     /// Returns the 'prefix' part. For example, if the `fullname` is `ns:foo`, this function returns
     /// `ns`.
-    pub fn prefix(&self) -> Option<&str> {
+    pub(crate) fn prefix(&self) -> Option<&str> {
         match self.find() {
             None => None,
             Some(pos) => {
@@ -46,13 +46,13 @@ impl Name {
     }
 
     /// Returns both the 'prefix' and the 'name', for example `ns:foo`.
-    pub fn full(&self) -> &str {
+    pub(crate) fn full(&self) -> &str {
         self.value.as_str()
     }
 
     /// Sets the 'name' part. For example, if the value was `ns::foo`, then
     /// `set_name("bar")` would set it to `ns:bar`.
-    pub fn set_name<S: AsRef<str>>(&mut self, name: S) {
+    pub(crate) fn set_name<S: AsRef<str>>(&mut self, name: S) {
         match self.prefix() {
             None => self.value = name.as_ref().into(),
             Some(prefix) => {
@@ -67,10 +67,10 @@ impl Name {
 
     /// Sets the 'prefix' part. For example, if the value was `ns::foo`, then
     /// `set_prefix("xyz")` would set it to `xyz:foo`.
-    pub fn set_prefix<S: AsRef<str>>(&mut self, prefix: S) {
+    pub(crate) fn set_prefix<S: AsRef<str>>(&mut self, prefix: S) {
         let name = self.name();
         let mut value = String::with_capacity(prefix.as_ref().len() + 1 + name.len());
-        value.push_str(prefix.as_ref().into());
+        value.push_str(prefix.as_ref());
         value.push(':');
         value.push_str(name.as_ref());
         self.value = value;
@@ -78,7 +78,7 @@ impl Name {
 
     /// Sets the complete value. For example, if the value was `ns::foo`, then
     /// `set_full("xyz:bar")` would set it to `xyz:bar`.
-    pub fn set_full<S: Into<String>>(&mut self, full: S) {
+    pub(crate) fn set_full<S: Into<String>>(&mut self, full: S) {
         self.value = full.into();
     }
 }

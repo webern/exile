@@ -279,32 +279,32 @@ mod tests {
     fn assert_ezfile(doc: &Document) {
         let root = doc.root();
         let root_data = root;
-        assert_eq!(root_data.name, "cats");
-        assert_eq!(root_data.namespace, None);
-        assert_eq!(root_data.attributes_len(), 0);
-        assert_eq!(root_data.nodes.len(), 2);
+        assert_eq!("cats", root_data.name());
+        assert_eq!(None, root_data.prefix());
+        assert_eq!(0, root_data.attributes_len());
+        assert_eq!(2, root_data.nodes.len());
         let bones_element = root_data.nodes.get(0).unwrap();
         if let Node::Element(bones) = bones_element {
-            assert_eq!(bones.name, "cat");
-            assert_eq!(bones.namespace, None);
-            assert_eq!(bones.attributes_len(), 1);
-            assert_eq!(bones.nodes.len(), 0);
-            let name = bones.attribute("name").unwrap();
-            assert_eq!(name, "bones");
+            assert_eq!("cat", bones.name());
+            assert_eq!(None, bones.prefix());
+            assert_eq!(1, bones.attributes_len());
+            assert_eq!(0, bones.nodes.len());
+            let name_attribute_value = bones.attribute("name").unwrap();
+            assert_eq!("bones", name_attribute_value);
         } else {
             panic!("bones was supposed to be an element but was not");
         }
         let bishop_element = root_data.nodes.get(1).unwrap();
         if let Node::Element(bishop) = bishop_element {
-            assert_eq!(bishop.name, "cat");
-            assert_eq!(bishop.namespace, None);
-            assert_eq!(bishop.attributes_len(), 1);
-            let name = bishop.attribute("name").unwrap();
-            assert_eq!(name, "bishop");
+            assert_eq!("cat", bishop.name());
+            assert_eq!(None, bishop.prefix());
+            assert_eq!(1, bishop.attributes_len());
+            let name_attribute_value = bishop.attribute("name").unwrap();
+            assert_eq!("bishop", name_attribute_value);
             // assert text data
-            assert_eq!(bishop.nodes.len(), 1);
+            assert_eq!(1, bishop.nodes.len());
             if let Node::Text(text) = bishop.nodes.get(0).unwrap() {
-                assert_eq!(text, "punks");
+                assert_eq!("punks", text);
             } else {
                 panic!("Expected to find a text node but it was not there.");
             }
@@ -357,7 +357,7 @@ mod tests {
     fn test_escapes() {
         let expected = r#"<root attr="&lt;&amp;&gt;&quot;🍔&quot;''">&amp;&amp;&amp;&lt;&lt;&lt;'"🍔"'&gt;&gt;&gt;&amp;&amp;&amp;</root>"#;
         let mut root = Element::default();
-        root.name = "root".into();
+        root.set_name("root");
         root.add_attribute("attr", "<&>\"🍔\"\'\'");
         root.nodes.push(Node::Text("&&&<<<'\"🍔\"'>>>&&&".into()));
         let doc = Document::from_root(root);
