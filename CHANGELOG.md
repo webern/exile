@@ -6,12 +6,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Currently we are using v0.0.x where every version can and will contain breaking changes.
 
+## [Unreleased]
+## Added
+- Nothing yet.
+
+### Changed
+- Make `Element` struct members private [#74]
+
+[#74]: https://github.com/webern/exile/pull/74
+
 ## [v0.0.2] - 2020-11-15
 ### Added
 - Support for single-quoted attributes [#58]
 - `exile::load` for loading files [#58]
 - A lot of work on generating test cases with Java [#67], [#70], [#72]
-
 
 ### Changed
 - The `xdoc` `Version` and `Encoding` enums were weird, changed to remove `None` [#59]
@@ -53,7 +61,7 @@ Currently we are using v0.0.x where every version can and will contain breaking 
 [#52]: https://github.com/webern/exile/pull/52
 
 <!-- version diff links -->
-[Unreleased]: https://github.com/webern/exile/compare/v0.0.1...HEAD
+[Unreleased]: https://github.com/webern/exile/compare/v0.0.2...HEAD
 [v0.0.2]: https://github.com/webern/exile/compare/v0.0.1...v0.0.2
 [v0.0.1]: https://github.com/webern/exile/compare/v0.0.0...v0.0.1
 [v0.0.0]: https://github.com/webern/exile/releases/tag/v0.0.0

@@ -1,28 +1,26 @@
 use std::io::Write;
 
-use crate::xdoc::error::{Result, XErr};
+use crate::xdoc::error::{Result, XDocErr};
+use crate::xdoc::ord_map::OrdMap;
 use crate::xdoc::write_ops::write_attribute_value;
-use crate::xdoc::OrdMap;
+use crate::xdoc::Name;
 use crate::{Misc, Node, WriteOpts, PI};
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
 /// Represents an Element in an XML Document.
 pub struct Element {
-    /// The namespace of this element. e.g. in `foo:bar`, `foo` is the namespace.
-    pub namespace: Option<String>,
-    /// The name of this element. e.g. in `foo:bar`, `bar` is the name.
-    pub name: String,
+    /// The name of this element, which may contain a prefix part, such as `ns` in `ns:foo`.
+    name: Name,
     /// Attributes of this element.
-    pub attributes: OrdMap,
+    attributes: OrdMap,
     /// Children of this element.
-    pub nodes: Vec<Node>,
+    nodes: Vec<Node>,
 }
 
 impl Default for Element {
     fn default() -> Self {
         Self {
-            namespace: None,
-            name: "element".to_string(),
+            name: "element".into(),
             attributes: Default::default(),
             nodes: vec![],
         }
@@ -33,7 +31,6 @@ impl Element {
     /// Create a new element using the given name.
     pub fn from_name<S: AsRef<str>>(name: S) -> Self {
         Element {
-            namespace: None,
             name: name.as_ref().into(),
             attributes: Default::default(),
             nodes: vec![],
@@ -74,20 +71,69 @@ impl Element {
         self.nodes.push(Node::Element(element))
     }
 
-    /// The fullname of the element (including both the namespace and the name).
-    pub fn fullname(&self) -> String {
-        if let Some(ns) = &self.namespace {
-            if !ns.is_empty() {
-                return format!("{}:{}", ns, self.name);
-            }
-        }
-        self.name.clone()
+    /// Add a node of any kind as a child of this element.
+    pub fn add_node(&mut self, node: Node) {
+        self.nodes.push(node)
     }
 
-    // TODO - fullname? figure out namespace stuff
-    /// Sets the name of this element.
+    /// Get the number of nodes (of any kind) that are children of this node.
+    pub fn nodes_len(&self) -> usize {
+        self.nodes.len()
+    }
+
+    /// Get the first child node (of any kind)
+    pub fn first_node(&self) -> Option<&Node> {
+        self.nodes.first()
+    }
+
+    /// Get the child node (of any kind) at `index`.
+    pub fn node(&self, index: usize) -> Option<&Node> {
+        self.nodes.get(index)
+    }
+
+    /// The fullname of the element (including both the namespace alias prefix and the name). For
+    /// example, if the name of this element is `ns:foo`, this function returns `"ns:foo"`.
+    /// [`Element::name`] and [`Element:prefix`] give the parsed sections of the fullname.
+    pub fn fullname(&self) -> &str {
+        self.name.full()
+    }
+
+    /// The name of the element without its prefix. For example, if the name of this element is
+    /// `ns:foo`, `name()` will return `foo`.
+    pub fn name(&self) -> &str {
+        self.name.name()
+    }
+
+    /// The name of the element's namespace alias prefix. For example, if the name of this element
+    /// is `ns:foo`, `prefix()` will return `Some("ns")`.
+    pub fn prefix(&self) -> Option<&str> {
+        self.name.prefix()
+    }
+
+    /// Sets the name of this element without changing the namespace alias prefix. For example, if
+    /// the name of this element is `ns:foo` then `set_name("bar")` will change the fullname to
+    /// `ns:bar`.
     pub fn set_name<S: AsRef<str>>(&mut self, name: S) {
-        self.name = name.as_ref().into()
+        // TODO check validity of the name, return an error?
+        self.name.set_name(name)
+    }
+
+    /// Sets the namespace alias prefix of this element without changing the name. For example, if
+    /// the name of this element is `ns:foo` then `set_prefix("xyz:) will change the fullname to
+    /// `xyz:foo`.
+    pub fn set_prefix<S: AsRef<str>>(&mut self, prefix: S) -> Result<()> {
+        // TODO check validity of the prefix
+        self.name.set_prefix(prefix);
+        Ok(())
+    }
+
+    /// Sets the fullname of the element. For example, if the name of this element is `ns:foo`, then
+    /// `set_fullname("xyz:baz")` will set the fullname to `xyz:baz`. `set_fullname("baz")` will
+    /// eliminate any existing namespace alias prefix and set the fullname to `baz`.
+    pub fn set_fullname<S: Into<String>>(&mut self, fullname: S) -> Result<()> {
+        // TODO check validity of the fullname
+        self.name.set_full(fullname);
+        Ok(())
     }
 
     /// Inserts a key-value pair into the attributes map.
@@ -107,10 +153,20 @@ impl Element {
             .insert(key.as_ref().into(), value.as_ref().into())
     }
 
+    /// Gets the attribute value at `key`. `None` if an attribute by that name does not exist.
+    pub fn attribute<S: AsRef<str>>(&self, key: S) -> Option<&str> {
+        self.attributes.map().get(key.as_ref()).map(|s| s.as_str())
+    }
+
+    /// Gets the count of attributes.
+    pub fn attributes_len(&self) -> usize {
+        self.attributes.map().len()
+    }
+
     /// Creates a new element as the last child of this element and returns a mut ref to it.
     pub fn add_new_child(&mut self) -> Result<&mut Element> {
         self.nodes.push(Node::Element(Element::default()));
-        let new_node = self.nodes.last_mut().ok_or_else(|| XErr {
+        let new_node = self.nodes.last_mut().ok_or_else(|| XDocErr {
             message: "the sky is falling".to_string(),
             file: "".to_string(),
             line: 0,
@@ -119,7 +175,7 @@ impl Element {
         if let Node::Element(new_element) = new_node {
             Ok(new_element)
         } else {
-            Err(XErr {
+            Err(XDocErr {
                 message: "the sky is still falling".to_string(),
                 file: "".to_string(),
                 line: 0,
@@ -195,14 +251,7 @@ impl Element {
         if let Err(e) = write!(writer, "<") {
             return wrap!(e);
         }
-        if let Some(ns) = &self.namespace {
-            if !ns.is_empty() {
-                if let Err(e) = write!(writer, "{}:", ns) {
-                    return wrap!(e);
-                }
-            }
-        }
-        if let Err(e) = write!(writer, "{}", self.name) {
+        if let Err(e) = write!(writer, "{}", self.fullname()) {
             return wrap!(e);
         }
 
@@ -254,7 +303,7 @@ impl Element {
         if let Err(e) = write!(writer, "</") {
             return wrap!(e);
         }
-        if let Some(ns) = &self.namespace {
+        if let Some(ns) = self.prefix() {
             if !ns.is_empty() {
                 if let Err(e) = write!(writer, "{}:", ns) {
                     return wrap!(e);
@@ -267,9 +316,6 @@ impl Element {
         if let Err(e) = write!(writer, ">") {
             return wrap!(e);
         }
-        // if let Err(e) = opts.newline(writer) {
-        //     return wrap!(e);
-        // }
         Ok(())
     }
 
@@ -277,7 +323,7 @@ impl Element {
         if self.name.is_empty() {
             return raise!("Empty element name.");
         }
-        if let Some(ns) = &self.namespace {
+        if let Some(ns) = self.prefix() {
             if ns.is_empty() {
                 return raise!("Namespace should not be empty when the option is 'some'.");
             }

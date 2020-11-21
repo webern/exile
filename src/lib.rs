@@ -35,8 +35,8 @@ let xml = r#"
 
 let doc = exile::parse(xml).unwrap();
 for child in doc.root().children() {
-    println!("element name: {}", child.name);
-    if let Some(attribute) = child.attributes.map().get("name") {
+    println!("element name: {}", child.name());
+    if let Some(attribute) = child.attribute("name") {
         println!("name attribute: {}", attribute);
     }
 }
@@ -47,22 +47,22 @@ Authoring XML looks like this.
 ```
 use exile::{Document, Element, Node};
 let mut root = Element::from_name("my_root");
-// TODO - improve the interface
-root.attributes.mut_map().insert("foo".into(), "bar".into());
+root.add_attribute("foo", "bar");
 let mut child = Element::from_name("my_child");
-child.nodes.push(Node::Text("Hello World!".into()));
-root.nodes.push(Node::Element(child));
+child.add_text("Hello World!");
+root.add_child(child);
 let doc = Document::from_root(root);
 println!("{}", doc.to_string());
 ```
 
-The program above prints:
+The above program prints:
 
 ```xml
 <my_root foo="bar">
   <my_child>Hello World!</my_child>
 </my_root>
 ```
+
 */
 
 #![deny(rust_2018_idioms)]
@@ -101,13 +101,13 @@ fn simple_document_test() {
     "#;
     let doc = parse(xml).unwrap();
     let root = doc.root();
-    assert_eq!("r", root.name.as_str());
-    assert_eq!(1, root.nodes.len());
-    let child = root.nodes.first().unwrap();
+    assert_eq!("r", root.name());
+    assert_eq!(1, root.nodes_len());
+    let child = root.first_node().unwrap();
     if let Node::Element(element) = child {
-        assert_eq!("a", element.name.as_str());
-        let attribute_value = element.attributes.map().get("b").unwrap();
-        assert_eq!("c", attribute_value.as_str());
+        assert_eq!("a", element.name());
+        let attribute_value = element.attribute("b").unwrap();
+        assert_eq!("c", attribute_value);
     } else {
         panic!("expected element but found a different type of node")
     }

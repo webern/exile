@@ -2,11 +2,11 @@ use std::error::Error;
 use std::fmt;
 
 /// The `Result` type for this library.
-pub type Result<T> = std::result::Result<T, XErr>;
+pub type Result<T> = std::result::Result<T, XDocErr>;
 
 /// A generic error type for this library.
 #[derive(Debug)]
-pub struct XErr {
+pub struct XDocErr {
     /// The error message.
     pub message: String,
     /// The sourcecode file where the error was raised.
@@ -17,7 +17,7 @@ pub struct XErr {
     pub source: Option<Box<dyn Error>>,
 }
 
-impl fmt::Display for XErr {
+impl fmt::Display for XDocErr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if let Some(src) = &self.source {
             write!(
@@ -34,7 +34,7 @@ impl fmt::Display for XErr {
     }
 }
 
-impl Error for XErr {
+impl Error for XDocErr {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         if let Some(src) = &self.source {
             return Some(src.as_ref());
@@ -45,19 +45,19 @@ impl Error for XErr {
 
 macro_rules! wrap {
     // Base case:
-    ($err:expr) => (Err($crate::xdoc::error::XErr {
+    ($err:expr) => (Err($crate::xdoc::error::XDocErr {
         message: "an error occurred".to_string(),
         file: file!().to_string(),
         line: line!() as u64,
         source: Some($err.into()),
     }));
-    ($err:expr, $msg:expr) => (Err($crate::xdoc::error::XErr {
+    ($err:expr, $msg:expr) => (Err($crate::xdoc::error::XDocErr {
         message: $msg.to_string(),
         file: file!().to_string(),
         line: line!() as u64,
         source: Some($err.into()),
     }));
-    ($err:expr, $fmt:expr, $($arg:expr),+) => (Err($crate::xdoc::error::XErr {
+    ($err:expr, $fmt:expr, $($arg:expr),+) => (Err($crate::xdoc::error::XDocErr {
         message: format!($fmt, $($arg),+),
         file: file!().to_string(),
         line: line!() as u64,
@@ -77,7 +77,7 @@ macro_rules! better_wrap {
 // a convenience macro for creating a Result::Err
 macro_rules! raise {
     // Base case:
-    ($msg:expr) => (Err($crate::xdoc::error::XErr {
+    ($msg:expr) => (Err($crate::xdoc::error::XDocErr {
         message: $msg.to_string(),
         file: file!().to_string(),
         line: line!() as u64,

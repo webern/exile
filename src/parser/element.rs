@@ -3,7 +3,6 @@ use crate::parser::chars::is_name_start_char;
 use crate::parser::pi::parse_pi;
 use crate::parser::string::{parse_string, StringType};
 use crate::parser::{parse_name, skip_comment, Iter};
-use crate::xdoc::OrdMap;
 use crate::{Element, Misc, Node};
 
 pub(crate) fn parse_element(iter: &mut Iter<'_>) -> Result<Element> {
@@ -24,7 +23,7 @@ pub(crate) fn parse_element(iter: &mut Iter<'_>) -> Result<Element> {
 
     // now the only valid chars are '>' or the start of an attribute name
     if iter.is_name_start_char() {
-        element.attributes = parse_attributes(iter)?;
+        parse_attributes(iter, &mut element)?;
     }
 
     // check and return early if it is an empty, self-closing tag that had attributes
@@ -55,19 +54,14 @@ fn split_element_name(input: &str) -> Result<(&str, &str)> {
 
 fn make_named_element(input: &str) -> Result<Element> {
     let split = split_element_name(input)?;
-    Ok(Element {
-        namespace: match split.0 {
-            "" => None,
-            _ => Some(split.0.to_owned()),
-        },
-        name: split.1.to_string(),
-        attributes: Default::default(),
-        nodes: vec![],
-    })
+    let mut element = Element::from_name(split.1);
+    if !split.0.is_empty() {
+        element.set_prefix(split.0)?
+    }
+    Ok(element)
 }
 
-fn parse_attributes(iter: &mut Iter<'_>) -> Result<OrdMap> {
-    let mut attributes = OrdMap::new();
+fn parse_attributes(iter: &mut Iter<'_>, element: &mut Element) -> Result<()> {
     loop {
         iter.skip_whitespace()?;
         if iter.is('/') || iter.is('>') {
@@ -86,12 +80,12 @@ fn parse_attributes(iter: &mut Iter<'_>) -> Result<OrdMap> {
         iter.advance_or_die()?;
         let value = parse_attribute_value(iter, string_type)?;
         expect!(iter, start)?;
-        attributes.mut_map().insert(key, value);
+        element.add_attribute(key, value);
         if !iter.advance() {
             break;
         }
     }
-    Ok(attributes)
+    Ok(())
 }
 
 fn attribute_start_quote(iter: &Iter<'_>) -> Result<(char, StringType)> {
@@ -136,12 +130,12 @@ fn parse_children(iter: &mut Iter<'_>, parent: &mut Element) -> Result<()> {
                     // do nothing
                 }
                 LTParse::Some(node) => {
-                    parent.nodes.push(node);
+                    parent.add_node(node);
                 }
             }
         } else {
             let text = parse_text(iter)?;
-            parent.nodes.push(Node::Text(text));
+            parent.add_node(Node::Text(text));
         }
         // some parsing functions may return with the iter pointing to the last thing that was part
         // of their construct, while others might advance the iter to the next char *after* the

@@ -1,8 +1,9 @@
-use crate::xdoc::error::Result;
-use crate::{Element, Misc, WriteOpts};
 use std::borrow::Cow;
 use std::default::Default;
 use std::io::{Cursor, Write};
+
+use crate::xdoc::error::Result;
+use crate::{Element, Misc, WriteOpts};
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
 /// Represents the XML Version being used.
@@ -35,9 +36,12 @@ impl Default for Encoding {
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash, Default)]
 /// The XML declaration at the start of the XML Document.
 pub struct Declaration {
-    /// The version of the XML Document. Default is `Version::V10` when `None`.
+    /// The version of the XML Document. `None` is the same as `Version::V10` except that it is not
+    /// printed in the XML document. That is, XML defaults to 1.0 in the absence of a declaration.
     pub version: Option<Version>,
-    /// The encoding of the XML Document. Default is `Encoding::Utf8` when `None`.
+    /// The encoding of the XML Document. `None` is the same as `Encoding::Utf8` except that it is
+    /// not printed in the XML document. That is, XML defaults to `UTF-8` in the absence of a
+    /// declaration.
     pub encoding: Option<Encoding>,
 }
 
@@ -266,40 +270,41 @@ macro_rules! map (
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::xdoc::OrdMap;
-    use crate::Node;
     use std::io::Cursor;
+
+    use crate::Node;
+
+    use super::*;
 
     fn assert_ezfile(doc: &Document) {
         let root = doc.root();
         let root_data = root;
-        assert_eq!(root_data.name, "cats");
-        assert_eq!(root_data.namespace, None);
-        assert_eq!(root_data.attributes.map().len(), 0);
-        assert_eq!(root_data.nodes.len(), 2);
-        let bones_element = root_data.nodes.get(0).unwrap();
+        assert_eq!("cats", root_data.name());
+        assert_eq!(None, root_data.prefix());
+        assert_eq!(0, root_data.attributes_len());
+        assert_eq!(2, root_data.nodes_len());
+        let bones_element = root_data.node(0).unwrap();
         if let Node::Element(bones) = bones_element {
-            assert_eq!(bones.name, "cat");
-            assert_eq!(bones.namespace, None);
-            assert_eq!(bones.attributes.map().len(), 1);
-            assert_eq!(bones.nodes.len(), 0);
-            let name = bones.attributes.map().get("name").unwrap();
-            assert_eq!(name, "bones");
+            assert_eq!("cat", bones.name());
+            assert_eq!(None, bones.prefix());
+            assert_eq!(1, bones.attributes_len());
+            assert_eq!(0, bones.nodes_len());
+            let name_attribute_value = bones.attribute("name").unwrap();
+            assert_eq!("bones", name_attribute_value);
         } else {
             panic!("bones was supposed to be an element but was not");
         }
-        let bishop_element = root_data.nodes.get(1).unwrap();
+        let bishop_element = root_data.node(1).unwrap();
         if let Node::Element(bishop) = bishop_element {
-            assert_eq!(bishop.name, "cat");
-            assert_eq!(bishop.namespace, None);
-            assert_eq!(bishop.attributes.map().len(), 1);
-            let name = bishop.attributes.map().get("name").unwrap();
-            assert_eq!(name, "bishop");
+            assert_eq!("cat", bishop.name());
+            assert_eq!(None, bishop.prefix());
+            assert_eq!(1, bishop.attributes_len());
+            let name_attribute_value = bishop.attribute("name").unwrap();
+            assert_eq!("bishop", name_attribute_value);
             // assert text data
-            assert_eq!(bishop.nodes.len(), 1);
-            if let Node::Text(text) = bishop.nodes.get(0).unwrap() {
-                assert_eq!(text, "punks");
+            assert_eq!(1, bishop.nodes_len());
+            if let Node::Text(text) = bishop.node(0).unwrap() {
+                assert_eq!("punks", text);
             } else {
                 panic!("Expected to find a text node but it was not there.");
             }
@@ -315,40 +320,20 @@ mod tests {
 </cats>"#;
 
     fn create_ezfile() -> Document {
-        let bones_data = Element {
-            namespace: None,
-            name: "cat".into(),
-            attributes: OrdMap::from(map! { "name".to_string() => "bones".to_string() }),
-            nodes: Vec::default(),
-        };
-
-        let bishop_data = Element {
-            namespace: None,
-            name: "cat".into(),
-            attributes: OrdMap::from(map! { "name".to_string() => "bishop".to_string() }),
-            nodes: vec![Node::Text("punks".to_string())],
-        };
-
-        let bones_element = Node::Element(bones_data);
-        let bishop_element = Node::Element(bishop_data);
-
-        let cats_data = Element {
-            namespace: None,
-            name: "cats".into(),
-            attributes: Default::default(),
-            nodes: vec![bones_element, bishop_element],
-        };
-
-        Document {
-            declaration: Declaration {
-                version: Some(Version::V10),
-                encoding: Some(Encoding::Utf8),
-            },
-            doctypedecl: None,
-            prolog_misc: vec![],
-            root: cats_data,
-            epilog_misc: vec![],
-        }
+        let mut bones = Element::from_name("cat");
+        bones.add_attribute("name", "bones");
+        let mut bishop = Element::from_name("cat");
+        bishop.add_attribute("name", "bishop");
+        bishop.add_text("punks");
+        let mut cats = Element::from_name("cats");
+        cats.add_child(bones);
+        cats.add_child(bishop);
+        let mut doc = Document::from_root(cats);
+        doc.set_declaration(Declaration {
+            version: Some(Version::V10),
+            encoding: Some(Encoding::Utf8),
+        });
+        doc
     }
 
     #[test]
@@ -365,18 +350,16 @@ mod tests {
         assert!(result.is_ok());
         let data = c.into_inner();
         let data_str = std::str::from_utf8(data.as_slice()).unwrap();
-        assert_eq!(data_str, EZFILE_STR);
+        assert_eq!(EZFILE_STR, data_str);
     }
 
     #[test]
     fn test_escapes() {
         let expected = r#"<root attr="&lt;&amp;&gt;&quot;🍔&quot;''">&amp;&amp;&amp;&lt;&lt;&lt;'"🍔"'&gt;&gt;&gt;&amp;&amp;&amp;</root>"#;
         let mut root = Element::default();
-        root.name = "root".into();
-        root.attributes
-            .mut_map()
-            .insert("attr".into(), "<&>\"🍔\"\'\'".into());
-        root.nodes.push(Node::Text("&&&<<<'\"🍔\"'>>>&&&".into()));
+        root.set_name("root");
+        root.add_attribute("attr", "<&>\"🍔\"\'\'");
+        root.add_text("&&&<<<'\"🍔\"'>>>&&&");
         let doc = Document::from_root(root);
 
         let mut c = Cursor::new(Vec::new());

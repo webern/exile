@@ -38,8 +38,8 @@ let xml = r#"
 
 let doc = exile::parse(xml).unwrap();
 for child in doc.root().children() {
-    println!("element name: {}", child.name);
-    if let Some(attribute) = child.attributes.map().get("name") {
+    println!("element name: {}", child.name());
+    if let Some(attribute) = child.attribute("name") {
         println!("name attribute: {}", attribute);
     }
 }
@@ -50,16 +50,15 @@ Authoring XML looks like this.
 ```rust
 use exile::{Document, Element, Node};
 let mut root = Element::from_name("my_root");
-// TODO - improve the interface
-root.attributes.mut_map().insert("foo".into(), "bar".into());
+root.add_attribute("foo", "bar");
 let mut child = Element::from_name("my_child");
-child.nodes.push(Node::Text("Hello World!".into()));
-root.nodes.push(Node::Element(child));
+child.add_text("Hello World!");
+root.add_child(child);
 let doc = Document::from_root(root);
 println!("{}", doc.to_string());
 ```
 
-The program above prints:
+The above program prints:
 
 ```xml
 <my_root foo="bar">

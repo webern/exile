@@ -6,6 +6,7 @@ use core::fmt;
 use std::fmt::{Display, Formatter};
 
 use crate::parser::ParserState;
+use crate::xdoc::error::XDocErr;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // public error type
@@ -19,6 +20,8 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub enum Error {
     /// A syntax error encountered when parsing an XML document.
     Parse(ParseError),
+    /// An error related to the `Document` model.
+    XdocErr(XDocErr),
     /// Any other error not related to the syntax of the XML document.
     Other(OtherError),
 }
@@ -27,6 +30,7 @@ impl Display for crate::error::Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
             Error::Parse(pe) => pe.fmt(f),
+            Error::XdocErr(xe) => xe.fmt(f),
             Error::Other(oe) => oe.fmt(f),
         }
     }
@@ -42,6 +46,13 @@ impl std::error::Error for crate::error::Error {
                     None
                 }
             }
+            Error::XdocErr(e) => {
+                if let Some(s) = &e.source {
+                    Some(s.as_ref())
+                } else {
+                    None
+                }
+            }
             Error::Other(e) => {
                 if let Some(s) = &e.source {
                     Some(s.as_ref())
@@ -50,6 +61,12 @@ impl std::error::Error for crate::error::Error {
                 }
             }
         }
+    }
+}
+
+impl From<XDocErr> for Error {
+    fn from(xe: XDocErr) -> Self {
+        Error::XdocErr(xe)
     }
 }
 

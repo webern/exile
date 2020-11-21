@@ -3,22 +3,9 @@ use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::hash::{Hash, Hasher};
 
-// TODO - extract key and value types
-/// OrdMap implements some conveniences like Clone an PartialEq for maps so that we can compare
-/// XML Documents (and do other things).
-pub struct OrdMap(BTreeMap<String, String>);
-
-impl OrdMap {
-    /// Create a new, empty OrdMap
-    pub fn new() -> Self {
-        OrdMap(BTreeMap::new())
-    }
-
-    /// Construct a new OrdMap from a BTreeMap
-    pub fn from(inner: BTreeMap<String, String>) -> Self {
-        OrdMap(inner)
-    }
-}
+/// OrdMap implements some conveniences like Clone and PartialEq for BTreeMap so that we can compare
+/// XML Documents.
+pub(crate) struct OrdMap(BTreeMap<String, String>);
 
 impl Clone for OrdMap {
     fn clone(&self) -> Self {
@@ -58,12 +45,12 @@ impl Eq for OrdMap {}
 
 impl OrdMap {
     /// Return the inner BTreeMap as immutable.
-    pub fn map(&self) -> &BTreeMap<String, String> {
+    pub(crate) fn map(&self) -> &BTreeMap<String, String> {
         &self.0
     }
 
     /// Return the inner BTreeMap as mutable.
-    pub fn mut_map(&mut self) -> &mut BTreeMap<String, String> {
+    pub(crate) fn mut_map(&mut self) -> &mut BTreeMap<String, String> {
         &mut self.0
     }
 
@@ -147,6 +134,8 @@ impl Hash for OrdMap {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeMap;
+
     use super::OrdMap;
 
     /// Although this test does nothing but explore the behavior of a built-in data structure, it's
@@ -154,7 +143,7 @@ mod tests {
     /// serialize in the order that they were inserted.
     #[test]
     fn map_insertion_order() {
-        let mut a = OrdMap::new();
+        let mut a = OrdMap(BTreeMap::new());
         a.mut_map().insert("0".to_string(), String::new());
         a.mut_map().insert("1".to_string(), String::new());
         a.mut_map().insert("2".to_string(), String::new());
@@ -170,13 +159,13 @@ mod tests {
     /// insertion order.
     #[test]
     fn map_equality() {
-        let mut a = OrdMap::new();
+        let mut a = OrdMap(BTreeMap::new());
         a.mut_map().insert("0".to_string(), "a".to_string());
         a.mut_map().insert("1".to_string(), "b".to_string());
         a.mut_map().insert("2".to_string(), "c".to_string());
         a.mut_map().insert("3".to_string(), "d".to_string());
         a.mut_map().insert("4".to_string(), "e".to_string());
-        let mut b = OrdMap::new();
+        let mut b = OrdMap(BTreeMap::new());
         b.mut_map().insert("4".to_string(), "e".to_string());
         b.mut_map().insert("3".to_string(), "d".to_string());
         b.mut_map().insert("1".to_string(), "b".to_string());
