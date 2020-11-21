@@ -3,7 +3,7 @@ use std::ops::Deref;
 
 /// Both attributes and elements can have a namespace alias prefix, such as `ns:foo`, where `ns` is
 /// the 'prefix' and 'foo' is the 'name'. The `Name` struct provides the convenience of parsing and
-/// identifying the 'prefix' part.
+/// differentiating the 'prefix' and 'name' parts.
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Name {
     value: String,
