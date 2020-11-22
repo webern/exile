@@ -3,11 +3,11 @@
 use crate::test_utils::run_parse_test;
 use exile::{Declaration, Document};
 
-const INPUT_FILE: &str = "jclark_valid_sa_009.xml";
+const INPUT_FILE: &str = "jclark_valid_sa_015.xml";
 
 #[test]
-/// A valid XML file from the W3C conformance test suite: valid-sa-009
-fn valid_sa_009_parse() {
+/// A valid XML file from the W3C conformance test suite: valid-sa-015
+fn valid_sa_015_parse() {
     run_parse_test(INPUT_FILE, &expected());
 }
 
@@ -20,6 +20,6 @@ fn expected() -> Document {
     // TODO - write doctype information
     let root = doc.root_mut();
     root.set_name(r#"doc"#);
-    root.add_text(r#" "#);
+    root.add_attribute(r#"ABCDEFGHIJKLMNOPQRSTUVWXYZ"#, r#"v1"#);
     doc
 }

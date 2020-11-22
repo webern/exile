@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 
 class ConfTestGenerator {
     /// The maximum number of W3C tests of ConfType.Valid that will be generated.
-    private static final int MAX_VALID = 10;
+    private static final int MAX_VALID = 30;
     /// The maximum number of W3C tests of ConfType.NotWellFormed that will be generated.
     private static final int MAX_NOT_WELL_FORMED = 5;
     /// The tests directory, e.g. exile_repo/exile/tests
@@ -495,17 +495,22 @@ class ConfTestGenerator {
                                        ConfTest t,
                                        Document doc,
                                        OutputStreamWriter os) throws TestGenException {
+        XText xtext = new XText(child);
         // TODO - if we start to support ignorable whitespace nodes or preserve directives, this will not work
-        if (child.isElementContentWhitespace()) {
-            return;
+        //        if (child.isElementContentWhitespace()) {
+        //            return;
+        //        }
+        //        // TODO - this probably not work once we get into more complicated test cases (e.g. CData and entities, etc)
+        //        String text = child.getWholeText();
+        //        // HACK - this is a super-funky way of figuring out whether the text node is ignorable whitespace
+        //        if (text.trim().isEmpty()) {
+        //            return;
+        //        }
+        if (xtext.getDocType() == null && xtext.getData().trim().length() == 0) {
+            System.out.println("skipping what is likely element whitespace");
+        } else if (!xtext.isElementContentWhitespace()) {
+            F.writeln(os, "%s.add_text(r#\"%s\"#);", parentVariableName, xtext.getData());
         }
-        // HACK - this is a super-funky way of figuring out whether the text node is ignoreable whitespace
-        if (child.getWholeText().trim().isEmpty()) {
-            return;
-        }
-        // TODO - this probably not work once we get into more complicated test cases (e.g. CData and entities, etc)
-        String text = child.getWholeText();
-        F.writeln(os, "%s.add_text(r#\"%s\"#);", parentVariableName, text);
     }
 
     private static void writeElementChild(String parentVariableName,

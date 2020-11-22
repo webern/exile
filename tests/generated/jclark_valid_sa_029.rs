@@ -1,25 +1,24 @@
 // generated file, do not edit
 
 use crate::test_utils::run_parse_test;
-use exile::{Declaration, Document};
+use exile::{Declaration, Document, Version};
 
-const INPUT_FILE: &str = "jclark_valid_sa_009.xml";
+const INPUT_FILE: &str = "jclark_valid_sa_029.xml";
 
 #[test]
-/// A valid XML file from the W3C conformance test suite: valid-sa-009
-fn valid_sa_009_parse() {
+/// A valid XML file from the W3C conformance test suite: valid-sa-029
+fn valid_sa_029_parse() {
     run_parse_test(INPUT_FILE, &expected());
 }
 
 fn expected() -> Document {
     let mut doc = Document::new();
     doc.set_declaration(Declaration {
-        version: None,
+        version: Some(Version::V10),
         encoding: None,
     });
     // TODO - write doctype information
     let root = doc.root_mut();
     root.set_name(r#"doc"#);
-    root.add_text(r#" "#);
     doc
 }

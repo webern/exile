@@ -89,8 +89,12 @@ class X {
                 // https://bugs.openjdk.java.net/browse/JDK-8217937
                 factory.setExpandEntityReferences(false);
             }
+            factory.setIgnoringElementContentWhitespace(true);
+            //            factory.setValidating(true);
             DocumentBuilder builder = factory.newDocumentBuilder();
             Document document = builder.parse(uri);
+
+            document.normalizeDocument();
             return document;
         } catch (FactoryConfigurationError e) {
             throw new TestGenException("unable to get a document builder factory", e);

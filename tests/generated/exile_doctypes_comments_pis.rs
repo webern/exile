@@ -28,22 +28,22 @@ fn expected() -> Document {
     }));
     let root = doc.root_mut();
     root.set_name(r#"note"#);
-    let gen1n3 = root.add_new_child().unwrap();
-    gen1n3.set_name(r#"to"#);
-    gen1n3.add_text(r#"Tove"#);
-    let gen1n5 = root.add_new_child().unwrap();
-    gen1n5.set_name(r#"from"#);
-    gen1n5.add_text(r#"Jani"#);
-    gen1n5.add_pi(exile::PI {
+    let gen1n1 = root.add_new_child().unwrap();
+    gen1n1.set_name(r#"to"#);
+    gen1n1.add_text(r#"Tove"#);
+    let gen1n2 = root.add_new_child().unwrap();
+    gen1n2.set_name(r#"from"#);
+    gen1n2.add_text(r#"Jani"#);
+    gen1n2.add_pi(exile::PI {
         target: r#"pi"#.into(),
         instructions: vec![r#"in"#.to_owned(), r#"element"#.to_owned()],
     });
-    let gen1n7 = root.add_new_child().unwrap();
-    gen1n7.set_name(r#"heading"#);
-    gen1n7.add_text(r#"Reminder"#);
-    let gen1n9 = root.add_new_child().unwrap();
-    gen1n9.set_name(r#"body"#);
-    gen1n9.add_text(r#"Don't forget me this weekend"#);
+    let gen1n3 = root.add_new_child().unwrap();
+    gen1n3.set_name(r#"heading"#);
+    gen1n3.add_text(r#"Reminder"#);
+    let gen1n4 = root.add_new_child().unwrap();
+    gen1n4.set_name(r#"body"#);
+    gen1n4.add_text(r#"Don't forget me this weekend"#);
     doc.push_epilog_misc(exile::Misc::PI(exile::PI {
         target: r#"pi"#.into(),
         instructions: vec![r#"at"#.to_owned(), r#"the"#.to_owned(), r#"end"#.to_owned()],
