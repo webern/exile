@@ -352,7 +352,7 @@ class ConfTestGenerator {
                                               OutputStreamWriter os) throws TestGenException {
 
         F.writeln(os, "fn expected() -> Document {");
-        Document doc = X.loadShallow(t.getPath().toFile());
+        Document doc = X.loadShallow(t.getPath().toFile(), t.getNamespaces());
         F.writeln(os, "let mut doc = Document::new();");
         writeExpectedXmlDeclaration(foundDecl, os);
         List<Node> prelude = findPrelude(doc);
@@ -505,8 +505,84 @@ class ConfTestGenerator {
             // newlines and whitespace pretty-printing between elements. Not something we want to add to the exile DOM.
             System.out.println("skipping what is likely element whitespace");
         } else if (!xtext.isElementContentWhitespace()) {
-            F.writeln(os, "%s.add_text(r#\"%s\"#);", parentVariableName, xtext.getData());
+            String data = xtext.getData();
+            // this is a little bit scary. the exile parser will always treat whitespace as 'replace', which is what
+            // many(?) parsers do. but the Java parser is more correct than that. it only does so when validating. so
+            // here we hand-rolled the replacing and collapsing algs to view the string as exile intends to.
+            data = normalizeWhitespace(data);
+            if (data.isEmpty()) {
+                return;
+            }
+            data = rustStringLiteral(data);
+            F.writeln(os, "%s.add_text(%s);", parentVariableName, data);
         }
+    }
+
+    /**
+     * All occurrences of #x9 (tab), #xA (line feed) and #xD (carriage return) are replaced with #x20 (space).
+     */
+    private static boolean isWhite(int c) {
+        return (c == ' ') || (c == '\t') || (c == '\n') || (c == '\r');
+    }
+
+    /**
+     * Subsequent to the replacements specified above under replace, contiguous sequences of #x20s are collapsed to a
+     * single #x20, and initial and/or final #x20s are deleted.
+     */
+    private static String normalizeWhitespace(String s) {
+        boolean hasNonWhite = false;
+        boolean spaceBuffer = false;
+        StringBuilder result = new StringBuilder(s.length());
+        int l = s.length();
+        for (int i = 0; i < l; i++) {
+            int c = s.codePointAt(i);
+            boolean isW = isWhite(c);
+            if (isW) {
+                if (!hasNonWhite) {
+                    continue;
+                }
+                if (!spaceBuffer) {
+                    spaceBuffer = true;
+                }
+            } else {
+                hasNonWhite = true;
+                if (spaceBuffer) {
+                    result.append(' ');
+                    spaceBuffer = false;
+                }
+                result.append((char) c);
+            }
+        }
+        return result.toString();
+    }
+
+    private static String rustStringLiteral(String s) {
+        if (s.contains("\r") ||
+                s.contains("\t") ||
+                s.contains("\b") ||
+                s.contains("\n") ||
+                s.contains("\f") ||
+                s.contains("\u00a0")) {
+            return String.format("\"%s\"", rustEscape(s));
+        } else {
+            if (s.contains("\"#")) {
+                return String.format("r###\"%s\"###", s);
+            } else {
+                return String.format("r#\"%s\"#", s);
+            }
+        }
+    }
+
+    private static String rustEscape(String s) {
+        s = s.replaceAll("\\\\", "\\\\");
+        s = s.replaceAll("\"", "\\\"");
+        s = s.replaceAll("\n", "\\\\n");
+        s = s.replaceAll("\r", "\\\\r");
+        s = s.replaceAll("\t", "\\\\t");
+        s = s.replaceAll("\b", "\\\\b");
+        s = s.replaceAll("\f", "\\\\f");
+        s = s.replaceAll("\u00a0", "\\\\u{00a0}");
+        return s;
     }
 
     private static void writeElementChild(String parentVariableName,

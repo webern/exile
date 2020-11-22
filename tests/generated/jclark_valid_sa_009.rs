@@ -20,6 +20,5 @@ fn expected() -> Document {
     // TODO - write doctype information
     let root = doc.root_mut();
     root.set_name(r#"doc"#);
-    root.add_text(r#" "#);
     doc
 }

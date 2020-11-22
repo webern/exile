@@ -1,7 +1,6 @@
 package com.matthewjamesbriggs.xmltestgen;
 
 import lombok.AllArgsConstructor;
-import org.junit.Test;
 import org.w3c.dom.Element;
 import lombok.Getter;
 
@@ -25,7 +24,7 @@ import java.nio.file.Path;
     @Getter
     private final String sections;
     @Getter
-    private final boolean namespace;
+    private final XNamespaces namespaces;
     @Getter
     private final ConfType confType;
     @Getter
@@ -44,7 +43,11 @@ import java.nio.file.Path;
         id = X.getRequiredAttribute(element, "ID");
         String entitiesStr = X.getOptionalAttribute(element, "ENTITIES"); // both, general, none, parameter, <absent>
         entities = Entities.fromString(entitiesStr);
-        namespace = X.getOptionalAttribute(element, "NAMESPACE").equals("yes");
+        if (X.getOptionalAttribute(element, "NAMESPACE").equals("yes")) {
+            namespaces = XNamespaces.ON;
+        } else {
+            namespaces = XNamespaces.OFF;
+        }
         output = X.getOptionalAttribute(element, "OUTPUT");
         String recommendationStr =
                 X.getOptionalAttribute(element, "RECOMMENDATION"); // NS1.0, XML1.0, XML1.0-errata2e, XML1.1
@@ -72,7 +75,7 @@ import java.nio.file.Path;
                 entities.toString(),
                 path.toString(),
                 output,
-                namespace,
+                namespaces,
                 confType.toString(),
                 xmlVersion.toString(),
                 sections);

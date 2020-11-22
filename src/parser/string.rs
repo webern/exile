@@ -18,20 +18,27 @@ pub(crate) enum StringType {
 /// Parse a string that terminates based on some character(s) determined by `string_type`.
 pub(crate) fn parse_string(iter: &mut Iter<'_>, string_type: StringType) -> Result<String> {
     let mut space_buffer = None;
+    let mut is_non_white_reached = false;
     let mut result = String::new();
     while !is_end_char(iter, string_type) {
         if iter.st.c == '&' {
             let c = parse_escape(iter)?;
             if is_whitespace(c) {
-                space_buffer = Some(' ');
+                if is_non_white_reached {
+                    space_buffer = Some(' ');
+                }
             } else {
+                is_non_white_reached = true;
                 result.push(c);
             }
         } else if is_forbidden(iter, string_type) {
             return parse_err!(iter, "forbidden character in {:?} string", string_type);
         } else if iter.is_whitespace() {
-            space_buffer = Some(' ')
+            if is_non_white_reached {
+                space_buffer = Some(' ');
+            }
         } else {
+            is_non_white_reached = true;
             if let Some(space) = space_buffer {
                 result.push(space);
                 space_buffer = None;
