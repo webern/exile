@@ -19,3 +19,8 @@ mod jclark_valid_sa_002;
 mod jclark_valid_sa_003;
 mod jclark_valid_sa_004;
 mod jclark_valid_sa_005;
+mod jclark_valid_sa_006;
+mod jclark_valid_sa_007;
+mod jclark_valid_sa_008;
+mod jclark_valid_sa_009;
+mod jclark_valid_sa_010;
