@@ -496,17 +496,13 @@ class ConfTestGenerator {
                                        Document doc,
                                        OutputStreamWriter os) throws TestGenException {
         XText xtext = new XText(child);
-        // TODO - if we start to support ignorable whitespace nodes or preserve directives, this will not work
-        //        if (child.isElementContentWhitespace()) {
-        //            return;
-        //        }
-        //        // TODO - this probably not work once we get into more complicated test cases (e.g. CData and entities, etc)
-        //        String text = child.getWholeText();
-        //        // HACK - this is a super-funky way of figuring out whether the text node is ignorable whitespace
-        //        if (text.trim().isEmpty()) {
-        //            return;
-        //        }
+        // HACK: this is quite difficult. The DOM presents us with 'ignorable whitespace' but does not mark it as such
+        // unless the parser is in validation mode. In the presence of a doctype, when an element is specified as
+        // containing other elements and not PCDATA, then the DOM marks isElementContentWhitespace true. But sometimes
+        // we have no doctype and we essentially have to guess.
         if (xtext.getDocType() == null && xtext.getData().trim().length() == 0) {
+            // Because there is no doctype and the text is nothing but whitespace, we are assuming that this is just the
+            // newlines and whitespace pretty-printing between elements. Not something we want to add to the exile DOM.
             System.out.println("skipping what is likely element whitespace");
         } else if (!xtext.isElementContentWhitespace()) {
             F.writeln(os, "%s.add_text(r#\"%s\"#);", parentVariableName, xtext.getData());
