@@ -12,6 +12,7 @@ Currently supported:
 - Text Nodes
 - Processing Instructions
 - UTF-8
+- Whitespace Normalization
 
 Not Supported:
 - Entities
@@ -19,7 +20,7 @@ Not Supported:
 - Doctypes
 - Comment Parsing
 - Other Encodings
-- Whitespace Preservation
+- Whitesace Preservation: All text nodes are treated as if whitespace `collapse` were in-effect.
 
 # Example
 

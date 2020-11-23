@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 
 class ConfTestGenerator {
     /// The maximum number of W3C tests of ConfType.Valid that will be generated.
-    private static final int MAX_VALID = 5;
+    private static final int MAX_VALID = 17;
     /// The maximum number of W3C tests of ConfType.NotWellFormed that will be generated.
     private static final int MAX_NOT_WELL_FORMED = 5;
     /// The tests directory, e.g. exile_repo/exile/tests
@@ -78,11 +78,12 @@ class ConfTestGenerator {
         }
     }
 
+    // TODO - get rid of this
     @AllArgsConstructor private static class PI {
         @Getter
         private final String target;
         @Getter
-        private final List<String> instructions;
+        private final String data;
     }
 
     /**
@@ -352,7 +353,7 @@ class ConfTestGenerator {
                                               OutputStreamWriter os) throws TestGenException {
 
         F.writeln(os, "fn expected() -> Document {");
-        Document doc = X.loadShallow(t.getPath().toFile());
+        Document doc = X.loadShallow(t.getPath().toFile(), t.getNamespaces());
         F.writeln(os, "let mut doc = Document::new();");
         writeExpectedXmlDeclaration(foundDecl, os);
         List<Node> prelude = findPrelude(doc);
@@ -399,25 +400,13 @@ class ConfTestGenerator {
     private static PI parseProcessingInstruction(ProcessingInstruction pi) throws TestGenException {
         String target = pi.getTarget();
         String data = pi.getData();
-        String[] split = data.split("\\s");
-        List<String> instructions = new ArrayList<>();
-        for (String s : split) {
-            String trimmed = s.trim();
-            if (!trimmed.isEmpty()) {
-                instructions.add(trimmed);
-            }
-        }
-        return new PI(target, instructions);
+        return new PI(target, data);
     }
 
     private static void constructProcessingInstruction(PI pi, OutputStreamWriter os) throws TestGenException {
         F.writeln(os, "exile::PI {");
-        F.writeln(os, "target: r#\"%s\"#.into(),", pi.getTarget());
-        F.writeln(os, "instructions: vec![");
-        for (String instruction : pi.getInstructions()) {
-            F.writeln(os, "r#\"%s\"#.to_owned(),", instruction);
-        }
-        F.writeln(os, "],");
+        F.writeln(os, "target: %s.into(),", rustStringLiteral(pi.getTarget()));
+        F.writeln(os, "data: %s.into(),", rustStringLiteral(pi.getData()));
         F.writeln(os, "}");
     }
 
@@ -495,17 +484,94 @@ class ConfTestGenerator {
                                        ConfTest t,
                                        Document doc,
                                        OutputStreamWriter os) throws TestGenException {
-        // TODO - if we start to support ignorable whitespace nodes or preserve directives, this will not work
-        if (child.isElementContentWhitespace()) {
-            return;
+        XText xtext = new XText(child);
+        // HACK: this is quite difficult. The DOM presents us with 'ignorable whitespace' but does not mark it as such
+        // unless the parser is in validation mode. In the presence of a doctype, when an element is specified as
+        // containing other elements and not PCDATA, then the DOM marks isElementContentWhitespace true. But sometimes
+        // we have no doctype and we essentially have to guess.
+        if (xtext.getDocType() == null && xtext.getData().trim().length() == 0) {
+            // Because there is no doctype and the text is nothing but whitespace, we are assuming that this is just the
+            // newlines and whitespace pretty-printing between elements. Not something we want to add to the exile DOM.
+            System.out.println("skipping what is likely element whitespace");
+        } else if (!xtext.isElementContentWhitespace()) {
+            String data = xtext.getData();
+            // this is a little bit scary. the exile parser will always treat whitespace as 'replace', which is what
+            // many(?) parsers do. but the Java parser is more correct than that. it only does so when validating. so
+            // here we hand-rolled the replacing and collapsing algs to view the string as exile intends to.
+            data = normalizeWhitespace(data);
+            if (data.isEmpty()) {
+                return;
+            }
+            data = rustStringLiteral(data);
+            F.writeln(os, "%s.add_text(%s);", parentVariableName, data);
         }
-        // HACK - this is a super-funky way of figuring out whether the text node is ignoreable whitespace
-        if (child.getWholeText().trim().isEmpty()) {
-            return;
+    }
+
+    /**
+     * All occurrences of #x9 (tab), #xA (line feed) and #xD (carriage return) are replaced with #x20 (space).
+     */
+    private static boolean isWhite(int c) {
+        return (c == ' ') || (c == '\t') || (c == '\n') || (c == '\r');
+    }
+
+    /**
+     * Subsequent to the replacements specified above under replace, contiguous sequences of #x20s are collapsed to a
+     * single #x20, and initial and/or final #x20s are deleted.
+     */
+    private static String normalizeWhitespace(String s) {
+        boolean hasNonWhite = false;
+        boolean spaceBuffer = false;
+        StringBuilder result = new StringBuilder(s.length());
+        int l = s.length();
+        for (int i = 0; i < l; i++) {
+            int c = s.codePointAt(i);
+            boolean isW = isWhite(c);
+            if (isW) {
+                if (!hasNonWhite) {
+                    continue;
+                }
+                if (!spaceBuffer) {
+                    spaceBuffer = true;
+                }
+            } else {
+                hasNonWhite = true;
+                if (spaceBuffer) {
+                    result.append(' ');
+                    spaceBuffer = false;
+                }
+                result.append((char) c);
+            }
         }
-        // TODO - this probably not work once we get into more complicated test cases (e.g. CData and entities, etc)
-        String text = child.getWholeText();
-        F.writeln(os, "%s.add_text(r#\"%s\"#);", parentVariableName, text);
+        return result.toString();
+    }
+
+    private static String rustStringLiteral(String s) {
+        if (s.contains("\r") ||
+                s.contains("\t") ||
+                s.contains("\b") ||
+                s.contains("\n") ||
+                s.contains("\f") ||
+                s.contains("\u00a0")) {
+            return String.format("\"%s\"", rustEscape(s));
+        } else {
+            if (s.contains("\"#")) {
+                return String.format("r###\"%s\"###", s);
+            } else {
+                return String.format("r#\"%s\"#", s);
+            }
+        }
+    }
+
+    private static String rustEscape(String s) {
+        s = s.replaceAll("\\\\", "\\\\");
+        s = s.replaceAll("\"", "\\\"");
+        s = s.replaceAll("\n", "\\\\n");
+        s = s.replaceAll("\r", "\\\\r");
+        s = s.replaceAll("\t", "\\\\t");
+        s = s.replaceAll("\b", "\\\\b");
+        s = s.replaceAll("\f", "\\\\f");
+        s = s.replaceAll("\u00a0", "\\\\u{00a0}");
+        return s;
     }
 
     private static void writeElementChild(String parentVariableName,

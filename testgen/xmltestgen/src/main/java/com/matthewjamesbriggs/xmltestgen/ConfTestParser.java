@@ -17,7 +17,7 @@ import java.util.List;
 
 class ConfTestParser {
     static List<ConfTest> parse(String w3cXmlFilepath) throws TestGenException {
-        Document doc = X.loadComplete(new File(w3cXmlFilepath));
+        Document doc = X.loadComplete(new File(w3cXmlFilepath), XNamespaces.OFF);
         return parseDocument(doc);
     }
 
@@ -170,7 +170,7 @@ class ConfTestParser {
         String id = location.getCoreName();
         Recommendation recommendation = metadata.getRecommendation();
         final String sections = "N/A";
-        boolean namespace = ExileTestMetadata.getNamespace();
+        XNamespaces namespaces = XNamespaces.fromBoolean(ExileTestMetadata.getNamespace());
         ConfType confType = metadata.getSyntax().getConfType();
         XmlVersion xmlVersion = metadata.getXmlVersion();
         String prefix = confTestCases.getPrefix();
@@ -189,7 +189,7 @@ class ConfTestParser {
                 null,
                 recommendation,
                 sections,
-                namespace,
+                namespaces,
                 confType,
                 xmlVersion,
                 prefix,

@@ -19,23 +19,23 @@ fn expected() -> Document {
     });
     doc.push_prolog_misc(exile::Misc::PI(exile::PI {
         target: r#"a"#.into(),
-        instructions: vec![r#"b"#.to_owned()],
+        data: r#"b"#.into(),
     }));
     let root = doc.root_mut();
     root.set_name(r#"c"#);
     root.add_pi(exile::PI {
         target: r#"d"#.into(),
-        instructions: vec![r#"e"#.to_owned()],
+        data: r#"e"#.into(),
     });
     let gen1n3 = root.add_new_child().unwrap();
     gen1n3.set_name(r#"f"#);
     root.add_pi(exile::PI {
         target: r#"g"#.into(),
-        instructions: vec![r#"h"#.to_owned()],
+        data: r#"h"#.into(),
     });
     doc.push_epilog_misc(exile::Misc::PI(exile::PI {
         target: r#"i"#.into(),
-        instructions: vec![r#"j"#.to_owned()],
+        data: r#"j"#.into(),
     }));
     doc
 }

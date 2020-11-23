@@ -8,12 +8,14 @@ Currently we are using v0.0.x where every version can and will contain breaking 
 
 ## [Unreleased]
 ## Added
-- Nothing yet.
+- Whitespace normalization of text nodes [#75]
 
 ### Changed
 - Make `Element` struct members private [#74]
+- Improve processing instructions [#75]
 
 [#74]: https://github.com/webern/exile/pull/74
+[#75]: https://github.com/webern/exile/pull/75
 
 ## [v0.0.2] - 2020-11-15
 ### Added

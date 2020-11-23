@@ -70,27 +70,33 @@ class X {
      * @return
      * @throws TestGenException
      */
-    static Document loadComplete(File file) throws TestGenException {
-        return load(file, true);
+    static Document loadComplete(File file, XNamespaces namespaces) throws TestGenException {
+        return load(file, XEntityExpansion.ON, namespaces);
     }
 
-    static Document loadShallow(File file) throws TestGenException {
-        return load(file, false);
+    static Document loadShallow(File file, XNamespaces namespaces) throws TestGenException {
+        return load(file, XEntityExpansion.OFF, namespaces);
     }
 
-    private static Document load(File file, boolean expandEntities) throws TestGenException {
+    private static Document load(File file,
+                                 XEntityExpansion entityEpansion,
+                                 XNamespaces namespace) throws TestGenException {
         file = F.canonicalize(file);
         F.checkFile(file);
         String uri = file.toPath().toUri().toString();
 
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            if (!expandEntities) {
+            if (entityEpansion == XEntityExpansion.OFF) {
                 // https://bugs.openjdk.java.net/browse/JDK-8217937
                 factory.setExpandEntityReferences(false);
             }
+            factory.setNamespaceAware(namespace == XNamespaces.ON);
+            factory.setIgnoringElementContentWhitespace(true);
             DocumentBuilder builder = factory.newDocumentBuilder();
             Document document = builder.parse(uri);
+            // TODO - is this working?
+            document.normalizeDocument();
             return document;
         } catch (FactoryConfigurationError e) {
             throw new TestGenException("unable to get a document builder factory", e);
