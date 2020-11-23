@@ -20,11 +20,11 @@ fn expected() -> Document {
     // TODO - write doctype information
     doc.push_prolog_misc(exile::Misc::PI(exile::PI {
         target: r#"pi"#.into(),
-        instructions: vec![r#"before"#.to_owned(), r#"doctype"#.to_owned()],
+        data: r#"before doctype "#.into(),
     }));
     doc.push_prolog_misc(exile::Misc::PI(exile::PI {
         target: r#"pi"#.into(),
-        instructions: vec![r#"after"#.to_owned(), r#"doctype"#.to_owned()],
+        data: r#"after doctype "#.into(),
     }));
     let root = doc.root_mut();
     root.set_name(r#"note"#);
@@ -36,7 +36,7 @@ fn expected() -> Document {
     gen1n2.add_text(r#"Jani"#);
     gen1n2.add_pi(exile::PI {
         target: r#"pi"#.into(),
-        instructions: vec![r#"in"#.to_owned(), r#"element"#.to_owned()],
+        data: r#"in element "#.into(),
     });
     let gen1n3 = root.add_new_child().unwrap();
     gen1n3.set_name(r#"heading"#);
@@ -46,7 +46,7 @@ fn expected() -> Document {
     gen1n4.add_text(r#"Don't forget me this weekend"#);
     doc.push_epilog_misc(exile::Misc::PI(exile::PI {
         target: r#"pi"#.into(),
-        instructions: vec![r#"at"#.to_owned(), r#"the"#.to_owned(), r#"end"#.to_owned()],
+        data: r#"at the end "#.into(),
     }));
     doc
 }

@@ -11,7 +11,7 @@ The public concepts in `xdoc` are re-exported by `exile`.
 
 #![warn(missing_docs)]
 
-pub use chars::{contains_whitespace, is_whitespace};
+pub use chars::is_whitespace;
 pub use doc::Document;
 pub use doc::{Declaration, Encoding, Version};
 pub use element::Element;

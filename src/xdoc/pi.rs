@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter};
 use std::io::{Cursor, Write};
 
 use crate::xdoc::error::Result;
-use crate::xdoc::{contains_whitespace, WriteOpts};
+use crate::xdoc::WriteOpts;
 
 /// Represents a Processing Instruction (PI) in an XML document.
 ///
@@ -29,8 +29,8 @@ use crate::xdoc::{contains_whitespace, WriteOpts};
 pub struct PI {
     /// The processing instruction target.
     pub target: String,
-    /// The processing instructions.
-    pub instructions: Vec<String>,
+    /// The processing instruction data.
+    pub data: String,
 }
 
 impl PI {
@@ -44,8 +44,8 @@ impl PI {
         if let Err(e) = write!(writer, "<?{}", &self.target) {
             return wrap!(e);
         }
-        for instruction in &self.instructions {
-            if let Err(e) = write!(writer, " {}", instruction) {
+        if !self.data.is_empty() {
+            if let Err(e) = write!(writer, " {}", self.data) {
                 return wrap!(e);
             }
         }
@@ -57,16 +57,8 @@ impl PI {
 
     fn check(&self) -> Result<()> {
         // TODO - check that the name is compliant
-        if self.target.is_empty() {
-            return raise!("Empty processing instruction target.");
-        }
-        for s in &self.instructions {
-            if s.contains("?>") {
-                return raise!("Processing instruction contains '?>'.");
-            }
-            if contains_whitespace(s) {
-                return raise!("Processing instruction contains whitespace.");
-            }
+        if self.data.contains("?>") {
+            return raise!("Processing instruction data contains '?>'.");
         }
         Ok(())
     }
@@ -91,8 +83,7 @@ impl Display for PI {
 fn pi_test_simple() {
     let mut pi = PI::default();
     pi.target = "thetarget".into();
-    pi.instructions.push("dat1".into());
-    pi.instructions.push("dat2".into());
+    pi.data = "dat1 dat2".into();
     let got = pi.to_string();
     let want = "<?thetarget dat1 dat2?>";
     assert_eq!(got, want);
@@ -111,7 +102,7 @@ fn pi_test_empty() {
 fn pi_test_bad() {
     let mut pi = PI::default();
     pi.target = "x".into();
-    pi.instructions.push("da?>t1".into());
+    pi.data = "da?>t1".into();
     let got = pi.to_string();
     let want = "<?error?>";
     assert_eq!(got, want);

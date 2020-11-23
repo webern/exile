@@ -22,7 +22,7 @@ fn expected() -> Document {
     root.set_name(r#"doc"#);
     root.add_pi(exile::PI {
         target: r#"pi"#.into(),
-        instructions: vec![],
+        data: r#""#.into(),
     });
     doc
 }

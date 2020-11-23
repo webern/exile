@@ -78,11 +78,12 @@ class ConfTestGenerator {
         }
     }
 
+    // TODO - get rid of this
     @AllArgsConstructor private static class PI {
         @Getter
         private final String target;
         @Getter
-        private final List<String> instructions;
+        private final String data;
     }
 
     /**
@@ -399,25 +400,13 @@ class ConfTestGenerator {
     private static PI parseProcessingInstruction(ProcessingInstruction pi) throws TestGenException {
         String target = pi.getTarget();
         String data = pi.getData();
-        String[] split = data.split("\\s");
-        List<String> instructions = new ArrayList<>();
-        for (String s : split) {
-            String trimmed = s.trim();
-            if (!trimmed.isEmpty()) {
-                instructions.add(trimmed);
-            }
-        }
-        return new PI(target, instructions);
+        return new PI(target, data);
     }
 
     private static void constructProcessingInstruction(PI pi, OutputStreamWriter os) throws TestGenException {
         F.writeln(os, "exile::PI {");
-        F.writeln(os, "target: r#\"%s\"#.into(),", pi.getTarget());
-        F.writeln(os, "instructions: vec![");
-        for (String instruction : pi.getInstructions()) {
-            F.writeln(os, "r#\"%s\"#.to_owned(),", instruction);
-        }
-        F.writeln(os, "],");
+        F.writeln(os, "target: %s.into(),", rustStringLiteral(pi.getTarget()));
+        F.writeln(os, "data: %s.into(),", rustStringLiteral(pi.getData()));
         F.writeln(os, "}");
     }
 

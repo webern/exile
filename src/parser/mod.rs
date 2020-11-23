@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::iter::Peekable;
+use std::path::Path;
 use std::str::Chars;
 
 use crate::error::{display_char, parse_err, Error, ParseError, Result, ThrowSite, XmlSite};
@@ -7,7 +8,6 @@ use crate::parser::chars::{is_name_char, is_name_start_char};
 use crate::parser::element::parse_element;
 use crate::parser::pi::{parse_pi, parse_pi_logic};
 use crate::{Declaration, Document, Encoding, Misc, Version};
-use std::path::Path;
 
 mod chars;
 mod element;
@@ -320,20 +320,21 @@ fn parse_document(iter: &mut Iter<'_>, document: &mut Document) -> Result<()> {
 // the values found into the mutable document parameter
 fn parse_declaration_pi(iter: &mut Iter<'_>, document: &mut Document) -> Result<()> {
     state_must_be_before_declaration(iter)?;
-    let (target, instructions) = parse_pi_logic(iter)?;
-    document.set_declaration(parse_declaration(&target, &instructions)?);
+    let (target, data) = parse_pi_logic(iter)?;
+    document.set_declaration(parse_declaration(&target, &data)?);
     Ok(())
 }
 
-fn parse_declaration(target: &str, instructions: &[String]) -> Result<Declaration> {
+fn parse_declaration(target: &str, data: &str) -> Result<Declaration> {
     let mut declaration = Declaration::default();
     if target != "xml" {
         return raise!("pi_data.target != xml");
     }
+    let instructions: Vec<&str> = data.split_whitespace().collect();
     if instructions.len() > 2 {
         return raise!("");
     }
-    let map = parse_as_map(instructions)?;
+    let map = parse_as_map(&instructions)?;
     if let Some(&val) = map.get("version") {
         match val {
             "1.0" => {
