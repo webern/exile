@@ -332,7 +332,10 @@ fn parse_declaration(target: &str, data: &str) -> Result<Declaration> {
     }
     let instructions: Vec<&str> = data.split_whitespace().collect();
     if instructions.len() > 2 {
-        return raise!("");
+        return raise!(
+            "only able to parse xml declarations that include version and encoding. \
+        a string split of the xml processing instruction data yielded more than two items."
+        );
     }
     let map = parse_as_map(&instructions)?;
     if let Some(&val) = map.get("version") {
