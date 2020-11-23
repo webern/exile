@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 
 class ConfTestGenerator {
     /// The maximum number of W3C tests of ConfType.Valid that will be generated.
-    private static final int MAX_VALID = 30;
+    private static final int MAX_VALID = 17;
     /// The maximum number of W3C tests of ConfType.NotWellFormed that will be generated.
     private static final int MAX_NOT_WELL_FORMED = 5;
     /// The tests directory, e.g. exile_repo/exile/tests
