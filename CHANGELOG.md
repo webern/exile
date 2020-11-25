@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Currently we are using v0.0.x where every version can and will contain breaking changes.
 
-## [Unreleased]
+## [v0.0.3] 2020-11-25
 ## Added
 - Whitespace normalization of text nodes [#75]
 - Support CDATA sections [#76]
@@ -66,6 +66,7 @@ Currently we are using v0.0.x where every version can and will contain breaking 
 
 <!-- version diff links -->
 [Unreleased]: https://github.com/webern/exile/compare/v0.0.2...HEAD
+[v0.0.3]: https://github.com/webern/exile/compare/v0.0.2...v0.0.3
 [v0.0.2]: https://github.com/webern/exile/compare/v0.0.1...v0.0.2
 [v0.0.1]: https://github.com/webern/exile/compare/v0.0.0...v0.0.1
 [v0.0.0]: https://github.com/webern/exile/releases/tag/v0.0.0
