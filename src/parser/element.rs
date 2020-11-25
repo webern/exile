@@ -1,6 +1,6 @@
-use crate::error::Result;
 use crate::parser::bang::parse_bang;
 use crate::parser::chars::is_name_start_char;
+use crate::parser::error::Result;
 use crate::parser::pi::parse_pi;
 use crate::parser::string::{parse_string, StringType};
 use crate::parser::{parse_name, Iter};
@@ -10,7 +10,7 @@ pub(crate) fn parse_element(iter: &mut Iter<'_>) -> Result<Element> {
     expect!(iter, '<')?;
     iter.advance_or_die()?;
     let name = parse_name(iter)?;
-    let mut element = make_named_element(name.as_str())?;
+    let mut element = Element::from_name(name);
 
     // absorb whitespace
     iter.skip_whitespace()?;
@@ -46,24 +46,6 @@ pub(crate) fn parse_element(iter: &mut Iter<'_>) -> Result<Element> {
     Ok(element)
 }
 
-fn split_element_name(input: &str) -> Result<(&str, &str)> {
-    let split: Vec<&str> = input.split(':').collect();
-    match split.len() {
-        1 => Ok(("", split.first().unwrap())),
-        2 => Ok((split.first().unwrap(), split.last().unwrap())),
-        _ => raise!(""),
-    }
-}
-
-fn make_named_element(input: &str) -> Result<Element> {
-    let split = split_element_name(input)?;
-    let mut element = Element::from_name(split.1);
-    if !split.0.is_empty() {
-        element.set_prefix(split.0)?
-    }
-    Ok(element)
-}
-
 fn parse_attributes(iter: &mut Iter<'_>, element: &mut Element) -> Result<()> {
     loop {
         iter.skip_whitespace()?;
@@ -96,7 +78,8 @@ fn attribute_start_quote(iter: &Iter<'_>) -> Result<(char, StringType)> {
     match c {
         '\'' => Ok((c, StringType::AttributeSingle)),
         '"' => Ok((c, StringType::AttributeDouble)),
-        _ => raise!(
+        _ => parse_err!(
+            iter,
             "expected attribute value to start with either a single or double quote, got '{}'",
             c
         ),
@@ -105,15 +88,11 @@ fn attribute_start_quote(iter: &Iter<'_>) -> Result<(char, StringType)> {
 
 /// Expects the iter to be pointing at the first character of the string.
 fn parse_attribute_value(iter: &mut Iter<'_>, string_type: StringType) -> Result<String> {
-    match string_type {
-        StringType::AttributeDouble | StringType::AttributeSingle => {
-            parse_string(iter, string_type)
-        }
-        _ => raise!(
-            "bug: the wrong function was called for a string of type: {:?}",
-            string_type
-        ),
-    }
+    debug_assert!(matches!(
+        string_type,
+        StringType::AttributeDouble | StringType::AttributeSingle
+    ));
+    parse_string(iter, string_type)
 }
 
 // this function takes over after an element's opening tag (the parent element) has been parsed.
@@ -135,7 +114,9 @@ fn parse_children(iter: &mut Iter<'_>, parent: &mut Element) -> Result<()> {
                 LTParse::Some(node) => match node {
                     Node::Element(elem) => parent.add_child(elem),
                     Node::Text(text) => parent.add_text(text),
-                    Node::CData(cdata) => parent.add_cdata(cdata)?,
+                    Node::CData(cdata) => parent
+                        .add_cdata(cdata)
+                        .map_err(|e| create_parser_error!(&iter.st, "{}", e))?,
                     Node::Misc(misc) => match misc {
                         Misc::Comment(_) => panic!("comments unsupported"),
                         Misc::PI(pi) => parent.add_pi(pi),

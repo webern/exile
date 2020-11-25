@@ -1,9 +1,10 @@
 #[allow(unused_imports)]
-use exile::error::XmlSite;
+use std::path::PathBuf;
+
+#[allow(unused_imports)]
+use exile::parser::XmlSite;
 #[allow(unused_imports)]
 use exile::Document;
-#[allow(unused_imports)]
-use std::path::PathBuf;
 
 const MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
 const INPUT_DATA: &str = "input_data";
@@ -46,7 +47,7 @@ pub fn run_not_well_formed_test(filename: &str, throw_site: Option<XmlSite>) {
     match e {
         exile::error::Error::Parse(parse_error) => {
             if let Some(actual_site) = throw_site {
-                assert_eq!(actual_site, parse_error.xml_site);
+                assert_eq!(actual_site, parse_error.xml_site.unwrap());
             }
         }
         _ => panic!("expected parse error."),

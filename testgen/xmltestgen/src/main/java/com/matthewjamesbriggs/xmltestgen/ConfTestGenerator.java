@@ -225,7 +225,7 @@ class ConfTestGenerator {
         F.writeln(os, "");
         F.writeln(os, "use crate::test_utils::run_not_well_formed_test;");
         if (bad != null) {
-            F.writeln(os, "use exile::error::XmlSite;");
+            F.writeln(os, "use exile::parser::XmlSite;");
         }
         F.writeln(os, "");
         writeConstDeclarations(t, os);

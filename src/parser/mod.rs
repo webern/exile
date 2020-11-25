@@ -1,23 +1,32 @@
+/*!
+This module is responsible for parsing XML from string representations.
+!*/
 use std::collections::HashMap;
 use std::iter::Peekable;
 use std::path::Path;
 use std::str::Chars;
 
-use crate::error::{display_char, parse_err, Error, ParseError, Result, ThrowSite, XmlSite};
+use crate::error::{OtherError, ThrowSite};
 use crate::parser::bang::parse_bang;
 use crate::parser::chars::{is_name_char, is_name_start_char};
 use crate::parser::element::parse_element;
+use crate::parser::error::{display_char, Result};
+pub use crate::parser::error::{ParseError, XmlSite};
 use crate::parser::pi::{parse_pi, parse_pi_logic};
 use crate::{Declaration, Document, Encoding, Misc, Version};
+
+#[macro_use]
+mod macros;
 
 mod bang;
 mod chars;
 mod element;
+mod error;
 mod pi;
 mod string;
 
 #[derive(Debug, Clone, Copy, Eq, PartialOrd, PartialEq, Hash)]
-pub struct Position {
+pub(super) struct Position {
     pub line: u64,
     pub column: u64,
     pub absolute: u64,
@@ -77,21 +86,18 @@ impl<'a> Iter<'a> {
             it: s.chars().peekable(),
             st: ParserState {
                 position: Default::default(),
-                c: 'x',
+                c: '\0',
                 doc_status: Default::default(),
                 tag_status: Default::default(),
             },
         };
         if !i.advance() {
-            return Err(Error::Parse(ParseError {
-                throw_site: ThrowSite {
-                    file: file!().to_owned(),
-                    line: line!(),
-                },
-                xml_site: XmlSite::from_parser(&ParserState::default()),
-                message: Some("iter advancement was required, but not possible".to_string()),
+            return Err(ParseError {
+                throw_site: throw_site!(),
+                xml_site: None,
+                message: Some("iter could not be initialized, empty document".to_string()),
                 source: None,
-            }));
+            });
         }
         Ok(i)
     }
@@ -130,16 +136,16 @@ impl<'a> Iter<'a> {
         if self.is(expected) {
             Ok(())
         } else {
-            Err(parse_err(
-                &self.st,
-                site,
-                Some(format!(
+            Err(ParseError {
+                throw_site: site,
+                xml_site: Some(XmlSite::from_parser(&self.st)),
+                message: Some(format!(
                     "expected '{}' but found '{}'",
                     display_char(expected),
                     display_char(self.st.c)
                 )),
-                Option::<Error>::None,
-            ))
+                source: None,
+            })
         }
     }
 
@@ -216,7 +222,7 @@ impl<'a> Iter<'a> {
         let opt = self.it.peek();
         match opt {
             Some(c) => Ok(*c),
-            None => raise!(""),
+            None => parse_err!(self, "unexpected end of document"),
         }
     }
 
@@ -227,10 +233,11 @@ impl<'a> Iter<'a> {
 }
 
 pub(crate) fn document_from_string<S: AsRef<str>>(s: S) -> crate::error::Result<Document> {
-    let mut iter = crate::parser::Iter::new(s.as_ref())?;
+    let mut iter = crate::parser::Iter::new(s.as_ref()).map_err(crate::error::Error::Parse)?;
     let mut document = Document::new();
+    // TODO - this loop seems weird
     loop {
-        parse_document(&mut iter, &mut document)?;
+        parse_document(&mut iter, &mut document).map_err(crate::error::Error::Parse)?;
         if !iter.advance() {
             break;
         }
@@ -239,11 +246,13 @@ pub(crate) fn document_from_string<S: AsRef<str>>(s: S) -> crate::error::Result<
 }
 
 pub(crate) fn document_from_file<P: AsRef<Path>>(path: P) -> crate::error::Result<Document> {
-    let s = wrap!(
-        std::fs::read_to_string(path.as_ref()),
-        "Unable to read file '{}'",
-        path.as_ref().display()
-    )?;
+    let s = std::fs::read_to_string(path.as_ref()).map_err(|e| {
+        crate::error::Error::Other(OtherError {
+            throw_site: throw_site!(),
+            message: Some(format!("Unable to read file '{}'", path.as_ref().display())),
+            source: Some(Box::new(e)),
+        })
+    })?;
     document_from_string(s)
 }
 
@@ -305,7 +314,8 @@ fn parse_document(iter: &mut Iter<'_>, document: &mut Document) -> Result<()> {
                     document.push_epilog_misc(Misc::PI(pi));
                 }
                 DocStatus::Root => {
-                    return raise!(
+                    return parse_err!(
+                        iter,
                         "the parser state is inconsistent, should not be {:?}",
                         DocStatus::Root
                     );
@@ -333,23 +343,26 @@ fn parse_document(iter: &mut Iter<'_>, document: &mut Document) -> Result<()> {
 fn parse_declaration_pi(iter: &mut Iter<'_>, document: &mut Document) -> Result<()> {
     state_must_be_before_declaration(iter)?;
     let (target, data) = parse_pi_logic(iter)?;
-    document.set_declaration(parse_declaration(&target, &data)?);
+    document.set_declaration(parse_declaration(iter, &target, &data)?);
     Ok(())
 }
 
-fn parse_declaration(target: &str, data: &str) -> Result<Declaration> {
+/// Given the target and data from the declaration processing instruction, parse the XML version and
+/// encoding. For example. `iter` is only passed to make error construction easier.
+fn parse_declaration(iter: &Iter<'_>, target: &str, data: &str) -> Result<Declaration> {
     let mut declaration = Declaration::default();
     if target != "xml" {
-        return raise!("pi_data.target != xml");
+        return parse_err!(iter, "pi_data.target != xml");
     }
     let instructions: Vec<&str> = data.split_whitespace().collect();
     if instructions.len() > 2 {
-        return raise!(
+        return parse_err!(
+            iter,
             "only able to parse xml declarations that include version and encoding. \
         a string split of the xml processing instruction data yielded more than two items."
         );
     }
-    let map = parse_as_map(&instructions)?;
+    let map = parse_as_map(iter, &instructions)?;
     if let Some(&val) = map.get("version") {
         match val {
             "1.0" => {
@@ -359,7 +372,7 @@ fn parse_declaration(target: &str, data: &str) -> Result<Declaration> {
                 declaration.version = Some(Version::V11);
             }
             _ => {
-                return raise!("");
+                return parse_err!(iter, "unknown or unsupported XML version number '{}'", val);
             }
         }
     }
@@ -369,7 +382,7 @@ fn parse_declaration(target: &str, data: &str) -> Result<Declaration> {
                 declaration.encoding = Some(Encoding::Utf8);
             }
             _ => {
-                return raise!("");
+                return parse_err!(iter, "unknown or unsupported encoding string '{}'", val);
             }
         }
     }
@@ -377,8 +390,11 @@ fn parse_declaration(target: &str, data: &str) -> Result<Declaration> {
 }
 
 /// Splits each string on '=', then for the value on the right, expects it to be a quoted string
-/// starting with either `"` or `'`.
-fn parse_as_map<'a, S: AsRef<str>>(data: &'a [S]) -> Result<HashMap<&'a str, &'a str>> {
+/// starting with either `"` or `'`. `iter` is only passed to ease error construction.
+fn parse_as_map<'a, S: AsRef<str>>(
+    iter: &Iter<'_>,
+    data: &'a [S],
+) -> Result<HashMap<&'a str, &'a str>> {
     let mut result = HashMap::new();
     for item in data {
         let s = item.as_ref();
@@ -392,7 +408,8 @@ fn parse_as_map<'a, S: AsRef<str>>(data: &'a [S]) -> Result<HashMap<&'a str, &'a
                 let quoted_value = *split.get(1).unwrap();
                 let len = quoted_value.len();
                 if len < 2 {
-                    return raise!(
+                    return parse_err!(
+                        iter,
                         "unparseable string encountered in XML declaration: '{}'",
                         quoted_value
                     );
@@ -401,7 +418,8 @@ fn parse_as_map<'a, S: AsRef<str>>(data: &'a [S]) -> Result<HashMap<&'a str, &'a
                 let middle = &quoted_value[1..len - 1];
                 let end = &quoted_value[len - 1..];
                 if (open != "'" && open != "\"") || open != end {
-                    return raise!(
+                    return parse_err!(
+                        iter,
                         "bad quotation marks encountered in XML declaration: '{}' and '{}'",
                         open,
                         end
@@ -416,7 +434,7 @@ fn parse_as_map<'a, S: AsRef<str>>(data: &'a [S]) -> Result<HashMap<&'a str, &'a
 
 fn state_must_be_before_declaration(iter: &Iter<'_>) -> Result<()> {
     if iter.st.doc_status != DocStatus::Declaration {
-        return raise!("");
+        return parse_err!(iter, "state_must_be_before_declaration");
     } else {
         Ok(())
     }

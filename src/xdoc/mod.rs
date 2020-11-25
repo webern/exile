@@ -9,8 +9,6 @@ Specifically, the `xtest` crate uses `xdoc` to generate tests for `exile`.
 The public concepts in `xdoc` are re-exported by `exile`.
 */
 
-#![warn(missing_docs)]
-
 pub use chars::is_whitespace;
 pub use doc::Document;
 pub use doc::{Declaration, Encoding, Version};
@@ -22,14 +20,14 @@ pub use write_ops::{Newline, WriteOpts};
 
 pub use crate::xdoc::error::Result;
 
-/// The public error type for this library. Macros are for internal use.
 #[macro_use]
-pub mod error;
+mod macros;
 
 mod cdata;
 mod chars;
 mod doc;
 mod element;
+pub mod error;
 mod name;
 mod node;
 pub(crate) mod ord_map;

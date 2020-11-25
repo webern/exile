@@ -5,9 +5,12 @@ The `bang` module parses those constructs that start with `<!`.
 use crate::Node;
 
 use super::element::LTParse;
+use super::error::Result;
 use super::Iter;
-use super::Result;
 
+/// Parses an XML node that starts with `<!`. Expected the iterator to be pointing at `<` when
+/// called, and expects the next character to be `!`. Returns the iterator pointing at the next
+/// character after the closing `>`.
 pub(super) fn parse_bang(iter: &mut Iter<'_>) -> Result<LTParse> {
     debug_assert_eq!('<', iter.st.c);
     iter.advance_or_die()?;
@@ -31,10 +34,11 @@ pub(super) fn parse_bang(iter: &mut Iter<'_>) -> Result<LTParse> {
     }
 }
 
-// takes the iter when it is pointing at a '!'. returns when '-->' is encountered. Returns an error
-// if it is not a well-formed comment.
 // TODO - support comments https://github.com/webern/exile/issues/27
-pub(super) fn skip_comment(iter: &mut Iter<'_>) -> Result<()> {
+/// Advances the iterator past a comment. Takes the iterator pointing at `!` and returns the
+/// iterator pointing at the first character after the closing '>'. Returns an error  if it is not a
+/// well-formed comment.
+fn skip_comment(iter: &mut Iter<'_>) -> Result<()> {
     expect!(iter, '!')?;
     iter.advance_or_die()?;
     expect!(iter, '-')?;
@@ -60,10 +64,11 @@ pub(super) fn skip_comment(iter: &mut Iter<'_>) -> Result<()> {
     Ok(())
 }
 
-// takes the iter after a '<' and when it is pointing at a '!'. returns when '>' is encountered.
-// will not work if the node being parsed is a comment, you must already know it to be a DOCTYPE
 // TODO - support doctypes https://github.com/webern/exile/issues/22
-pub(super) fn skip_doctype(iter: &mut Iter<'_>) -> Result<()> {
+/// Advances the iterator past a `<!DOCTYPE` section. Expects the iterator to be pointing at `!` and
+/// returns the iterator pointing at the first character after the closing `>`. Does not inspect
+/// the contents to ensure they are well-formed.
+fn skip_doctype(iter: &mut Iter<'_>) -> Result<()> {
     expect!(iter, '!')?;
     while !iter.is('>') {
         if iter.is('[') {
@@ -76,10 +81,9 @@ pub(super) fn skip_doctype(iter: &mut Iter<'_>) -> Result<()> {
     Ok(())
 }
 
-// takes the iter when it is inside if a <!DOCTYPE construct and has encountered the '[' char.
-// ignores everything and returns the iter when it is pointing to the first encountered ']'
 // TODO - support doctypes https://github.com/webern/exile/issues/22
-pub(crate) fn skip_nested_doctype_stuff(iter: &mut Iter<'_>) -> Result<()> {
+/// Helps `skip_doctype` to find the end of a doctype section.
+fn skip_nested_doctype_stuff(iter: &mut Iter<'_>) -> Result<()> {
     expect!(iter, '[')?;
     iter.advance_or_die()?;
     while !iter.is(']') {
@@ -129,6 +133,8 @@ fn parse_cdata(iter: &mut Iter<'_>) -> Result<String> {
     iter.advance();
     Ok(data)
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #[test]
 fn parse_bang_cdata_1() {
