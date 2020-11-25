@@ -55,9 +55,7 @@ impl WriteOpts {
         W: Write,
     {
         let s = std::iter::repeat(s).take(num).collect::<String>();
-        if let Err(e) = write!(writer, "{}", s) {
-            return wrap!(e);
-        }
+        xwrite!(writer, "{}", s)?;
         Ok(())
     }
 
@@ -70,14 +68,10 @@ impl WriteOpts {
                 return Ok(());
             }
             Indent::Spaces(n) => {
-                if let Err(e) = Self::write_repeatedly(writer, depth * n, " ") {
-                    return wrap!(e);
-                }
+                Self::write_repeatedly(writer, depth * n, " ")?;
             }
             Indent::Tab => {
-                if let Err(e) = Self::write_repeatedly(writer, depth, "\t") {
-                    return wrap!(e);
-                }
+                Self::write_repeatedly(writer, depth, "\t")?;
             }
         }
         Ok(())
@@ -87,9 +81,7 @@ impl WriteOpts {
     where
         W: Write,
     {
-        if let Err(e) = write!(writer, "{}", self.newline_str()) {
-            return wrap!(e);
-        }
+        xwrite!(writer, "{}", self.newline_str())?;
         Ok(())
     }
 }
@@ -114,7 +106,7 @@ where
 }
 
 // writes a string escaping as necessary for inclusion in an element.
-pub(crate) fn write_element_string<W, S>(
+pub(crate) fn write_element_text<W, S>(
     s: S,
     writer: &mut W,
     _opts: &WriteOpts,

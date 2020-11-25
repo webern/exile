@@ -25,7 +25,7 @@ use crate::xdoc::WriteOpts;
 /// > may be used for formal declaration of PI targets. Parameter entity references must not be
 /// > recognized within processing instructions.
 ///
-#[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash, Default)]
+#[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Ord, Hash, Default)]
 pub struct PI {
     /// The processing instruction target.
     pub target: String,
@@ -41,17 +41,11 @@ impl PI {
     {
         self.check()?;
         opts.indent(writer, depth)?;
-        if let Err(e) = write!(writer, "<?{}", &self.target) {
-            return wrap!(e);
-        }
+        xwrite!(writer, "<?{}", &self.target)?;
         if !self.data.is_empty() {
-            if let Err(e) = write!(writer, " {}", self.data) {
-                return wrap!(e);
-            }
+            xwrite!(writer, " {}", self.data)?;
         }
-        if let Err(e) = write!(writer, "?>") {
-            return wrap!(e);
-        }
+        xwrite!(writer, "?>")?;
         Ok(())
     }
 

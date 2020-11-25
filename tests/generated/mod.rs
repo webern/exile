@@ -2,6 +2,7 @@
 
 mod exile_angle_in_attribute_value;
 mod exile_cd_catalog;
+mod exile_cdata;
 mod exile_doctypes_comments_pis;
 mod exile_escapes;
 mod exile_ezfile;
@@ -32,3 +33,6 @@ mod jclark_valid_sa_014;
 mod jclark_valid_sa_015;
 mod jclark_valid_sa_016;
 mod jclark_valid_sa_017;
+mod jclark_valid_sa_018;
+mod jclark_valid_sa_019;
+mod jclark_valid_sa_020;

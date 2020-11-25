@@ -10,6 +10,7 @@ Currently supported:
 - Elements
 - Attributes
 - Text Nodes
+- CDATA Sections
 - Processing Instructions
 - UTF-8
 - Whitespace Normalization
@@ -71,14 +72,16 @@ The above program prints:
 
 use std::path::Path;
 
+pub use crate::parser::ParseError;
 pub use crate::xdoc::{
     Declaration, Document, Element, Encoding, Misc, Node, Version, WriteOpts, PI,
 };
 
 /// The `error` module defines the error types for this library.
 #[macro_use]
+mod macros;
 pub mod error;
-mod parser;
+pub mod parser;
 mod xdoc;
 
 /// Parse an XML file held in string contents.

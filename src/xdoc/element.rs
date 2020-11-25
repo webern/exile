@@ -1,12 +1,13 @@
 use std::io::Write;
 
+use crate::xdoc::cdata::check_cdata;
 use crate::xdoc::error::{Result, XDocErr};
 use crate::xdoc::ord_map::OrdMap;
 use crate::xdoc::write_ops::write_attribute_value;
 use crate::xdoc::Name;
 use crate::{Misc, Node, WriteOpts, PI};
 
-#[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialOrd, Ord, PartialEq, Hash)]
 /// Represents an Element in an XML Document.
 pub struct Element {
     /// The name of this element, which may contain a prefix part, such as `ns` in `ns:foo`.
@@ -19,21 +20,17 @@ pub struct Element {
 
 impl Default for Element {
     fn default() -> Self {
-        Self {
-            name: "element".into(),
-            attributes: Default::default(),
-            nodes: vec![],
-        }
+        Self::from_name("element")
     }
 }
 
 impl Element {
     /// Create a new element using the given name.
-    pub fn from_name<S: AsRef<str>>(name: S) -> Self {
+    pub fn from_name<S: Into<String>>(name: S) -> Self {
         Element {
-            name: name.as_ref().into(),
+            name: Name::new(name.into()),
             attributes: Default::default(),
-            nodes: vec![],
+            nodes: Default::default(),
         }
     }
 
@@ -71,9 +68,13 @@ impl Element {
         self.nodes.push(Node::Element(element))
     }
 
-    /// Add a node of any kind as a child of this element.
-    pub fn add_node(&mut self, node: Node) {
-        self.nodes.push(node)
+    /// Add a `CDATA` node. Will error if the string contains `]]>` as this cannot be represented in
+    /// a `CDATA` node.
+    pub fn add_cdata<S: Into<String>>(&mut self, cdata: S) -> Result<()> {
+        let cdata = cdata.into();
+        check_cdata(cdata.as_str())?;
+        self.nodes.push(Node::CData(cdata));
+        Ok(())
     }
 
     /// Get the number of nodes (of any kind) that are children of this node.
@@ -243,17 +244,11 @@ impl Element {
         W: Write,
     {
         if let Err(e) = self.check() {
-            return wrap!(e);
+            return raise!(e);
         }
-        if let Err(e) = opts.indent(writer, depth) {
-            return wrap!(e);
-        }
-        if let Err(e) = write!(writer, "<") {
-            return wrap!(e);
-        }
-        if let Err(e) = write!(writer, "{}", self.fullname()) {
-            return wrap!(e);
-        }
+        opts.indent(writer, depth)?;
+        xwrite!(writer, "<")?;
+        xwrite!(writer, "{}", self.fullname())?;
 
         let attribute_keys = self
             .attributes
@@ -262,35 +257,25 @@ impl Element {
             .map(|k| k.as_str())
             .collect::<Vec<&str>>();
         for &k in attribute_keys.iter() {
-            if let Err(e) = write!(writer, " {}=\"", &k) {
-                return wrap!(e);
-            }
+            xwrite!(writer, " {}=\"", &k)?;
             if let Some(val) = self.attributes.map().get(k) {
-                better_wrap!(write_attribute_value(val, writer, opts))?;
+                write_attribute_value(val, writer, opts)?;
             }
-            if let Err(e) = write!(writer, "\"") {
-                return wrap!(e);
-            }
+            xwrite!(writer, "\"")?;
         }
 
         if self.nodes.is_empty() {
-            if let Err(e) = write!(writer, "/>") {
-                return wrap!(e);
-            } else {
-                return Ok(());
-            }
-        } else if let Err(e) = write!(writer, ">") {
-            return wrap!(e);
+            xwrite!(writer, "/>")?;
+            return Ok(());
+        } else {
+            xwrite!(writer, ">")?;
         }
 
         for (index, node) in self.nodes.iter().enumerate() {
             if index == 0 && !node.is_text() {
                 opts.newline(writer)?;
             }
-            if let Err(e) = node.write(writer, opts, depth + 1) {
-                // TODO - this may explode with recursive wrapping
-                return wrap!(e);
-            }
+            node.write(writer, opts, depth + 1)?;
             if !node.is_text() {
                 opts.newline(writer)?;
             }
@@ -300,37 +285,22 @@ impl Element {
         if !self.is_text() {
             opts.indent(writer, depth)?;
         }
-        if let Err(e) = write!(writer, "</") {
-            return wrap!(e);
-        }
-        if let Some(ns) = self.prefix() {
-            if !ns.is_empty() {
-                if let Err(e) = write!(writer, "{}:", ns) {
-                    return wrap!(e);
-                }
-            }
-        }
-        if let Err(e) = write!(writer, "{}", self.name) {
-            return wrap!(e);
-        }
-        if let Err(e) = write!(writer, ">") {
-            return wrap!(e);
-        }
+        xwrite!(writer, "</{}>", self.fullname())?;
         Ok(())
     }
 
-    fn check(&self) -> Result<()> {
+    fn check(&self) -> std::result::Result<(), &'static str> {
         if self.name.is_empty() {
-            return raise!("Empty element name.");
+            return Err("Empty element name.");
         }
         if let Some(ns) = self.prefix() {
             if ns.is_empty() {
-                return raise!("Namespace should not be empty when the option is 'some'.");
+                return Err("Namespace should not be empty when the option is 'some'.");
             }
         }
         for attribute_key in self.attributes.map().keys() {
             if attribute_key.is_empty() {
-                return raise!("Empty attribute name encountered.");
+                return Err("Empty attribute name encountered.");
             }
         }
         Ok(())

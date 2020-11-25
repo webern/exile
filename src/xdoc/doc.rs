@@ -5,7 +5,7 @@ use std::io::{Cursor, Write};
 use crate::xdoc::error::Result;
 use crate::{Element, Misc, WriteOpts};
 
-#[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
+#[derive(Debug, Clone, Copy, Eq, Ord, PartialOrd, PartialEq, Hash)]
 /// Represents the XML Version being used.
 pub enum Version {
     /// The XML Version is 1.0.
@@ -20,7 +20,7 @@ impl Default for Version {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
+#[derive(Debug, Clone, Copy, Eq, Ord, PartialOrd, PartialEq, Hash)]
 /// The encoding of the XML Document, currently only UTF-8 is supported.
 pub enum Encoding {
     /// The encoding is UTF-8.
@@ -33,7 +33,7 @@ impl Default for Encoding {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash, Default)]
+#[derive(Debug, Clone, Copy, Eq, Ord, PartialOrd, PartialEq, Hash, Default)]
 /// The XML declaration at the start of the XML Document.
 pub struct Declaration {
     /// The version of the XML Document. `None` is the same as `Version::V10` except that it is not
@@ -168,21 +168,15 @@ impl Document {
         W: Write,
     {
         if self.declaration.encoding.is_some() || self.declaration.version.is_some() {
-            if let Err(e) = write!(writer, "<?xml ") {
-                return wrap!(e);
-            }
+            xwrite!(writer, "<?xml ")?;
             let need_space = true;
             if let Some(version) = &self.declaration.version {
                 match version {
                     Version::V10 => {
-                        if let Err(e) = write!(writer, "version=\"1.0\"") {
-                            return wrap!(e);
-                        }
+                        xwrite!(writer, "version=\"1.0\"")?;
                     }
                     Version::V11 => {
-                        if let Err(e) = write!(writer, "version=\"1.1\"") {
-                            return wrap!(e);
-                        }
+                        xwrite!(writer, "version=\"1.1\"")?;
                     }
                 }
             }
@@ -190,56 +184,37 @@ impl Document {
                 match encoding {
                     Encoding::Utf8 => {
                         if need_space {
-                            if let Err(e) = write!(writer, " ") {
-                                return wrap!(e);
-                            }
+                            xwrite!(writer, " ")?;
                         }
-                        if let Err(e) = write!(writer, "encoding=\"UTF-8\"") {
-                            return wrap!(e);
-                        }
+                        xwrite!(writer, "encoding=\"UTF-8\"")?
                     }
                 }
             }
-            if let Err(e) = write!(writer, "?>") {
-                return wrap!(e);
-            }
+            xwrite!(writer, "?>")?;
             if let Err(e) = opts.newline(writer) {
-                return wrap!(e);
+                return wrap_err!(e);
             }
         }
         for misc in self.prolog_misc() {
-            if let Err(e) = misc.write(writer, opts, 0) {
-                return wrap!(e);
-            }
-            if let Err(e) = opts.newline(writer) {
-                return wrap!(e);
-            }
+            misc.write(writer, opts, 0)?;
+            opts.newline(writer)?;
         }
-        if let Err(e) = self.root().write(writer, opts, 0) {
-            return wrap!(e);
-        }
+        self.root().write(writer, opts, 0)?;
         for misc in self.epilog_misc() {
-            if let Err(e) = opts.newline(writer) {
-                return wrap!(e);
-            }
-            if let Err(e) = misc.write(writer, opts, 0) {
-                return wrap!(e);
-            }
+            opts.newline(writer)?;
+            misc.write(writer, opts, 0)?;
         }
-
         Ok(())
     }
 
     /// Write the `Document` to a `String` using the given options.
     pub fn to_string_opts(&self, opts: &WriteOpts) -> Result<String> {
         let mut c = Cursor::new(Vec::new());
-        if let Err(e) = self.write_opts(&mut c, &opts) {
-            return wrap!(e);
-        }
+        self.write_opts(&mut c, &opts)?;
         let data = c.into_inner();
         match std::str::from_utf8(data.as_slice()) {
             Ok(s) => Ok(s.to_owned()),
-            Err(e) => wrap!(e),
+            Err(e) => wrap_err!(e),
         }
     }
 }

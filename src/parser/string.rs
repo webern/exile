@@ -1,18 +1,15 @@
-use crate::error::Result;
+use crate::parser::error::Result;
 use crate::parser::Iter;
 use crate::xdoc::is_whitespace;
 
 #[derive(Clone, Copy, Eq, PartialEq, Debug)]
 pub(crate) enum StringType {
     /// A string inside of an element, e.g. <element>string</element>.
-    /// TODO - things does not work for <element>some<p/>string</element>
     Element,
     /// An attribute value string surrounded by double quotes, e.g. `"value"`.
     AttributeDouble,
     /// An attribute value string surrounded by single quotes, e.g. `'value'`.
     AttributeSingle,
-    // TODO - support CDATA https://github.com/webern/exile/issues/28
-    // CDATA,
 }
 
 /// Parse a string that terminates based on some character(s) determined by `string_type`.
@@ -168,7 +165,8 @@ fn parse_hexidecimal_codepoint(iter: &mut Iter<'_>) -> Result<char> {
         data.push(iter.st.c);
         iter.advance_or_die()?;
     }
-    let codepoint = wrap!(u32::from_str_radix(data.as_str(), 16))?;
+    let codepoint = u32::from_str_radix(data.as_str(), 16)
+        .map_err(|e| create_parser_error!(&iter.st, "{}", e))?;
     let maybe_char = std::char::from_u32(codepoint);
     match maybe_char {
         Some(c) => Ok(c),
@@ -186,7 +184,9 @@ fn parse_decimal_codepoint(iter: &mut Iter<'_>) -> Result<char> {
         data.push(iter.st.c);
         iter.advance_or_die()?;
     }
-    let codepoint = wrap!(data.parse::<u32>())?;
+    let codepoint = data
+        .parse::<u32>()
+        .map_err(|e| create_parser_error!(&iter.st, "{}", e))?;
     let maybe_char = std::char::from_u32(codepoint);
     match maybe_char {
         Some(c) => Ok(c),

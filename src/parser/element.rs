@@ -1,15 +1,16 @@
-use crate::error::Result;
+use crate::parser::bang::parse_bang;
 use crate::parser::chars::is_name_start_char;
+use crate::parser::error::Result;
 use crate::parser::pi::parse_pi;
 use crate::parser::string::{parse_string, StringType};
-use crate::parser::{parse_name, skip_comment, Iter};
+use crate::parser::{parse_name, Iter};
 use crate::{Element, Misc, Node};
 
 pub(crate) fn parse_element(iter: &mut Iter<'_>) -> Result<Element> {
     expect!(iter, '<')?;
     iter.advance_or_die()?;
     let name = parse_name(iter)?;
-    let mut element = make_named_element(name.as_str())?;
+    let mut element = Element::from_name(name);
 
     // absorb whitespace
     iter.skip_whitespace()?;
@@ -18,6 +19,7 @@ pub(crate) fn parse_element(iter: &mut Iter<'_>) -> Result<Element> {
     if iter.is('/') {
         iter.advance_or_die()?;
         expect!(iter, '>')?;
+        iter.advance();
         return Ok(element);
     }
 
@@ -30,34 +32,17 @@ pub(crate) fn parse_element(iter: &mut Iter<'_>) -> Result<Element> {
     if iter.is('/') {
         iter.advance_or_die()?;
         expect!(iter, '>')?;
+        iter.advance();
         return Ok(element);
     }
 
     // now the only valid char is '>' and we reach the child nodes
     expect!(iter, '>')?;
-    iter.advance_or_die()?;
+    iter.advance_or_die()?; // TODO - is it really fatal if we cannot advance?
     parse_children(iter, &mut element)?;
-    // TODO - what validation should be done here? why is the iter being advanced?
-    // while iter.advance() {}
-    expect!(iter, '>')?;
-    Ok(element)
-}
-
-fn split_element_name(input: &str) -> Result<(&str, &str)> {
-    let split: Vec<&str> = input.split(':').collect();
-    match split.len() {
-        1 => Ok(("", split.first().unwrap())),
-        2 => Ok((split.first().unwrap(), split.last().unwrap())),
-        _ => raise!(""),
-    }
-}
-
-fn make_named_element(input: &str) -> Result<Element> {
-    let split = split_element_name(input)?;
-    let mut element = Element::from_name(split.1);
-    if !split.0.is_empty() {
-        element.set_prefix(split.0)?
-    }
+    debug_assert_eq!('>', iter.st.c);
+    iter.advance(); // TODO - should this be advance_or_die?
+    debug_assert_ne!('>', iter.st.c);
     Ok(element)
 }
 
@@ -93,7 +78,8 @@ fn attribute_start_quote(iter: &Iter<'_>) -> Result<(char, StringType)> {
     match c {
         '\'' => Ok((c, StringType::AttributeSingle)),
         '"' => Ok((c, StringType::AttributeDouble)),
-        _ => raise!(
+        _ => parse_err!(
+            iter,
             "expected attribute value to start with either a single or double quote, got '{}'",
             c
         ),
@@ -102,15 +88,11 @@ fn attribute_start_quote(iter: &Iter<'_>) -> Result<(char, StringType)> {
 
 /// Expects the iter to be pointing at the first character of the string.
 fn parse_attribute_value(iter: &mut Iter<'_>, string_type: StringType) -> Result<String> {
-    match string_type {
-        StringType::AttributeDouble | StringType::AttributeSingle => {
-            parse_string(iter, string_type)
-        }
-        _ => raise!(
-            "bug: the wrong function was called for a string of type: {:?}",
-            string_type
-        ),
-    }
+    debug_assert!(matches!(
+        string_type,
+        StringType::AttributeDouble | StringType::AttributeSingle
+    ));
+    parse_string(iter, string_type)
 }
 
 // this function takes over after an element's opening tag (the parent element) has been parsed.
@@ -129,31 +111,32 @@ fn parse_children(iter: &mut Iter<'_>, parent: &mut Element) -> Result<()> {
                 LTParse::Skip => {
                     // do nothing
                 }
-                LTParse::Some(node) => {
-                    parent.add_node(node);
-                }
+                LTParse::Some(node) => match node {
+                    Node::Element(elem) => parent.add_child(elem),
+                    Node::Text(text) => parent.add_text(text),
+                    Node::CData(cdata) => parent
+                        .add_cdata(cdata)
+                        .map_err(|e| create_parser_error!(&iter.st, "{}", e))?,
+                    Node::Misc(misc) => match misc {
+                        Misc::Comment(_) => panic!("comments unsupported"),
+                        Misc::PI(pi) => parent.add_pi(pi),
+                    },
+                    Node::DocType(_) => panic!("doctype unsupported"),
+                },
             }
         } else {
             let text = parse_text(iter)?;
             if !text.is_empty() {
-                parent.add_node(Node::Text(text));
+                parent.add_text(text);
             }
         }
-        // some parsing functions may return with the iter pointing to the last thing that was part
-        // of their construct, while others might advance the iter to the next char *after* the
-        // thing they parsed. to deal with this we check, are we pointing to a '<' currently? if so,
-        // we do not want to advance the iter. also, if we have reached the end, we want to break
-        // out of the loop.
-        if !iter.is('<') && !iter.advance() {
-            break;
-        }
     }
-    Ok(())
 }
 
 // the return type for `parse_lt`. since the caller of `parse_lt` doesn't know what type of node
 // has been encountered, this enum is used to describe what was parsed.
-enum LTParse {
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
+pub(super) enum LTParse {
     // the parsed entity was an EndTag.
     EndTag,
     // the parsed entity was an unsupported node type, i.e. something we want to skip.
@@ -164,10 +147,12 @@ enum LTParse {
 
 // parse the correct type of node (or end tag) when encountering a '<'
 fn parse_lt(iter: &mut Iter<'_>, parent: &mut Element) -> Result<LTParse> {
+    debug_assert_eq!('<', iter.st.c);
     let next = iter.peek_or_die()?;
-    // do the most common, hottest path first
+    // do the most common case first
     if is_name_start_char(next) {
         let element = parse_element(iter)?;
+        debug_assert_ne!('>', iter.st.c);
         return Ok(LTParse::Some(Node::Element(element)));
     }
     match next {
@@ -179,12 +164,7 @@ fn parse_lt(iter: &mut Iter<'_>, parent: &mut Element) -> Result<LTParse> {
             let pi = parse_pi(iter)?;
             Ok(LTParse::Some(Node::Misc(Misc::PI(pi))))
         }
-        '!' => {
-            // skip comment expects the iter to be advanced passed lt
-            iter.advance_or_die()?;
-            skip_comment(iter)?;
-            Ok(LTParse::Skip)
-        }
+        '!' => parse_bang(iter),
         _ => {
             // this error occurred on the peeked char, so to report the correct position of the
             // error, we will first advance the iter (if possible).
