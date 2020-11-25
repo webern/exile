@@ -4,11 +4,13 @@ use std::path::Path;
 use std::str::Chars;
 
 use crate::error::{display_char, parse_err, Error, ParseError, Result, ThrowSite, XmlSite};
+use crate::parser::bang::parse_bang;
 use crate::parser::chars::{is_name_char, is_name_start_char};
 use crate::parser::element::parse_element;
 use crate::parser::pi::{parse_pi, parse_pi_logic};
 use crate::{Declaration, Document, Encoding, Misc, Version};
 
+mod bang;
 mod chars;
 mod element;
 mod pi;
@@ -103,7 +105,16 @@ impl<'a> Iter<'a> {
                 self.st.position.increment(self.st.c);
                 true
             }
-            None => false,
+            None => {
+                // if we haven't already hit the end, the character will not be null. if that's the
+                // case, we increment the position one more time to point past the end.
+                if self.st.c != '\0' {
+                    self.st.position.increment(self.st.c);
+                }
+                // set the character to a null so nobody reads the previous position's character
+                self.st.c = '\0';
+                false
+            }
         }
     }
 
@@ -208,6 +219,11 @@ impl<'a> Iter<'a> {
             None => raise!(""),
         }
     }
+
+    /// Returns true if the character is `'\0'`, which means that the iter is exhausted.
+    pub(super) fn end(&self) -> bool {
+        self.st.c == '\0'
+    }
 }
 
 pub(crate) fn document_from_string<S: AsRef<str>>(s: S) -> crate::error::Result<Document> {
@@ -296,12 +312,8 @@ fn parse_document(iter: &mut Iter<'_>, document: &mut Document) -> Result<()> {
                 }
             },
             '!' => {
-                iter.advance_or_die()?;
-                if iter.peek_is('-') {
-                    skip_comment(iter)?;
-                } else {
-                    skip_doctype(iter)?
-                }
+                let _ltparse = parse_bang(iter)?;
+                // TODO - add it if appropriate
             }
             _ => {
                 document.set_root(parse_element(iter)?);
@@ -309,7 +321,7 @@ fn parse_document(iter: &mut Iter<'_>, document: &mut Document) -> Result<()> {
             }
         }
 
-        if !iter.advance() {
+        if iter.end() {
             break;
         }
     }
@@ -428,59 +440,49 @@ fn parse_name(iter: &mut Iter<'_>) -> Result<String> {
     Ok(name)
 }
 
-// takes the iter after a '<' and when it is pointing at a '!'. returns when '-->' is encountered.
-// will not work if the node being parsed is a DOCTYPE, you must already know it to be a comment.
-// TODO - support comments https://github.com/webern/exile/issues/27
-pub(crate) fn skip_comment(iter: &mut Iter<'_>) -> Result<()> {
-    expect!(iter, '!')?;
-    iter.advance_or_die()?;
-    expect!(iter, '-')?;
-    iter.advance_or_die()?;
-    expect!(iter, '-')?;
-    iter.advance_or_die()?;
-    let mut consecutive_dashes: u8 = 0;
-    loop {
-        if iter.is('-') {
-            consecutive_dashes += 1;
-        } else if iter.is('>') && consecutive_dashes == 2 {
-            break;
-        } else {
-            consecutive_dashes = 0;
-        }
-        iter.advance_or_die()?;
-    }
-    Ok(())
-}
-
-// takes the iter after a '<' and when it is pointing at a '!'. returns when '>' is encountered.
-// will not work if the node being parsed is a comment, you must already know it to be a DOCTYPE
-// TODO - support doctypes https://github.com/webern/exile/issues/22
-pub(crate) fn skip_doctype(iter: &mut Iter<'_>) -> Result<()> {
-    expect!(iter, '!')?;
-    while !iter.is('>') {
-        if iter.is('[') {
-            skip_nested_doctype_stuff(iter)?
-        }
-        iter.advance_or_die()?;
-    }
-    Ok(())
-}
-
-// takes the iter when it is inside if a <!DOCTYPE construct and has encountered the '[' char.
-// ignores everything and returns the iter when it is pointing to the first encountered ']'
-// TODO - support doctypes https://github.com/webern/exile/issues/22
-pub(crate) fn skip_nested_doctype_stuff(iter: &mut Iter<'_>) -> Result<()> {
-    expect!(iter, '[')?;
-    iter.advance_or_die()?;
-    while !iter.is(']') {
-        iter.advance_or_die()?;
-    }
-    Ok(())
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // TESTS
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#[test]
+fn xml_00() {
+    let xml = "<doc/>";
+    let doc = document_from_string(xml).unwrap();
+    assert!(doc.declaration().version.is_none());
+    assert!(doc.declaration().encoding.is_none());
+    assert_eq!(0, doc.root().nodes_len());
+    assert_eq!("doc", doc.root().fullname());
+}
+
+#[test]
+fn xml_01() {
+    let xml = r#"<?xml version="1.0" encoding="UTF-8"?><doc/>"#;
+    let doc = document_from_string(xml).unwrap();
+    assert_eq!(Version::V10, doc.declaration().version.unwrap());
+    assert_eq!(Encoding::Utf8, doc.declaration().encoding.unwrap());
+    assert_eq!(0, doc.root().nodes_len());
+    assert_eq!("doc", doc.root().fullname());
+}
+
+#[test]
+fn xml_02() {
+    let xml = r#"<?xml encoding="UTF-8"?><doc/>"#;
+    let doc = document_from_string(xml).unwrap();
+    assert!(doc.declaration().version.is_none());
+    assert_eq!(Encoding::Utf8, doc.declaration().encoding.unwrap());
+    assert_eq!(0, doc.root().nodes_len());
+    assert_eq!("doc", doc.root().fullname());
+}
+
+#[test]
+fn xml_03() {
+    let xml = r#"<?xml version="1.0"?><doc/>"#;
+    let doc = document_from_string(xml).unwrap();
+    assert_eq!(Version::V10, doc.declaration().version.unwrap());
+    assert!(doc.declaration().encoding.is_none());
+    assert_eq!(0, doc.root().nodes_len());
+    assert_eq!("doc", doc.root().fullname());
+}
 
 #[cfg(test)]
 mod tests {

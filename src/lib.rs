@@ -10,6 +10,7 @@ Currently supported:
 - Elements
 - Attributes
 - Text Nodes
+- CDATA Sections
 - Processing Instructions
 - UTF-8
 - Whitespace Normalization

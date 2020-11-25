@@ -1,10 +1,11 @@
 use std::io::Write;
 
+use crate::xdoc::cdata::write_cdata;
 use crate::xdoc::error::Result;
-use crate::xdoc::write_ops::write_element_string;
+use crate::xdoc::write_ops::write_element_text;
 use crate::{Element, WriteOpts};
 
-#[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialOrd, Ord, PartialEq, Hash)]
 /// Represents a Node in an XML Document. The Document consists of a recursive nesting of these.
 pub enum Node {
     /// `<element/>`
@@ -13,8 +14,7 @@ pub enum Node {
     /// Text data in an element, i.e. `<x>hello &lt;</x>` where the `Text` is `hello <`.
     Text(String),
 
-    // TODO - support CDATA https://github.com/webern/exile/issues/28
-    /// `<![CDATA[text]]>` - not implemented
+    /// `<![CDATA[text]]>`
     CData(String),
 
     /// Represents comments, processing instructions and whitespace.
@@ -39,13 +39,8 @@ impl Node {
     {
         match self {
             Node::Element(data) => data.write(writer, opts, depth),
-            Node::Text(s) => {
-                write_element_string(s.as_str(), writer, opts, depth)?;
-                Ok(())
-            }
-            Node::CData(_) => {
-                Ok(()) /*TODO - implement*/
-            }
+            Node::Text(s) => write_element_text(s.as_str(), writer, opts, depth),
+            Node::CData(cdata) => write_cdata(cdata, writer),
             Node::Misc(m) => m.write(writer, opts, depth),
             Node::DocType(_) => {
                 Ok(()) /*TODO - implement*/
@@ -63,7 +58,7 @@ impl Node {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialOrd, Ord, PartialEq, Hash)]
 // TODO - support Whitespace https://github.com/webern/exile/issues/55
 /// Represents a "Misc" entry, which is a Processing Instruction (PI), Comment, or Whitespace
 pub enum Misc {

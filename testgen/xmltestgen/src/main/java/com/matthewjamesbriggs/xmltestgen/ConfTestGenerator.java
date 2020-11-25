@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 
 class ConfTestGenerator {
     /// The maximum number of W3C tests of ConfType.Valid that will be generated.
-    private static final int MAX_VALID = 17;
+    private static final int MAX_VALID = 20;
     /// The maximum number of W3C tests of ConfType.NotWellFormed that will be generated.
     private static final int MAX_NOT_WELL_FORMED = 5;
     /// The tests directory, e.g. exile_repo/exile/tests
@@ -459,6 +459,7 @@ class ConfTestGenerator {
                     writeProcessingInstruction((ProcessingInstruction) child, parentVariableName, os);
                     break;
                 case CData:
+                    writeCdataChild(parentVariableName, parentGeneration, i, (CDATASection) child, t, doc, os);
                 case EntityReference:
                 case Entity:
                 case Comment:
@@ -572,6 +573,16 @@ class ConfTestGenerator {
         s = s.replaceAll("\f", "\\\\f");
         s = s.replaceAll("\u00a0", "\\\\u{00a0}");
         return s;
+    }
+
+    private static void writeCdataChild(String parentVariableName,
+                                        int parentGeneration,
+                                        int i,
+                                        CDATASection child,
+                                        ConfTest t,
+                                        Document doc,
+                                        OutputStreamWriter os) throws TestGenException {
+        F.writeln(os, "%s.add_cdata(%s).unwrap();", parentVariableName, rustStringLiteral(child.getData()));
     }
 
     private static void writeElementChild(String parentVariableName,

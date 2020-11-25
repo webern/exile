@@ -25,7 +25,7 @@ use crate::xdoc::WriteOpts;
 /// > may be used for formal declaration of PI targets. Parameter entity references must not be
 /// > recognized within processing instructions.
 ///
-#[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash, Default)]
+#[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Ord, Hash, Default)]
 pub struct PI {
     /// The processing instruction target.
     pub target: String,

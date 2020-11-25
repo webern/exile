@@ -5,7 +5,7 @@ use std::io::{Cursor, Write};
 use crate::xdoc::error::Result;
 use crate::{Element, Misc, WriteOpts};
 
-#[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
+#[derive(Debug, Clone, Copy, Eq, Ord, PartialOrd, PartialEq, Hash)]
 /// Represents the XML Version being used.
 pub enum Version {
     /// The XML Version is 1.0.
@@ -20,7 +20,7 @@ impl Default for Version {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
+#[derive(Debug, Clone, Copy, Eq, Ord, PartialOrd, PartialEq, Hash)]
 /// The encoding of the XML Document, currently only UTF-8 is supported.
 pub enum Encoding {
     /// The encoding is UTF-8.
@@ -33,7 +33,7 @@ impl Default for Encoding {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash, Default)]
+#[derive(Debug, Clone, Copy, Eq, Ord, PartialOrd, PartialEq, Hash, Default)]
 /// The XML declaration at the start of the XML Document.
 pub struct Declaration {
     /// The version of the XML Document. `None` is the same as `Version::V10` except that it is not

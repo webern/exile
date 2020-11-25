@@ -357,7 +357,7 @@ macro_rules! expect {
 /// iter: required as the first argument, `Iter`
 /// message: optional, can be a string or a format
 macro_rules! parse_err {
-    // required: first argument must be the ParserState object
+    // required: first argument must be the Iter object
     ($iter:expr) => { Err(create_parser_error!(&$iter.st)) };
     // optional: second argument can be a simple string message
     ($iter:expr, $msg:expr) => { Err(create_parser_error!(&$iter.st, $msg) ) };

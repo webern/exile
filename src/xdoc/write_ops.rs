@@ -114,7 +114,7 @@ where
 }
 
 // writes a string escaping as necessary for inclusion in an element.
-pub(crate) fn write_element_string<W, S>(
+pub(crate) fn write_element_text<W, S>(
     s: S,
     writer: &mut W,
     _opts: &WriteOpts,

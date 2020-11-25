@@ -26,6 +26,7 @@ pub use crate::xdoc::error::Result;
 #[macro_use]
 pub mod error;
 
+mod cdata;
 mod chars;
 mod doc;
 mod element;

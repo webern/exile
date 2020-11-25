@@ -117,6 +117,14 @@ impl PartialOrd for OrdMap {
     }
 }
 
+impl Ord for OrdMap {
+    fn cmp(&self, other: &Self) -> Ordering {
+        let ordering = self.partial_cmp(other);
+        // TODO - I think I implemented these backwards, maybe all I needed was Ord not PartialOrd
+        ordering.unwrap()
+    }
+}
+
 impl fmt::Debug for OrdMap {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0.fmt(f)

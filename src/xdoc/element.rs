@@ -1,12 +1,13 @@
 use std::io::Write;
 
+use crate::xdoc::cdata::check_cdata;
 use crate::xdoc::error::{Result, XDocErr};
 use crate::xdoc::ord_map::OrdMap;
 use crate::xdoc::write_ops::write_attribute_value;
 use crate::xdoc::Name;
 use crate::{Misc, Node, WriteOpts, PI};
 
-#[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialOrd, Ord, PartialEq, Hash)]
 /// Represents an Element in an XML Document.
 pub struct Element {
     /// The name of this element, which may contain a prefix part, such as `ns` in `ns:foo`.
@@ -71,9 +72,13 @@ impl Element {
         self.nodes.push(Node::Element(element))
     }
 
-    /// Add a node of any kind as a child of this element.
-    pub fn add_node(&mut self, node: Node) {
-        self.nodes.push(node)
+    /// Add a `CDATA` node. Will error if the string contains `]]>` as this cannot be represented in
+    /// a `CDATA` node.
+    pub fn add_cdata<S: Into<String>>(&mut self, cdata: S) -> Result<()> {
+        let cdata = cdata.into();
+        check_cdata(cdata.as_str())?;
+        self.nodes.push(Node::CData(cdata));
+        Ok(())
     }
 
     /// Get the number of nodes (of any kind) that are children of this node.
