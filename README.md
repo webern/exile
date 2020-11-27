@@ -1,6 +1,6 @@
 # exile
 
-Current version: 0.0.3
+Current version: 0.0.4
 
 ![build](https://github.com/webern/exile/workflows/exile%20ci/badge.svg)
 
@@ -10,19 +10,19 @@ The goal, at least initially, is to provide an abstract syntax tree of an XML fi
 As such, this is a Exile is a dom parser and loads the complete contents of the document into memory.
 
 Currently supported:
-- Elements
 - Attributes
-- Text Nodes
 - CDATA Sections
+- Comment Parsing
+- Elements
 - Processing Instructions
+- Text Nodes
 - UTF-8
 - Whitespace Normalization
 
 Not Supported:
+- Doctypes
 - Entities
 - Entity References
-- Doctypes
-- Comment Parsing
 - Other Encodings
 - Whitesace Preservation: All text nodes are treated as if whitespace `collapse` were in-effect.
 
