@@ -1,14 +1,21 @@
 // generated file, do not edit
 
-use crate::test_utils::run_parse_test;
+use crate::test_utils::{run_output_test, run_parse_test};
 use exile::{Declaration, Document, Encoding, Version};
 
 const INPUT_FILE: &str = "exile_pi.xml";
+const OUTPUT_FILE: &str = "exile_pi.output.xml";
 
 #[test]
 /// a simple file with processing instructions
 fn pi_parse() {
     run_parse_test(INPUT_FILE, &expected());
+}
+
+#[test]
+/// Check that the serialization of this XML document matches what we expect.
+fn pi_serialize() {
+    run_output_test(OUTPUT_FILE, &expected());
 }
 
 fn expected() -> Document {

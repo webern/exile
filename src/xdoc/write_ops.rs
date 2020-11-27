@@ -122,6 +122,7 @@ where
             '<' => better_wrap!(write!(writer, "&lt;"))?,
             '>' => better_wrap!(write!(writer, "&gt;"))?,
             '&' => better_wrap!(write!(writer, "&amp;"))?,
+            '\u{a0}' => better_wrap!(write!(writer, "&#xA0;"))?,
             _ => better_wrap!(write!(writer, "{}", c))?,
         }
     }
