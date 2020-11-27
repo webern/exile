@@ -1,7 +1,7 @@
 [package]
 name = "exile"
-version = "0.0.3"
-description = "Nacent XML DOM Library"
+version = "0.0.4"
+description = "DOM-Style XML Parser"
 authors = ["Matthew James Briggs <matthew.james.briggs@gmail.com>"]
 categories = ["encoding", "parser-implementations", "parsing"]
 edition = "2018"

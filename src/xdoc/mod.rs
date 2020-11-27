@@ -48,6 +48,6 @@ mod tests {
         assert!(result.is_ok());
         let data = c.into_inner();
         let data_str = std::str::from_utf8(data.as_slice()).unwrap();
-        assert_eq!("<root-element/>", data_str);
+        assert_eq!("<root-element/>\n", data_str);
     }
 }

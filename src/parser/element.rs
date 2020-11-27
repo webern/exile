@@ -4,7 +4,7 @@ use crate::parser::error::Result;
 use crate::parser::pi::parse_pi;
 use crate::parser::string::{parse_string, StringType};
 use crate::parser::{parse_name, Iter};
-use crate::{Element, Misc, Node};
+use crate::{Element, Node};
 
 pub(crate) fn parse_element(iter: &mut Iter<'_>) -> Result<Element> {
     expect!(iter, '<')?;
@@ -117,10 +117,10 @@ fn parse_children(iter: &mut Iter<'_>, parent: &mut Element) -> Result<()> {
                     Node::CData(cdata) => parent
                         .add_cdata(cdata)
                         .map_err(|e| create_parser_error!(&iter.st, "{}", e))?,
-                    Node::Misc(misc) => match misc {
-                        Misc::Comment(_) => panic!("comments unsupported"),
-                        Misc::PI(pi) => parent.add_pi(pi),
-                    },
+                    Node::Comment(comment) => parent
+                        .add_comment(comment)
+                        .map_err(|e| create_parser_error!(&iter.st, "{}", e))?,
+                    Node::PI(pi) => parent.add_pi(pi),
                     Node::DocType(_) => panic!("doctype unsupported"),
                 },
             }
@@ -162,7 +162,7 @@ fn parse_lt(iter: &mut Iter<'_>, parent: &mut Element) -> Result<LTParse> {
         }
         '?' => {
             let pi = parse_pi(iter)?;
-            Ok(LTParse::Some(Node::Misc(Misc::PI(pi))))
+            Ok(LTParse::Some(Node::PI(pi)))
         }
         '!' => parse_bang(iter),
         _ => {

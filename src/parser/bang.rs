@@ -19,8 +19,8 @@ pub(super) fn parse_bang(iter: &mut Iter<'_>) -> Result<LTParse> {
     match next {
         '-' => {
             // skip comment expects the iter to be advanced passed lt
-            skip_comment(iter)?;
-            Ok(LTParse::Skip)
+            let comment = parse_comment(iter)?;
+            Ok(LTParse::Some(Node::Comment(comment)))
         }
         '[' => {
             let cdata = parse_cdata(iter)?;
@@ -38,13 +38,14 @@ pub(super) fn parse_bang(iter: &mut Iter<'_>) -> Result<LTParse> {
 /// Advances the iterator past a comment. Takes the iterator pointing at `!` and returns the
 /// iterator pointing at the first character after the closing '>'. Returns an error  if it is not a
 /// well-formed comment.
-fn skip_comment(iter: &mut Iter<'_>) -> Result<()> {
+fn parse_comment(iter: &mut Iter<'_>) -> Result<String> {
     expect!(iter, '!')?;
     iter.advance_or_die()?;
     expect!(iter, '-')?;
     iter.advance_or_die()?;
     expect!(iter, '-')?;
     iter.advance_or_die()?;
+    let mut comment = String::new();
     loop {
         if iter.is('-') && iter.peek_is('-') {
             // advance to the second dash
@@ -56,12 +57,14 @@ fn skip_comment(iter: &mut Iter<'_>) -> Result<()> {
             } else {
                 return parse_err!(iter, "-- is not allowed in a comment string");
             }
+        } else {
+            comment.push(iter.st.c);
         }
         iter.advance_or_die()?;
     }
     // advance the iter to the char following -->
     iter.advance();
-    Ok(())
+    Ok(comment)
 }
 
 // TODO - support doctypes https://github.com/webern/exile/issues/22
@@ -259,12 +262,11 @@ fn parse_bang_doctype() {
     assert_eq!(iter_char_after, iter.st.c);
 }
 
-// TODO - write real tests for comments https://github.com/webern/exile/issues/27
 #[test]
 fn parse_bang_comment_1() {
     let data = r#"<!-- foo -->x"#;
     let iter_char_after = 'x';
-    let expected = LTParse::Skip;
+    let expected = LTParse::Some(Node::Comment(" foo ".into()));
     let mut iter = Iter::new(data).unwrap();
     let actual = parse_bang(&mut iter).unwrap();
     assert_eq!(expected, actual);
@@ -273,6 +275,28 @@ fn parse_bang_comment_1() {
 
 #[test]
 fn parse_bang_comment_2() {
+    let data = r#"<!-- foo-->x"#;
+    let iter_char_after = 'x';
+    let expected = LTParse::Some(Node::Comment(" foo".into()));
+    let mut iter = Iter::new(data).unwrap();
+    let actual = parse_bang(&mut iter).unwrap();
+    assert_eq!(expected, actual);
+    assert_eq!(iter_char_after, iter.st.c);
+}
+
+#[test]
+fn parse_bang_comment_3() {
+    let data = r#"<!--foo-->x"#;
+    let iter_char_after = 'x';
+    let expected = LTParse::Some(Node::Comment("foo".into()));
+    let mut iter = Iter::new(data).unwrap();
+    let actual = parse_bang(&mut iter).unwrap();
+    assert_eq!(expected, actual);
+    assert_eq!(iter_char_after, iter.st.c);
+}
+
+#[test]
+fn parse_bang_comment_bad_1() {
     let data = r#"<!-- -- -->x"#;
     let mut iter = Iter::new(data).unwrap();
     let result = parse_bang(&mut iter);

@@ -3,26 +3,29 @@ use std::io::Write;
 use crate::xdoc::cdata::write_cdata;
 use crate::xdoc::error::Result;
 use crate::xdoc::write_ops::write_element_text;
-use crate::{Element, WriteOpts};
+use crate::{Element, WriteOpts, PI};
 
 #[derive(Debug, Clone, Eq, PartialOrd, Ord, PartialEq, Hash)]
 /// Represents a Node in an XML Document. The Document consists of a recursive nesting of these.
 pub enum Node {
-    /// `<element/>`
-    Element(Element),
-
-    /// Text data in an element, i.e. `<x>hello &lt;</x>` where the `Text` is `hello <`.
-    Text(String),
-
     /// `<![CDATA[text]]>`
     CData(String),
 
-    /// Represents comments, processing instructions and whitespace.
-    Misc(Misc),
+    /// Comment, e.g. `<!--some comment-->`
+    Comment(String),
 
     // TODO - support doctypes https://github.com/webern/exile/issues/22
     /// `<!DOCTYPE doc>` - not implemented
     DocType(String),
+
+    /// `<element/>`
+    Element(Element),
+
+    /// Processing Instruction, e.g. `<?target data?>`
+    PI(PI),
+
+    /// Text data in an element, i.e. `<x>hello &lt;</x>` where the `Text` is `hello <`.
+    Text(String),
 }
 
 impl Default for Node {
@@ -38,13 +41,12 @@ impl Node {
         W: Write,
     {
         match self {
-            Node::Element(data) => data.write(writer, opts, depth),
-            Node::Text(s) => write_element_text(s.as_str(), writer, opts, depth),
             Node::CData(cdata) => write_cdata(cdata, writer),
-            Node::Misc(m) => m.write(writer, opts, depth),
-            Node::DocType(_) => {
-                Ok(()) /*TODO - implement*/
-            }
+            Node::Comment(comment) => write_comment(writer, opts, depth, comment),
+            Node::DocType(_) => panic!("doctypes unsupported"),
+            Node::Element(data) => data.write(writer, opts, depth),
+            Node::PI(pi) => pi.write(writer, opts, depth),
+            Node::Text(s) => write_element_text(s.as_str(), writer, opts, depth),
         }
     }
 
@@ -60,7 +62,8 @@ impl Node {
 
 #[derive(Debug, Clone, Eq, PartialOrd, Ord, PartialEq, Hash)]
 // TODO - support Whitespace https://github.com/webern/exile/issues/55
-/// Represents a "Misc" entry, which is a Processing Instruction (PI), Comment, or Whitespace
+/// Represents a "Misc" entry, which is a Processing Instruction (PI), Comment, or Whitespace. These
+/// are the types of nodes allowed in the prologue and epilogue of an XML document.
 pub enum Misc {
     // TODO - support comments https://github.com/webern/exile/issues/22
     /// `<!-- comment -->` - not implemented
@@ -77,14 +80,23 @@ impl Default for Misc {
 
 impl Misc {
     /// Serialize the XML Document to a `Write` stream.
-    pub fn write<W>(&self, writer: &mut W, opts: &WriteOpts, depth: usize) -> Result<()>
+    pub(crate) fn write<W>(&self, writer: &mut W, opts: &WriteOpts, depth: usize) -> Result<()>
     where
         W: Write,
     {
         match self {
-            // TODO - implement comments https://github.com/webern/exile/issues/27
-            Misc::Comment(_) => unimplemented!(),
+            Misc::Comment(comment) => write_comment(writer, opts, depth, comment),
             Misc::PI(pi) => pi.write(writer, opts, depth),
         }
     }
+}
+
+fn write_comment<W, S>(writer: &mut W, opts: &WriteOpts, depth: usize, comment: S) -> Result<()>
+where
+    W: Write,
+    S: AsRef<str>,
+{
+    opts.indent(writer, depth)?;
+    xwrite!(writer, "<!--{}-->", comment.as_ref())?;
+    Ok(())
 }

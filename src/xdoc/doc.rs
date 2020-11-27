@@ -1,9 +1,11 @@
 use std::borrow::Cow;
 use std::default::Default;
 use std::io::{Cursor, Write};
+use std::path::Path;
 
+use crate::error::OtherError;
 use crate::xdoc::error::Result;
-use crate::{Element, Misc, WriteOpts};
+use crate::{Element, Misc, WriteOpts, PI};
 
 #[derive(Debug, Clone, Copy, Eq, Ord, PartialOrd, PartialEq, Hash)]
 /// Represents the XML Version being used.
@@ -124,24 +126,38 @@ impl Document {
         self.declaration = declaration;
     }
 
-    /// Add a `Misc` before the root element.
-    pub fn push_prolog_misc(&mut self, misc: Misc) {
-        self.prolog_misc.push(misc)
+    /// Add a comment before the document root element.
+    pub fn add_prolog_comment<S: Into<String>>(&mut self, comment: S) -> Result<()> {
+        // TODO check for --
+        self.prolog_misc.push(Misc::Comment(comment.into()));
+        Ok(())
     }
 
-    /// Clear all `Misc` entries before the root element.
+    /// Add a processing instruction before the document root element.
+    pub fn add_prolog_pi(&mut self, pi: PI) {
+        self.prolog_misc.push(Misc::PI(pi));
+    }
+
+    /// Remove all `PI` and comment entries before the root element.
     pub fn clear_prolog_misc(&mut self) {
         self.prolog_misc.clear()
     }
 
-    /// Access the `Misc` entries after the root element.
-    pub fn epilog_misc(&self) -> std::slice::Iter<'_, Misc> {
-        self.epilog_misc.iter()
+    /// Access the `Misc` entries before the root element.
+    pub fn prolog_misc(&self) -> std::slice::Iter<'_, Misc> {
+        self.prolog_misc.iter()
     }
 
-    /// Add a `Misc` after the root element.
-    pub fn push_epilog_misc(&mut self, misc: Misc) {
-        self.epilog_misc.push(misc)
+    /// Add a comment after the document root element.
+    pub fn add_epilog_comment<S: Into<String>>(&mut self, comment: S) -> Result<()> {
+        // TODO check for --
+        self.epilog_misc.push(Misc::Comment(comment.into()));
+        Ok(())
+    }
+
+    /// Add a processing instruction after the document root element.
+    pub fn add_epilog_pi(&mut self, pi: PI) {
+        self.epilog_misc.push(Misc::PI(pi));
     }
 
     /// Clear all `Misc` entries after the root element.
@@ -149,9 +165,9 @@ impl Document {
         self.epilog_misc.clear()
     }
 
-    /// Access the `Misc` entries before the root element.
-    pub fn prolog_misc(&self) -> std::slice::Iter<'_, Misc> {
-        self.prolog_misc.iter()
+    /// Access the `Misc` entries after the root element.
+    pub fn epilog_misc(&self) -> std::slice::Iter<'_, Misc> {
+        self.epilog_misc.iter()
     }
 
     /// Write the `Document` to the `Write` object.
@@ -204,6 +220,7 @@ impl Document {
             opts.newline(writer)?;
             misc.write(writer, opts, 0)?;
         }
+        opts.newline(writer)?;
         Ok(())
     }
 
@@ -217,6 +234,17 @@ impl Document {
             Err(e) => wrap_err!(e),
         }
     }
+
+    /// Save a document to a file.
+    pub fn save<P: AsRef<Path>>(&self, path: P) -> crate::error::Result<()> {
+        std::fs::write(path.as_ref(), self.to_string().as_bytes()).map_err(|e| {
+            crate::error::Error::Other(OtherError {
+                throw_site: throw_site!(),
+                message: Some(format!("Unable to save file '{}'", path.as_ref().display())),
+                source: Some(Box::new(e)),
+            })
+        })
+    }
 }
 
 impl ToString for Document {
@@ -228,20 +256,6 @@ impl ToString for Document {
         }
     }
 }
-
-// a macro for creating a btree map, kind of like vec!
-#[allow(unused_macros)]
-macro_rules! map (
-    { $($key:expr => $value:expr),+ } => {
-        {
-            let mut m = ::std::collections::BTreeMap::new();
-            $(
-                m.insert($key, $value);
-            )+
-            m
-        }
-     };
-);
 
 #[cfg(test)]
 mod tests {
@@ -292,7 +306,8 @@ mod tests {
 <cats>
   <cat name="bones"/>
   <cat name="bishop">punks</cat>
-</cats>"#;
+</cats>
+"#;
 
     fn create_ezfile() -> Document {
         let mut bones = Element::from_name("cat");
@@ -330,7 +345,8 @@ mod tests {
 
     #[test]
     fn test_escapes() {
-        let expected = r#"<root attr="&lt;&amp;&gt;&quot;🍔&quot;''">&amp;&amp;&amp;&lt;&lt;&lt;'"🍔"'&gt;&gt;&gt;&amp;&amp;&amp;</root>"#;
+        let mut expected = r#"<root attr="&lt;&amp;&gt;&quot;🍔&quot;''">&amp;&amp;&amp;&lt;&lt;&lt;'"🍔"'&gt;&gt;&gt;&amp;&amp;&amp;</root>"#.to_owned();
+        expected.push('\n');
         let mut root = Element::default();
         root.set_name("root");
         root.add_attribute("attr", "<&>\"🍔\"\'\'");

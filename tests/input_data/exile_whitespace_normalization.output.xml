@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <text>Hello World</text>
+  <text>Hello World</text>
+  <text>&#xA0;&#xA0;Hello&#xA0;&#xA0;World&#xA0;&#xA0;</text>
+  <text>Hello World</text>
+  <text>Hello World</text>
+  <text>&#xA0;</text>
+</root>
