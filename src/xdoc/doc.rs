@@ -243,20 +243,6 @@ impl ToString for Document {
     }
 }
 
-// a macro for creating a btree map, kind of like vec!
-#[allow(unused_macros)]
-macro_rules! map (
-    { $($key:expr => $value:expr),+ } => {
-        {
-            let mut m = ::std::collections::BTreeMap::new();
-            $(
-                m.insert($key, $value);
-            )+
-            m
-        }
-     };
-);
-
 #[cfg(test)]
 mod tests {
     use std::io::Cursor;
