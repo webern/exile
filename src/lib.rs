@@ -83,6 +83,7 @@ mod macros;
 pub mod error;
 pub mod parser;
 mod xdoc;
+mod xdocv2;
 
 /// Parse an XML file held in string contents.
 pub fn parse<S: AsRef<str>>(xml: S) -> crate::error::Result<Document> {
