@@ -195,6 +195,13 @@ impl Element {
         self.nodes.push(Node::PI(pi))
     }
 
+    /// Append a processing instruction to this element's nodes.
+    pub fn add_comment<S: Into<String>>(&mut self, comment: S) -> Result<()> {
+        // TODO - check for disallowed --
+        self.nodes.push(Node::Comment(comment.into()));
+        Ok(())
+    }
+
     /// Does this element have any sub elements. For example, if the element is empty or contains
     /// only text and/or pis and/or comments, then false. if the element has elements, then true.
     pub fn has_children(&self) -> bool {

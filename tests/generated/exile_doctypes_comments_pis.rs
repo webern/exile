@@ -18,16 +18,17 @@ fn expected() -> Document {
         encoding: None,
     });
     // TODO - write doctype information
-    doc.push_prolog_misc(exile::Misc::PI(exile::PI {
+    doc.add_prolog_pi(exile::PI {
         target: r#"pi"#.into(),
         data: r#"before doctype "#.into(),
-    }));
-    doc.push_prolog_misc(exile::Misc::PI(exile::PI {
+    });
+    doc.add_prolog_pi(exile::PI {
         target: r#"pi"#.into(),
         data: r#"after doctype "#.into(),
-    }));
+    });
     let root = doc.root_mut();
     root.set_name(r#"note"#);
+    root.add_comment(r#" comment as element node "#).unwrap();
     let gen1n1 = root.add_new_child().unwrap();
     gen1n1.set_name(r#"to"#);
     gen1n1.add_text(r#"Tove"#);
@@ -44,9 +45,9 @@ fn expected() -> Document {
     let gen1n4 = root.add_new_child().unwrap();
     gen1n4.set_name(r#"body"#);
     gen1n4.add_text(r#"Don't forget me this weekend"#);
-    doc.push_epilog_misc(exile::Misc::PI(exile::PI {
+    doc.add_epilog_pi(exile::PI {
         target: r#"pi"#.into(),
         data: r#"at the end "#.into(),
-    }));
+    });
     doc
 }

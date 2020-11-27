@@ -5,7 +5,7 @@ use std::path::Path;
 
 use crate::error::OtherError;
 use crate::xdoc::error::Result;
-use crate::{Element, Misc, WriteOpts};
+use crate::{Element, Misc, WriteOpts, PI};
 
 #[derive(Debug, Clone, Copy, Eq, Ord, PartialOrd, PartialEq, Hash)]
 /// Represents the XML Version being used.
@@ -126,24 +126,38 @@ impl Document {
         self.declaration = declaration;
     }
 
-    /// Add a `Misc` before the root element.
-    pub fn push_prolog_misc(&mut self, misc: Misc) {
-        self.prolog_misc.push(misc)
+    /// Add a comment before the document root element.
+    pub fn add_prolog_comment<S: Into<String>>(&mut self, comment: S) -> Result<()> {
+        // TODO check for --
+        self.prolog_misc.push(Misc::Comment(comment.into()));
+        Ok(())
     }
 
-    /// Clear all `Misc` entries before the root element.
+    /// Add a processing instruction before the document root element.
+    pub fn add_prolog_pi(&mut self, pi: PI) {
+        self.prolog_misc.push(Misc::PI(pi));
+    }
+
+    /// Remove all `PI` and comment entries before the root element.
     pub fn clear_prolog_misc(&mut self) {
         self.prolog_misc.clear()
     }
 
-    /// Access the `Misc` entries after the root element.
-    pub fn epilog_misc(&self) -> std::slice::Iter<'_, Misc> {
-        self.epilog_misc.iter()
+    /// Access the `Misc` entries before the root element.
+    pub fn prolog_misc(&self) -> std::slice::Iter<'_, Misc> {
+        self.prolog_misc.iter()
     }
 
-    /// Add a `Misc` after the root element.
-    pub fn push_epilog_misc(&mut self, misc: Misc) {
-        self.epilog_misc.push(misc)
+    /// Add a comment after the document root element.
+    pub fn add_epilog_comment<S: Into<String>>(&mut self, comment: S) -> Result<()> {
+        // TODO check for --
+        self.epilog_misc.push(Misc::Comment(comment.into()));
+        Ok(())
+    }
+
+    /// Add a processing instruction after the document root element.
+    pub fn add_epilog_pi(&mut self, pi: PI) {
+        self.epilog_misc.push(Misc::PI(pi));
     }
 
     /// Clear all `Misc` entries after the root element.
@@ -151,9 +165,9 @@ impl Document {
         self.epilog_misc.clear()
     }
 
-    /// Access the `Misc` entries before the root element.
-    pub fn prolog_misc(&self) -> std::slice::Iter<'_, Misc> {
-        self.prolog_misc.iter()
+    /// Access the `Misc` entries after the root element.
+    pub fn epilog_misc(&self) -> std::slice::Iter<'_, Misc> {
+        self.epilog_misc.iter()
     }
 
     /// Write the `Document` to the `Write` object.

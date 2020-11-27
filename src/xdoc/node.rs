@@ -42,7 +42,7 @@ impl Node {
     {
         match self {
             Node::CData(cdata) => write_cdata(cdata, writer),
-            Node::Comment(_) => panic!("comments unsupported"),
+            Node::Comment(comment) => write_comment(writer, opts, depth, comment),
             Node::DocType(_) => panic!("doctypes unsupported"),
             Node::Element(data) => data.write(writer, opts, depth),
             Node::PI(pi) => pi.write(writer, opts, depth),
@@ -62,7 +62,8 @@ impl Node {
 
 #[derive(Debug, Clone, Eq, PartialOrd, Ord, PartialEq, Hash)]
 // TODO - support Whitespace https://github.com/webern/exile/issues/55
-/// Represents a "Misc" entry, which is a Processing Instruction (PI), Comment, or Whitespace
+/// Represents a "Misc" entry, which is a Processing Instruction (PI), Comment, or Whitespace. These
+/// are the types of nodes allowed in the prologue and epilogue of an XML document.
 pub enum Misc {
     // TODO - support comments https://github.com/webern/exile/issues/22
     /// `<!-- comment -->` - not implemented
@@ -79,14 +80,23 @@ impl Default for Misc {
 
 impl Misc {
     /// Serialize the XML Document to a `Write` stream.
-    pub fn write<W>(&self, writer: &mut W, opts: &WriteOpts, depth: usize) -> Result<()>
+    pub(crate) fn write<W>(&self, writer: &mut W, opts: &WriteOpts, depth: usize) -> Result<()>
     where
         W: Write,
     {
         match self {
-            // TODO - implement comments https://github.com/webern/exile/issues/27
-            Misc::Comment(_) => unimplemented!(),
+            Misc::Comment(comment) => write_comment(writer, opts, depth, comment),
             Misc::PI(pi) => pi.write(writer, opts, depth),
         }
     }
+}
+
+fn write_comment<W, S>(writer: &mut W, opts: &WriteOpts, depth: usize, comment: S) -> Result<()>
+where
+    W: Write,
+    S: AsRef<str>,
+{
+    opts.indent(writer, depth)?;
+    xwrite!(writer, "<!--{}-->", comment.as_ref())?;
+    Ok(())
 }

@@ -375,9 +375,9 @@ class ConfTestGenerator {
             if (xtype == XType.ProcessingInstruction) {
                 ProcessingInstruction piNode = (ProcessingInstruction) node;
                 PI pi = parseProcessingInstruction(piNode);
-                F.write(os, "doc.push_prolog_misc(exile::Misc::PI(");
+                F.write(os, "doc.add_prolog_pi(");
                 constructProcessingInstruction(pi, os);
-                F.writeln(os, "));");
+                F.writeln(os, ");");
             }
 
         }
@@ -389,9 +389,9 @@ class ConfTestGenerator {
             if (xtype == XType.ProcessingInstruction) {
                 ProcessingInstruction piNode = (ProcessingInstruction) node;
                 PI pi = parseProcessingInstruction(piNode);
-                F.write(os, "doc.push_epilog_misc(exile::Misc::PI(");
+                F.write(os, "doc.add_epilog_pi(");
                 constructProcessingInstruction(pi, os);
-                F.writeln(os, "));");
+                F.writeln(os, ");");
             }
 
         }
@@ -460,9 +460,12 @@ class ConfTestGenerator {
                     break;
                 case CData:
                     writeCdataChild(parentVariableName, parentGeneration, i, (CDATASection) child, t, doc, os);
+                    break;
+                case Comment:
+                    writeComment(parentVariableName, parentGeneration, i, (Comment) child, t, doc, os);
+                    break;
                 case EntityReference:
                 case Entity:
-                case Comment:
                 case Document:
                 case DocumentType:
                 case DocumentFragment:
@@ -476,6 +479,17 @@ class ConfTestGenerator {
                     break;
             }
         }
+    }
+
+    private static void writeComment(String parentVariableName,
+                                     int parentGeneration,
+                                     int i,
+                                     Comment child,
+                                     ConfTest t,
+                                     Document doc,
+                                     OutputStreamWriter os) throws TestGenException {
+        String data = child.getData();
+        F.writeln(os, "%s.add_comment(%s).unwrap();", parentVariableName, rustStringLiteral(data));
     }
 
     private static void writeTextChild(String parentVariableName,

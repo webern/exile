@@ -117,7 +117,9 @@ fn parse_children(iter: &mut Iter<'_>, parent: &mut Element) -> Result<()> {
                     Node::CData(cdata) => parent
                         .add_cdata(cdata)
                         .map_err(|e| create_parser_error!(&iter.st, "{}", e))?,
-                    Node::Comment(_) => panic!("comments unsupported"),
+                    Node::Comment(comment) => parent
+                        .add_comment(comment)
+                        .map_err(|e| create_parser_error!(&iter.st, "{}", e))?,
                     Node::PI(pi) => parent.add_pi(pi),
                     Node::DocType(_) => panic!("doctype unsupported"),
                 },

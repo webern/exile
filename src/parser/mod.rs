@@ -9,11 +9,11 @@ use std::str::Chars;
 use crate::error::{OtherError, ThrowSite};
 use crate::parser::bang::parse_bang;
 use crate::parser::chars::{is_name_char, is_name_start_char};
-use crate::parser::element::parse_element;
+use crate::parser::element::{parse_element, LTParse};
 use crate::parser::error::{display_char, Result};
 pub use crate::parser::error::{ParseError, XmlSite};
 use crate::parser::pi::{parse_pi, parse_pi_logic};
-use crate::{Declaration, Document, Encoding, Misc, Version};
+use crate::{Declaration, Document, Encoding, Misc, Node, Version};
 
 #[macro_use]
 mod macros;
@@ -307,11 +307,11 @@ fn parse_document(iter: &mut Iter<'_>, document: &mut Document) -> Result<()> {
                 }
                 DocStatus::Prolog => {
                     let pi = parse_pi(iter)?;
-                    document.push_prolog_misc(Misc::PI(pi));
+                    document.add_prolog_pi(pi);
                 }
                 DocStatus::Epilog => {
                     let pi = parse_pi(iter)?;
-                    document.push_epilog_misc(Misc::PI(pi));
+                    document.add_epilog_pi(pi);
                 }
                 DocStatus::Root => {
                     return parse_err!(
@@ -322,8 +322,16 @@ fn parse_document(iter: &mut Iter<'_>, document: &mut Document) -> Result<()> {
                 }
             },
             '!' => {
-                let _ltparse = parse_bang(iter)?;
-                // TODO - add it if appropriate
+                let ltparse = parse_bang(iter)?;
+                match ltparse {
+                    LTParse::Some(node) => match node {
+                        Node::Comment(c) => add_doc_misc(iter, document, Misc::Comment(c))?,
+                        Node::PI(p) => add_doc_misc(iter, document, Misc::PI(p))?,
+                        _ => return parse_err!(iter, "can not add document node '{:?}", node),
+                    },
+                    LTParse::Skip => {}
+                    _ => return parse_err!(iter, "unexpected {:?}", ltparse),
+                }
             }
             _ => {
                 document.set_root(parse_element(iter)?);
@@ -336,6 +344,32 @@ fn parse_document(iter: &mut Iter<'_>, document: &mut Document) -> Result<()> {
         }
     }
     Ok(())
+}
+
+// TODO - this is horrible
+fn add_doc_misc(iter: &mut Iter<'_>, document: &mut Document, misc: Misc) -> Result<()> {
+    match misc {
+        Misc::Comment(c) if iter.st.doc_status == DocStatus::Prolog => document
+            .add_prolog_comment(c)
+            .map_err(|e| create_parser_error!(&iter.st, "{}", e)),
+        Misc::Comment(c) if iter.st.doc_status == DocStatus::Epilog => document
+            .add_epilog_comment(c)
+            .map_err(|e| create_parser_error!(&iter.st, "{}", e)),
+        Misc::PI(p) if iter.st.doc_status == DocStatus::Prolog => {
+            document.add_prolog_pi(p);
+            Ok(())
+        }
+        Misc::PI(p) if iter.st.doc_status == DocStatus::Epilog => {
+            document.add_epilog_pi(p);
+            Ok(())
+        }
+        _ => parse_err!(
+            iter,
+            "unable to add '{:?}' to the '{:?}' section of the document",
+            misc,
+            iter.st.doc_status
+        ),
+    }
 }
 
 // takes the iter pointing to '<' and already expected to be '<?xml ...'. parses this and places
