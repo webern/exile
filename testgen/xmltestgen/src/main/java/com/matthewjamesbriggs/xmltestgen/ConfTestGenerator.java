@@ -378,8 +378,10 @@ class ConfTestGenerator {
                 F.write(os, "doc.add_prolog_pi(");
                 constructProcessingInstruction(pi, os);
                 F.writeln(os, ");");
+            } else if (xtype == XType.Comment) {
+                Comment comment = (Comment) node;
+                F.write(os, "doc.add_prolog_comment(%s).unwrap();", rustStringLiteral(comment.getData()));
             }
-
         }
     }
 
@@ -392,8 +394,10 @@ class ConfTestGenerator {
                 F.write(os, "doc.add_epilog_pi(");
                 constructProcessingInstruction(pi, os);
                 F.writeln(os, ");");
+            } else if (xtype == XType.Comment) {
+                Comment comment = (Comment) node;
+                F.write(os, "doc.add_epilog_comment(%s).unwrap();", rustStringLiteral(comment.getData()));
             }
-
         }
     }
 

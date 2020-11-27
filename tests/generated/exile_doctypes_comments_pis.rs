@@ -18,10 +18,14 @@ fn expected() -> Document {
         encoding: None,
     });
     // TODO - write doctype information
+    doc.add_prolog_comment(r#" comment before doctype "#)
+        .unwrap();
     doc.add_prolog_pi(exile::PI {
         target: r#"pi"#.into(),
         data: r#"before doctype "#.into(),
     });
+    doc.add_prolog_comment(r#" comment after doctype "#)
+        .unwrap();
     doc.add_prolog_pi(exile::PI {
         target: r#"pi"#.into(),
         data: r#"after doctype "#.into(),
@@ -45,6 +49,7 @@ fn expected() -> Document {
     let gen1n4 = root.add_new_child().unwrap();
     gen1n4.set_name(r#"body"#);
     gen1n4.add_text(r#"Don't forget me this weekend"#);
+    doc.add_epilog_comment(r#" at the end "#).unwrap();
     doc.add_epilog_pi(exile::PI {
         target: r#"pi"#.into(),
         data: r#"at the end "#.into(),
