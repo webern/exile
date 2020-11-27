@@ -206,6 +206,7 @@ impl Document {
             opts.newline(writer)?;
             misc.write(writer, opts, 0)?;
         }
+        opts.newline(writer)?;
         Ok(())
     }
 
@@ -305,7 +306,8 @@ mod tests {
 <cats>
   <cat name="bones"/>
   <cat name="bishop">punks</cat>
-</cats>"#;
+</cats>
+"#;
 
     fn create_ezfile() -> Document {
         let mut bones = Element::from_name("cat");
@@ -343,7 +345,8 @@ mod tests {
 
     #[test]
     fn test_escapes() {
-        let expected = r#"<root attr="&lt;&amp;&gt;&quot;🍔&quot;''">&amp;&amp;&amp;&lt;&lt;&lt;'"🍔"'&gt;&gt;&gt;&amp;&amp;&amp;</root>"#;
+        let mut expected = r#"<root attr="&lt;&amp;&gt;&quot;🍔&quot;''">&amp;&amp;&amp;&lt;&lt;&lt;'"🍔"'&gt;&gt;&gt;&amp;&amp;&amp;</root>"#.to_owned();
+        expected.push('\n');
         let mut root = Element::default();
         root.set_name("root");
         root.add_attribute("attr", "<&>\"🍔\"\'\'");
