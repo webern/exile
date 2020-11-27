@@ -1,7 +1,9 @@
 use std::borrow::Cow;
 use std::default::Default;
 use std::io::{Cursor, Write};
+use std::path::Path;
 
+use crate::error::OtherError;
 use crate::xdoc::error::Result;
 use crate::{Element, Misc, WriteOpts};
 
@@ -216,6 +218,17 @@ impl Document {
             Ok(s) => Ok(s.to_owned()),
             Err(e) => wrap_err!(e),
         }
+    }
+
+    /// Save a document to a file.
+    pub fn save<P: AsRef<Path>>(&self, path: P) -> crate::error::Result<()> {
+        std::fs::write(path.as_ref(), self.to_string().as_bytes()).map_err(|e| {
+            crate::error::Error::Other(OtherError {
+                throw_site: throw_site!(),
+                message: Some(format!("Unable to save file '{}'", path.as_ref().display())),
+                source: Some(Box::new(e)),
+            })
+        })
     }
 }
 

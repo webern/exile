@@ -1,3 +1,4 @@
+use std::env;
 #[allow(unused_imports)]
 use std::path::PathBuf;
 
@@ -9,13 +10,16 @@ use exile::Document;
 const MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
 const INPUT_DATA: &str = "input_data";
 
+pub fn input_data() -> PathBuf {
+    let p = PathBuf::from(MANIFEST_DIR).join("tests").join(INPUT_DATA);
+    p.canonicalize()
+        .unwrap_or_else(|e| panic!("bad path: {}: {}", p.display(), e))
+}
+
 /// Given a filename, gives the path to it in the `inpud_data` directory.
 #[allow(dead_code)]
 pub fn path(filename: &str) -> PathBuf {
-    let p = PathBuf::from(MANIFEST_DIR)
-        .join("tests")
-        .join(INPUT_DATA)
-        .join(filename);
+    let p = input_data().join(filename);
     p.canonicalize()
         .unwrap_or_else(|e| panic!("bad path: {}: {}", p.display(), e))
 }
@@ -23,6 +27,7 @@ pub fn path(filename: &str) -> PathBuf {
 /// Loads `filename` and compares it to `expected` asserting equality.
 #[allow(dead_code)]
 pub fn run_parse_test(filename: &str, expected: &Document) {
+    save_serialization(filename, expected);
     let path = path(filename);
     let actual = exile::load(&path).unwrap();
     if actual != *expected {
@@ -52,6 +57,17 @@ pub fn run_not_well_formed_test(filename: &str, throw_site: Option<XmlSite>) {
         }
         _ => panic!("expected parse error."),
     }
+}
+
+/// Saves a serialization of the `expected` document into the `input_data` directory using a name
+/// derived from `filename`. Only operates if `EXILE_SAVE_SERIALIZATION` is defined.
+pub fn save_serialization(filename: &str, expected: &Document) {
+    if env::var_os("EXILE_SAVE_SERIALIZATION").is_none() {
+        return;
+    }
+    let filename = filename.replace(".xml", ".serialized.xml");
+    let filepath = input_data().join(&filename);
+    expected.save(filepath).unwrap();
 }
 
 /// Check that the serialization of this XML document matches what we expect. `output_filename` is
