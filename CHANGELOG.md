@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Currently we are using v0.0.x where every version can and will contain breaking changes.
 
+## [Unreleased]
+## Added
+- Support comments [#77]
+
+### Changed
+- TBD
+
+[#77]: https://github.com/webern/exile/pull/77
+
 ## [v0.0.3] 2020-11-25
 ## Added
 - Whitespace normalization of text nodes [#75]
