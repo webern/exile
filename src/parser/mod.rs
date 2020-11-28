@@ -13,6 +13,7 @@ use crate::parser::element::{parse_element, LTParse};
 use crate::parser::error::{display_char, Result};
 pub use crate::parser::error::{ParseError, XmlSite};
 use crate::parser::pi::{parse_pi, parse_pi_logic};
+use crate::xdoc::xdocv2::doctype::{CHAR_CARRIAGE_RETURN, CHAR_NEWLINE, CHAR_SPACE, CHAR_TAB};
 use crate::{Declaration, Document, Encoding, Misc, Node, Version};
 
 #[macro_use]
@@ -193,7 +194,10 @@ impl<'a> Iter<'a> {
     }
 
     pub(crate) fn is_whitespace(&self) -> bool {
-        self.st.c.is_ascii_whitespace()
+        matches!(
+            self.st.c,
+            CHAR_SPACE | CHAR_TAB | CHAR_NEWLINE | CHAR_CARRIAGE_RETURN
+        )
     }
 
     pub(crate) fn is(&self, value: char) -> bool {
@@ -225,6 +229,16 @@ impl<'a> Iter<'a> {
             Some(c) => Ok(*c),
             None => parse_err!(self, "unexpected end of document"),
         }
+    }
+
+    /// Advance the iter past the end of the string given as `s`. Error if we are not point at the
+    /// beginning of `s`.
+    pub(crate) fn consume<S: AsRef<str>>(&mut self, s: S) -> Result<()> {
+        for c in s.as_ref().chars() {
+            expect!(self, c)?;
+            self.advance_or_die()?
+        }
+        Ok(())
     }
 
     /// Returns true if the character is `'\0'`, which means that the iter is exhausted.
@@ -535,6 +549,22 @@ fn xml_03() {
     assert!(doc.declaration().encoding.is_none());
     assert_eq!(0, doc.root().nodes_len());
     assert_eq!("doc", doc.root().fullname());
+}
+
+#[test]
+fn consume_test() {
+    let s = "bones and bish(";
+    let mut iter = Iter::new(s).unwrap();
+    iter.consume("bones and bish").unwrap();
+    assert_eq!(iter.st.c, '(')
+}
+
+#[test]
+fn consume_test_err() {
+    let s = "bones and fish(";
+    let mut iter = Iter::new(s).unwrap();
+    let result = iter.consume("bones and bish");
+    assert!(result.is_err());
 }
 
 #[cfg(test)]

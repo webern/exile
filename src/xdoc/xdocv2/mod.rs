@@ -1,1 +1,1 @@
-mod doctype;
+pub(crate) mod doctype;

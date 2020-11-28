@@ -50,3 +50,9 @@ macro_rules! parse_err {
         Err(create_parser_error!(&$iter.st, $fmt, $($arg),+))
     };
 }
+
+macro_rules! from_xe {
+    ($iter:expr, $xdoc_error:expr) => {{
+        create_parser_error!(&$iter.st, "{}", $xdoc_error)
+    }};
+}
