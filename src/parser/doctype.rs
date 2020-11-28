@@ -9,7 +9,8 @@ use crate::xdoc::xdocv2::doctype::{
     MixedValue, NDataDecl, NotationDeclValue, NotationTypeValue, PEDeclValue, PEDef,
     PEReferenceValue, PubIDLiteral, PublicExternalID, PublicID, Quote, Reference, ReferenceValue,
     Repetitions, SeqValue, Space, SystemExternalID, SystemLiteral, TokenizedType, Whitespace,
-    CHAR_CARRIAGE_RETURN, CHAR_NEWLINE, CHAR_SPACE, CHAR_TAB, STR_FIXED, STR_IMPLIED, STR_REQUIRED,
+    CHAR_CARRIAGE_RETURN, CHAR_NEWLINE, CHAR_SPACE, CHAR_TAB, STR_FIXED, STR_IMPLIED, STR_NOTATION,
+    STR_REQUIRED,
 };
 
 use super::error::Result;
@@ -328,32 +329,77 @@ impl EntityValueData {
 }
 
 impl Reference {
+    /// Expects iter pointing to `&`.
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        unimplemented!();
+        match iter.peek_or_die()? {
+            '#' => Ok(Reference::CharRef(CharRefValue::parse(iter)?)),
+            _ => Ok(Reference::EntityRef(ReferenceValue::parse(iter)?)),
+        }
     }
 }
 
 impl CharRefValue {
+    /// Expects iter pointing to `&`.
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        unimplemented!();
+        debug_assert!(iter.is('&'));
+        iter.advance_or_die()?;
+        expect!(iter, '#');
+        iter.advance_or_die()?;
+        let next = iter.peek_or_die()?;
+        let t = if next == 'x' {
+            iter.advance_or_die()?;
+            CharRefValueType::Hex
+        } else if next.is_ascii_digit() {
+            CharRefValueType::Decimal
+        } else {
+            return parse_err!(iter, "expected hex or decimal number");
+        };
+        let mut value = String::new();
+        loop {
+            if iter.is(';') {
+                break;
+            }
+            value.push(iter.st.c);
+            iter.advance_or_die()?;
+        }
+        iter.advance();
+        let value = match t {
+            CharRefValueType::Decimal => value
+                .parse::<u64>()
+                .map_err(|e| create_parser_error!(&iter.st, "{}", e))?,
+            CharRefValueType::Hex => u64::from_str_radix(value.as_str(), 16)
+                .map_err(|e| create_parser_error!(&iter.st, "{}", e))?,
+        };
+        Ok(Self {
+            char_ref_type: t,
+            value,
+        })
     }
 }
 
-impl CharRefValueType {
-    fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        unimplemented!();
-    }
-}
-
+/// Expects iter pointing at `!NOTATION` (i.e. after the `<`).
 impl NotationDeclValue {
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        unimplemented!();
+        debug_assert!(iter.is('!'));
+        iter.advance_or_die()?;
+        iter.consume(STR_NOTATION);
+        Ok(Self {
+            space_before_name: Whitespace::parse(iter)?,
+            name: DocTypeName::parse(iter)?,
+            space_before_id: Whitespace::parse(iter)?,
+            id: ExternalOrPublicID::parse(iter)?,
+            space_before_close: Whitespace::parse_optional(iter),
+        })
     }
 }
 
 impl ExternalOrPublicID {
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        unimplemented!();
+        match iter.st.c {
+            'S' => Ok(ExternalOrPublicID::External(ExternalID::parse(iter)?)),
+            'P' => Ok(ExternalOrPublicID::Public(PublicID::parse(iter)?)),
+            _ => parse_err!(iter, "expected SYSTEM or PUBLIC"),
+        }
     }
 }
 

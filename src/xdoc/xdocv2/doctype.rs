@@ -53,6 +53,9 @@ pub enum Space {
     Newline,
 }
 
+pub(crate) const STR_SYSTEM: &str = "SYSTEM";
+pub(crate) const STR_PUBLIC: &str = "PUBLIC";
+
 /// ExternalID ::= 'SYSTEM' S SystemLiteral
 ///                | 'PUBLIC' S PubidLiteral S SystemLiteral
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -489,6 +492,8 @@ pub enum CharRefValueType {
     Hex,
 }
 
+pub(crate) const STR_NOTATION: &str = "NOTATION";
+
 /// https://www.w3.org/TR/xml/#NT-NotationDecl
 /// ```text
 /// [82] NotationDecl ::= '<!NOTATION' S Name S (ExternalID | PublicID) S? '>'
@@ -496,6 +501,7 @@ pub enum CharRefValueType {
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct NotationDeclValue {
     pub(crate) space_before_name: Whitespace,
+    pub(crate) name: DocTypeName,
     pub(crate) space_before_id: Whitespace,
     pub(crate) id: ExternalOrPublicID,
     pub(crate) space_before_close: Option<Whitespace>,
