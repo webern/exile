@@ -33,6 +33,7 @@ mod node;
 pub(crate) mod ord_map;
 mod pi;
 mod write_ops;
+mod xdocv2;
 
 #[cfg(test)]
 mod tests {

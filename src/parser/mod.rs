@@ -20,6 +20,7 @@ mod macros;
 
 mod bang;
 mod chars;
+mod doctype;
 mod element;
 mod error;
 mod pi;
