@@ -311,20 +311,56 @@ impl NDataDecl {
 }
 
 impl PEDef {
+    /// Iter should be pointing at SYSTEM, PUBLIC, ' or "
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        unimplemented!();
+        debug_assert!(matches!(iter.st.c, 'S' | 'P' | '\'' | '"'));
+        match iter.st.c {
+            'S' | 'P' => Ok(PEDef::External(ExternalID::parse(iter)?)),
+            _ => Ok(PEDef::Entity(EntityValue::parse(iter)?)),
+        }
     }
 }
 
 impl EntityValue {
+    /// should be pointing at " or '
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        unimplemented!();
+        let mut data = Vec::new();
+        let q = Quote::new(iter.st.c).map_err(|e| from_xe!(iter, e))?;
+        iter.advance_or_die()?;
+        loop {
+            if iter.st.c == q.char() {
+                break;
+            }
+            data.push(EntityValueData::parse(iter, q)?);
+        }
+        iter.advance();
+        Ok(Self { quote: q, data })
     }
 }
 
 impl EntityValueData {
-    fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        unimplemented!();
+    /// Expects the iter pointing at `&` or `%` or any non-forbidden character.
+    fn parse(iter: &mut Iter<'_>, q: Quote) -> Result<Self> {
+        let c = iter.st.c;
+        if c == '&' {
+            return Ok(EntityValueData::Reference(ReferenceValue::parse(iter)?));
+        } else if c == '%' {
+            return Ok(EntityValueData::PEReference(PEReferenceValue::parse(iter)?));
+        }
+        // parse as text if it is not a reference
+        let mut s = String::new();
+        loop {
+            if iter.st.c == q.char() {
+                break;
+            } else if iter.st.c == '&' {
+                break;
+            } else if iter.st.c == '%' {
+                break;
+            }
+            s.push(c);
+            iter.advance_or_die()?;
+        }
+        Ok(EntityValueData::String(s))
     }
 }
 

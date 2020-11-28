@@ -465,6 +465,16 @@ pub enum EntityValueData {
     Reference(ReferenceValue),
 }
 
+impl EntityValueData {
+    pub(crate) fn forbidden(c: char, q: Quote) -> bool {
+        match c {
+            '\'' if q == Quote::Single => true,
+            '"' if q == Quote::Double => true,
+            _ => false,
+        }
+    }
+}
+
 /// https://www.w3.org/TR/xml/#NT-Reference
 /// ```text
 /// [67] Reference ::= EntityRef | CharRef
