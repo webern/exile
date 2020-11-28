@@ -21,7 +21,7 @@ mod macros;
 mod bang;
 mod chars;
 mod element;
-mod error;
+pub(crate) mod error;
 mod pi;
 mod string;
 
