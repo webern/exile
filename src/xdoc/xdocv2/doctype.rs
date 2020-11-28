@@ -190,6 +190,9 @@ pub struct PEReferenceValue {
     pub(crate) value: DocTypeName,
 }
 
+pub(crate) const STR_ELEMENT: &str = "ELEMENT";
+pub(crate) const STR_ATTLIST: &str = "ATTLIST";
+
 /// https://www.w3.org/TR/xml/#NT-markupdecl
 /// > markupdecl ::= elementdecl | AttlistDecl | EntityDecl | NotationDecl | PI | Comment
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -226,9 +229,18 @@ pub struct FormattedItem<T> {
     pub(crate) item: T,
 }
 
+/// ```text
+/// [7] Nmtoken ::= (NameChar)+
+/// ```
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub struct NmToken {
+    pub(crate) value: String,
+}
+
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct DelimitedListItem<T> {
     pub(crate) space_before_delimiter: Option<Whitespace>,
+    pub(crate) space_after_delimiter: Option<Whitespace>,
     pub(crate) item: T,
 }
 
@@ -241,6 +253,11 @@ pub struct MixedValue {
     pub(crate) space_before_close_parenthesis: Option<Whitespace>,
 }
 
+/// https://www.w3.org/TR/xml/#NT-children
+/// ```text
+/// [47] children ::= (choice | seq) ('?' | '*' | '+')?
+/// [48] cp ::= (Name | choice | seq) ('?' | '*' | '+')?
+/// ```
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum Repetitions {
     /// Something may appear once, i.e. it is suffixed with `?`.
@@ -253,56 +270,83 @@ pub enum Repetitions {
     OneOrMany,
 }
 
+/// https://www.w3.org/TR/xml/#NT-children
+/// ```text
+/// [47] children ::= (choice | seq) ('?' | '*' | '+')?
+/// ```
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum ChildrenType {
-    Choice(ChoiceValue),
-    Seq(SeqValue),
+    Choice(ChoiceOrSeqContent),
+    Seq(ChoiceOrSeqContent),
 }
 
+/// https://www.w3.org/TR/xml/#NT-children
+/// ```text
+///  [47] children ::= (choice | seq) ('?' | '*' | '+')?
+/// ```
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct ChildrenValue {
-    pub(crate) child_type: ChildrenType,
+    pub(crate) children_type: ChildrenType,
     pub(crate) repetitions: Repetitions,
 }
 
+/// https://www.w3.org/TR/xml/#NT-cp
+/// ```text
+///
+/// ```
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum CpType {
     Name(DocTypeName),
-    Choice(ChoiceValue),
-    Seq(SeqValue),
+    Choice(ChoiceOrSeqContent),
+    Seq(ChoiceOrSeqContent),
 }
 
+/// https://www.w3.org/TR/xml/#NT-cp
+/// ```text
+/// [48] cp ::= (Name | choice | seq) ('?' | '*' | '+')?
+/// ```
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct CpValue {
     pub(crate) cp_type: CpType,
     pub(crate) repetitions: Repetitions,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
-pub struct FormattedCp {
-    pub(crate) space_before_pipe: Option<Whitespace>,
-    pub(crate) space_after_pipe: Option<Whitespace>,
-    pub(crate) cp: CpValue,
-}
-
+/// https://www.w3.org/TR/xml/#NT-choice
+/// https://www.w3.org/TR/xml/#NT-seq
+/// ```text
+/// [49] choice ::= '(' S? cp ( S? '|' S? cp )+ S? ')'
+/// [50] seq    ::= '(' S? cp ( S? ',' S? cp )* S? ')'
+/// ```
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct ChoiceOrSeqContent {
-    pub(crate) space_after_open: Option<Whitespace>,
-    /// There must be at least 2 in this vec. The first should not have any values for
-    /// `space_before_delim` and `space_after_delim`.
-    pub(crate) cps: Vec<FormattedCp>,
+    pub(crate) choice_or_seq: ChoiceOrSeq,
+    pub(crate) cps: Vec<DelimitedListItem<CpValue>>,
     pub(crate) space_before_close: Option<Whitespace>,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
-pub struct ChoiceValue {
-    pub(crate) content: ChoiceOrSeqContent,
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub(crate) enum ChoiceOrSeq {
+    Choice,
+    Seq,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
-pub struct SeqValue {
-    pub(crate) content: ChoiceOrSeqContent,
-}
+// /// https://www.w3.org/TR/xml/#NT-choice
+// /// ```text
+// /// [49] choice ::= '(' S? cp ( S? '|' S? cp )+ S? ')'
+// /// ```
+// #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+// pub struct ChoiceValue {
+//     pub(crate) content: ChoiceOrSeqContent,
+// }
+//
+// /// https://www.w3.org/TR/xml/#NT-seq
+// /// ```text
+// /// [50] seq ::= '(' S? cp ( S? ',' S? cp )* S? ')'
+// /// ```
+// #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+// pub struct SeqValue {
+//     pub(crate) content: ChoiceOrSeqContent,
+// }
 
 /// https://www.w3.org/TR/xml/#NT-AttlistDecl
 /// AttlistDecl ::= '<!ATTLIST' S Name AttDef* S? '>'
@@ -330,21 +374,7 @@ pub struct AttDef {
 /// StringType | TokenizedType | EnumeratedType
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum AttType {
-    StringType,
-    TokenizedType,
-    EnumeratedTypes,
-}
-
-const STR_ID: &str = "ID";
-const STR_IDREF: &str = "IDREF";
-const STR_IDREFS: &str = "IDREFS";
-const STR_ENTITY: &str = "ENTITY";
-const STR_ENTITIES: &str = "ENTITIES";
-const STR_NMTOKEN: &str = "NMTOKEN";
-const STR_NMTOKENS: &str = "NMTOKENS";
-
-#[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash)]
-pub enum TokenizedType {
+    CData,
     ID,
     IDRef,
     IDRefs,
@@ -352,7 +382,17 @@ pub enum TokenizedType {
     Entities,
     NMToken,
     NMTokens,
+    EnumeratedTypes(EnumeratedType),
 }
+
+pub(crate) const STR_CDATA: &str = "CDATA";
+pub(crate) const STR_ID: &str = "ID";
+pub(crate) const STR_IDREF: &str = "IDREF";
+pub(crate) const STR_IDREFS: &str = "IDREFS";
+pub(crate) const STR_ENTITY: &str = "ENTITY";
+pub(crate) const STR_ENTITIES: &str = "ENTITIES";
+pub(crate) const STR_NMTOKEN: &str = "NMTOKEN";
+pub(crate) const STR_NMTOKENS: &str = "NMTOKENS";
 
 /// https://www.w3.org/TR/xml/#NT-EnumeratedType
 ///
@@ -375,21 +415,24 @@ pub struct NotationTypeValue {
 /// Enumeration ::= '(' S? Nmtoken (S? '|' S? Nmtoken)* S? ')'
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct EnumerationValue {
-    pub(crate) names: Vec<DelimitedListItem<DocTypeName>>,
+    pub(crate) names: Vec<DelimitedListItem<NmToken>>,
     pub(crate) space_before_close: Option<Whitespace>,
 }
 
 /// https://www.w3.org/TR/xml/#NT-EntityDecl
 /// EntityDecl ::=  GEDecl | PEDecl
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+/// GEDecl ::= '<!ENTITY' S Name S EntityDef S? '>'
+/// PEDecl ::=  '<!ENTITY' S '%' S Name S PEDef S? '>'
 pub enum EntityDeclValue {
     GEDecl(GEDeclValue),
     PEDecl(PEDeclValue),
 }
 
 /// https://www.w3.org/TR/xml/#NT-GEDecl
-/// GEDecl ::= '<!ENTITY' S Name S EntityDef S? '>'
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+/// GEDecl ::= '<!ENTITY' S Name S EntityDef S? '>'
+/// PEDecl ::=  '<!ENTITY' S '%' S Name S PEDef S? '>'
 pub struct GEDeclValue {
     pub(crate) space_before_name: Whitespace,
     pub(crate) name: DocTypeName,
@@ -399,9 +442,11 @@ pub struct GEDeclValue {
 }
 
 /// https://www.w3.org/TR/xml/#NT-PEDecl
+/// GEDecl ::= '<!ENTITY' S Name S EntityDef S? '>'
 /// PEDecl ::=  '<!ENTITY' S '%' S Name S PEDef S? '>'
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct PEDeclValue {
+    pub(crate) space_before_percent: Whitespace,
     pub(crate) space_before_name: Whitespace,
     pub(crate) name: DocTypeName,
     pub(crate) space_before_pe_def: Whitespace,
@@ -424,6 +469,8 @@ pub struct EntityDefExternal {
     pub(crate) external_id: ExternalID,
     pub(crate) ndata_decl: Option<NDataDecl>,
 }
+
+pub(crate) const STR_NDATA: &str = "NDATA";
 
 /// https://www.w3.org/TR/xml/#NT-NDataDecl
 /// NDataDecl ::= S 'NDATA' S Name
