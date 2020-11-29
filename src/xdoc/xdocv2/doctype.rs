@@ -162,7 +162,7 @@ impl PubIDLiteral {
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum IntSubset {
     MarkupDecl(MarkupDeclValue),
-    DeclSep(DeclSep),
+    DeclSep(DeclSep), // TODO reused name
 }
 
 /// > DeclSep ::= PEReference | S

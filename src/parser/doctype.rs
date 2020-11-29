@@ -122,25 +122,43 @@ impl PubIDLiteral {
 
 impl IntSubset {
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        unimplemented!();
+        if iter.is('<') {
+            Ok(IntSubset::MarkupDecl(MarkupDeclValue::parse(iter)?))
+        } else {
+            Ok(IntSubset::DeclSep(DeclSep::parse(iter)?))
+        }
     }
 }
 
 impl DeclSep {
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        unimplemented!();
+        if iter.is_whitespace() {
+            Ok(DeclSep::Space(Whitespace::parse(iter)?))
+        } else {
+            Ok(DeclSep::PEReference(PEReferenceValue::parse(iter)?))
+        }
     }
 }
 
 impl ReferenceValue {
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        unimplemented!();
+        debug_assert!(iter.is('&'));
+        iter.advance_or_die()?;
+        let name = DocTypeName::parse(iter)?;
+        expect!(iter, ';');
+        iter.advance();
+        Ok(Self { value: name })
     }
 }
 
 impl PEReferenceValue {
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        unimplemented!();
+        debug_assert!(iter.is('%'));
+        iter.advance_or_die()?;
+        let name = DocTypeName::parse(iter)?;
+        expect!(iter, ';');
+        iter.advance();
+        Ok(Self { value: name })
     }
 }
 
@@ -196,7 +214,7 @@ impl ElementDeclValue {
     /// expects iter at the first space following `<!ELEMENT`
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
         iter.consume(STR_ELEMENT)?;
-        OK(Self {
+        Ok(Self {
             space_before_name: Whitespace::parse(iter)?,
             name: DocTypeName::parse(iter)?,
             space_after_name: Whitespace::parse(iter)?,
