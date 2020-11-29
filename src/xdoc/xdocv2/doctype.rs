@@ -61,12 +61,14 @@ pub enum ExternalID {
     Public(PublicExternalID),
 }
 
+/// S SystemLiteral
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct SystemExternalID {
     pub(crate) space_before_literal: Whitespace,
     pub(crate) system_literal: SystemLiteral,
 }
 
+/// S PubidLiteral S SystemLiteral
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct PublicExternalID {
     pub(crate) space_before_pub_id: Whitespace,
@@ -639,7 +641,7 @@ pub struct AttValue {
 }
 
 impl AttValue {
-    fn write_opts<W: Write>(&self, w: W, _o: Wst) -> Result<()> {
+    fn write_opts<W: Write>(&self, _w: W, _o: Wst) -> Result<()> {
         unimplemented!();
     }
 }

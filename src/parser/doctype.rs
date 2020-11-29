@@ -12,13 +12,13 @@ use crate::xdoc::xdocv2::doctype::{
     Reference, ReferenceValue, Repetitions, SeqValue, Space, SystemExternalID, SystemLiteral,
     Whitespace, CHAR_CARRIAGE_RETURN, CHAR_NEWLINE, CHAR_SPACE, CHAR_TAB, STR_ANY, STR_ATTLIST,
     STR_CDATA, STR_DOCTYPE, STR_ELEMENT, STR_EMPTY, STR_ENTITY, STR_FIXED, STR_IMPLIED, STR_NDATA,
-    STR_NMTOKEN, STR_NOTATION, STR_PCDATA, STR_REQUIRED,
+    STR_NMTOKEN, STR_NOTATION, STR_PCDATA, STR_PUBLIC, STR_REQUIRED, STR_SYSTEM,
 };
 
 use super::error::Result;
 
 impl DocTypeDecl {
-    fn parse(iter: &mut Iter<'_>) -> Result<Self> {
+    pub(crate) fn parse(iter: &mut Iter<'_>) -> Result<Self> {
         debug_assert!(iter.is('!'));
         iter.advance_or_die()?;
         iter.consume(STR_DOCTYPE);
@@ -106,33 +106,53 @@ impl Whitespace {
     }
 }
 
-impl Space {
-    fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        unimplemented!();
-    }
-}
+// impl Space {
+//     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
+//         unimplemented!();
+//     }
+// }
 
 impl ExternalID {
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        unimplemented!();
+        match iter.st.c {
+            'S' => {
+                iter.consume(STR_SYSTEM)?;
+                Ok(ExternalID::System(SystemExternalID::parse(iter)?))
+            }
+            'P' => {
+                iter.consume(STR_PUBLIC)?;
+                Ok(ExternalID::Public(PublicExternalID::parse(iter)?))
+            }
+            _ => parse_err!(iter, "expected {} or {}", STR_SYSTEM, STR_PUBLIC),
+        }
     }
 }
 
 impl SystemExternalID {
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        unimplemented!();
+        Ok(Self {
+            space_before_literal: Whitespace::parse(iter)?,
+            system_literal: SystemLiteral::parse(iter)?,
+        })
     }
 }
 
 impl PublicExternalID {
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        unimplemented!();
+        Ok(Self {
+            space_before_pub_id: Whitespace::parse(iter)?,
+            pub_id_literal: PubIDLiteral::parse(iter)?,
+            space_after_pub_id: Whitespace::parse(iter)?,
+            system_literal: SystemLiteral::parse(iter)?,
+        })
     }
 }
 
 impl Quote {
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        unimplemented!();
+        let q = Self::new(iter.st.c).map_err(|e| from_xe!(iter, e))?;
+        iter.advance();
+        Ok(q)
     }
 }
 
@@ -336,22 +356,26 @@ impl MixedValue {
         space_after_open_parenthesis: Option<Whitespace>,
     ) -> Result<Self> {
         iter.consume(STR_PCDATA)?;
-        let mut space_before_delim = None;
+        let mut space_before_delimiter = None;
         let mut element_names = Vec::new();
         loop {
-            space_before_delim = Whitespace::parse_optional(iter);
+            space_before_delimiter = Whitespace::parse_optional(iter);
             if iter.is(')') {
                 break;
             }
             expect!(iter, '|')?;
-            let space_after_delim = Whitespace::parse_optional(iter);
-            element_names.push(DocTypeName::parse(iter)?);
+            let space_after_delimiter = Whitespace::parse_optional(iter);
+            element_names.push(DelimitedListItem {
+                space_before_delimiter,
+                space_after_delimiter,
+                item: DocTypeName::parse(iter)?,
+            });
         }
         iter.advance();
         Ok(Self {
             space_after_open_parenthesis,
-            element_names: Vec::new(),
-            space_before_close_parenthesis: space_before_delim,
+            element_names,
+            space_before_close_parenthesis: space_before_delimiter,
         })
     }
 }
@@ -653,7 +677,7 @@ impl NotationTypeValue {
             space_after_delimiter: ws_after_paren,
             item: first_name,
         });
-        let mut ws = None;
+        let mut ws;
         loop {
             ws = Whitespace::parse_optional(iter);
             if iter.is(')') {
@@ -689,7 +713,7 @@ impl EnumerationValue {
             space_after_delimiter: Whitespace::parse_optional(iter),
             item: NmToken::parse(iter, None)?,
         });
-        let mut ws = None;
+        let mut ws;
         loop {
             ws = Whitespace::parse_optional(iter);
             if iter.is(')') {
@@ -994,12 +1018,13 @@ impl AttValueData {
         } else {
             let mut s = String::new();
             loop {
-                if Self::forbidden(iter.st.c, q) {
-                    return parse_err!(iter, "forbidden character in attribute value");
-                } else if iter.is(q.char()) {
+                if iter.is(q.char()) {
                     iter.advance();
                     return Ok(AttValueData::Text(s));
+                } else if Self::forbidden(iter.st.c, q) {
+                    return parse_err!(iter, "forbidden character in attribute value");
                 }
+                s.push(iter.st.c);
                 iter.advance_or_die()?;
             }
         }
