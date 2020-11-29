@@ -2,6 +2,7 @@
 The `bang` module parses those constructs that start with `<!`.
 !*/
 
+use crate::xdoc::xdocv2::doctype::DocTypeDecl;
 use crate::Node;
 
 use super::element::LTParse;
@@ -72,15 +73,17 @@ pub(super) fn parse_comment(iter: &mut Iter<'_>) -> Result<String> {
 /// returns the iterator pointing at the first character after the closing `>`. Does not inspect
 /// the contents to ensure they are well-formed.
 fn skip_doctype(iter: &mut Iter<'_>) -> Result<()> {
-    expect!(iter, '!')?;
-    while !iter.is('>') {
-        if iter.is('[') {
-            skip_nested_doctype_stuff(iter)?
-        }
-        iter.advance_or_die()?;
-    }
-    // advance the iter to the char following ]>
-    iter.advance();
+    // expect!(iter, '!')?;
+    // while !iter.is('>') {
+    //     if iter.is('[') {
+    //         skip_nested_doctype_stuff(iter)?
+    //     }
+    //     iter.advance_or_die()?;
+    // }
+    // // advance the iter to the char following ]>
+    // iter.advance();
+    // Ok(())
+    let _ = DocTypeDecl::parse(iter)?;
     Ok(())
 }
 

@@ -300,14 +300,16 @@ impl ElementDeclValue {
     /// > elementdecl ::= '<!ELEMENT' S Name S contentspec S? '>'
     /// expects iter at the first space following `<!ELEMENT`
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        iter.consume(STR_ELEMENT)?;
-        Ok(Self {
+        let result = Ok(Self {
             space_before_name: Whitespace::parse(iter)?,
             name: DocTypeName::parse(iter)?,
             space_after_name: Whitespace::parse(iter)?,
             content_spec: ContentSpec::parse(iter)?,
             space_after_content_spec: Whitespace::parse_optional(iter),
-        })
+        });
+        expect!(iter, '>')?;
+        iter.advance();
+        result
     }
 }
 
