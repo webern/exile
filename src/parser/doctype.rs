@@ -17,20 +17,6 @@ use crate::xdoc::xdocv2::doctype::{
 
 use super::error::Result;
 
-// /// https://www.w3.org/TR/xml/#NT-doctypedecl
-// /// ```text
-// /// [28] doctypedecl ::= '<!DOCTYPE' S Name (S ExternalID)? S? ('[' intSubset ']' S?)? '>'
-// /// ```
-// #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
-// pub struct DocTypeDecl {
-//     pub(crate) space_before_name: Whitespace,
-//     pub(crate) name: DocTypeName,
-//     pub(crate) external_id: Option<(Whitespace, ExternalID)>,
-//     pub(crate) space_before_int_subset: Option<Whitespace>,
-//     pub(crate) int_subsets: Vec<IntSubset>,
-//     pub(crate) space_after_int_subset: Option<Whitespace>,
-// }
-
 impl DocTypeDecl {
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
         debug_assert!(iter.is('!'));
@@ -72,14 +58,24 @@ impl DocTypeDecl {
     }
 }
 
-enum ExternalIDOrSpaceBeforeIntSubset {
-    ExternalID(Whitespace, ExternalID),
-    SpaceBeforeIntSubset(Option<Whitespace>),
-}
-
 impl DocTypeName {
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        unimplemented!();
+        let mut name = String::new();
+        if !iter.is_name_start_char() {
+            return parse_err!(iter, "expected name start char");
+        }
+        name.push(iter.st.c);
+        iter.advance_or_die()?;
+        loop {
+            if !iter.is_name_char() {
+                break;
+            }
+            name.push(iter.st.c);
+            if !iter.advance() {
+                break;
+            }
+        }
+        Ok(Self { name })
     }
 }
 
