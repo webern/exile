@@ -443,82 +443,6 @@ fn parse_choice_or_seq(
     })
 }
 
-// impl ChoiceValue {
-//     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-//         debug_assert!(iter.is('('));
-//         iter.advance_or_die()?;
-//         let space_before_first_cp = Whitespace::parse_optional(iter);
-//         let first_cp_value = CpValue::parse(iter)?;
-//         let mut cps = Vec::new();
-//         cps.push(DelimitedListItem {
-//             space_before_delimiter: None,
-//             space_after_delimiter: space_before_first_cp,
-//             item: first_cp_value,
-//         });
-//         let mut ws_before_delimiter = Whitespace::parse_optional(iter);
-//         loop {
-//             if iter.is(')') {
-//                 iter.advance();
-//                 break;
-//             }
-//             expect!(iter, '|')?;
-//             let ws_after_delimiter = Whitespace::parse_optional(iter);
-//             let cp = CpValue::parse(iter)?;
-//             cps.push(DelimitedListItem {
-//                 space_before_delimiter: ws_before_delimiter,
-//                 space_after_delimiter: ws_after_delimiter,
-//                 item: cp,
-//             });
-//             ws_before_delimiter = Whitespace::parse_optional(iter);
-//         }
-//         if cps.len() < 2 {
-//             return parse_err!(iter, "choice must have at least two members");
-//         }
-//         Ok(Self {
-//             cps,
-//             space_before_close: ws_before_delimiter,
-//         })
-//     }
-// }
-//
-// impl SeqValue {
-//     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-//         debug_assert!(iter.is('('));
-//         iter.advance_or_die()?;
-//         let space_before_first_cp = Whitespace::parse_optional(iter);
-//         let first_cp_value = CpValue::parse(iter)?;
-//         let mut cps = Vec::new();
-//         cps.push(DelimitedListItem {
-//             space_before_delimiter: None,
-//             space_after_delimiter: space_before_first_cp,
-//             item: first_cp_value,
-//         });
-//         let mut ws_before_delimiter = Whitespace::parse_optional(iter);
-//         loop {
-//             if iter.is(')') {
-//                 iter.advance();
-//                 break;
-//             }
-//             expect!(iter, ',')?;
-//             let ws_after_delimiter = Whitespace::parse_optional(iter);
-//             let cp = CpValue::parse(iter)?;
-//             cps.push(DelimitedListItem {
-//                 space_before_delimiter: ws_before_delimiter,
-//                 space_after_delimiter: ws_after_delimiter,
-//                 item: cp,
-//             });
-//             ws_before_delimiter = Whitespace::parse_optional(iter);
-//         }
-//         if cps.is_empty() {
-//             return parse_err!(iter, "seq must have at least one member");
-//         }
-//         Ok(Self {
-//             cps,
-//             space_before_close: ws_before_delimiter,
-//         })
-//     }
-// }
-
 impl AttlistDeclValue {
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
         debug_assert!(iter.is('!'));
@@ -615,12 +539,6 @@ impl AttType {
         }
     }
 }
-
-// impl TokenizedType {
-//     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-//         unimplemented!();
-//     }
-// }
 
 impl EnumeratedType {
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
