@@ -4,22 +4,19 @@ use crate::xdoc::error::Result;
 use crate::PI;
 
 /// https://www.w3.org/TR/xml/#NT-doctypedecl
-/// > [28] doctypedecl ::= '<!DOCTYPE' S Name (S ExternalID)? S? ('[' intSubset ']' S?)? '>'
+/// ```text
+/// [28] doctypedecl ::= '<!DOCTYPE' S Name (S ExternalID)? S? ('[' intSubset ']' S?)? '>'
+/// ```
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct DocTypeDecl {
     pub(crate) space_before_name: Whitespace,
     pub(crate) name: DocTypeName,
-    pub(crate) external_id: Option<DocTypeDeclSpaceExternalID>,
+    pub(crate) external_id: Option<(Whitespace, ExternalID)>,
     pub(crate) space_before_int_subset: Option<Whitespace>,
-    pub(crate) int_subsets: Vec<IntSubset>,
-    pub(crate) space_after_int_subset: Option<Whitespace>,
+    pub(crate) int_subsets: Option<(IntSubsets, Option<Whitespace>)>,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
-pub struct DocTypeDeclSpaceExternalID {
-    pub(crate) space_before_id: Whitespace,
-    pub(crate) external_id: ExternalID,
-}
+pub(crate) const STR_DOCTYPE: &str = "DOCTYPE";
 
 /// Same as any name except without namespace alias prefixes.
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -110,6 +107,12 @@ pub struct SystemLiteral {
     pub(crate) value: String,
 }
 
+impl SystemLiteral {
+    pub(crate) fn forbidden(c: char, q: Quote) -> bool {
+        q.char() == c
+    }
+}
+
 /// https://www.w3.org/TR/xml/#NT-PubidLiteral
 /// ```text
 /// PubidLiteral ::= '"' PubidChar* '"' | "'" (PubidChar - "'")* "'"
@@ -156,9 +159,23 @@ impl PubIDLiteral {
     }
 }
 
-/// > intSubset ::= (markupdecl | DeclSep)*
-/// In the spec `intSubset` is a vec, however, I've defined the Vec at the usage site
-/// ([`DocTypeDecl`]).
+/// https://www.w3.org/TR/xml/#NT-intSubset
+/// ```text
+/// intSubset ::= (markupdecl | DeclSep)*
+/// ```
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub struct IntSubsets(Vec<IntSubset>);
+
+impl IntSubsets {
+    pub(crate) fn new(items: Vec<IntSubset>) -> Self {
+        Self(items)
+    }
+}
+
+/// https://www.w3.org/TR/xml/#NT-intSubset
+/// ```text
+/// intSubset ::= (markupdecl | DeclSep)*
+/// ```
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum IntSubset {
     MarkupDecl(MarkupDeclValue),

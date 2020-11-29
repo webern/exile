@@ -4,29 +4,77 @@ use crate::parser::Iter;
 use crate::xdoc::xdocv2::doctype::{
     AttDef, AttType, AttValue, AttValueData, AttlistDeclValue, CharRefValue, CharRefValueType,
     ChildrenType, ChildrenValue, ChoiceValue, ContentSpec, CpItem, CpValue, DeclSep, DefaultDecl,
-    DefaultDeclAttValue, DelimitedListItem, DocTypeDecl, DocTypeDeclSpaceExternalID, DocTypeName,
-    ElementDeclValue, EntityDeclValue, EntityDef, EntityDefExternal, EntityValue, EntityValueData,
-    EnumeratedType, EnumerationValue, ExternalID, ExternalOrPublicID, GEDeclValue, IntSubset,
+    DefaultDeclAttValue, DelimitedListItem, DocTypeDecl, DocTypeName, ElementDeclValue,
+    EntityDeclValue, EntityDef, EntityDefExternal, EntityValue, EntityValueData, EnumeratedType,
+    EnumerationValue, ExternalID, ExternalOrPublicID, GEDeclValue, IntSubset, IntSubsets,
     MarkupDeclValue, MixedValue, NDataDecl, NmToken, NotationDeclValue, NotationTypeValue,
     PEDeclValue, PEDef, PEReferenceValue, PubIDLiteral, PublicExternalID, PublicID, Quote,
     Reference, ReferenceValue, Repetitions, SeqValue, Space, SystemExternalID, SystemLiteral,
     Whitespace, CHAR_CARRIAGE_RETURN, CHAR_NEWLINE, CHAR_SPACE, CHAR_TAB, STR_ANY, STR_ATTLIST,
-    STR_CDATA, STR_ELEMENT, STR_EMPTY, STR_ENTITY, STR_FIXED, STR_IMPLIED, STR_NDATA, STR_NMTOKEN,
-    STR_NOTATION, STR_PCDATA, STR_REQUIRED,
+    STR_CDATA, STR_DOCTYPE, STR_ELEMENT, STR_EMPTY, STR_ENTITY, STR_FIXED, STR_IMPLIED, STR_NDATA,
+    STR_NMTOKEN, STR_NOTATION, STR_PCDATA, STR_REQUIRED,
 };
 
 use super::error::Result;
 
+// /// https://www.w3.org/TR/xml/#NT-doctypedecl
+// /// ```text
+// /// [28] doctypedecl ::= '<!DOCTYPE' S Name (S ExternalID)? S? ('[' intSubset ']' S?)? '>'
+// /// ```
+// #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+// pub struct DocTypeDecl {
+//     pub(crate) space_before_name: Whitespace,
+//     pub(crate) name: DocTypeName,
+//     pub(crate) external_id: Option<(Whitespace, ExternalID)>,
+//     pub(crate) space_before_int_subset: Option<Whitespace>,
+//     pub(crate) int_subsets: Vec<IntSubset>,
+//     pub(crate) space_after_int_subset: Option<Whitespace>,
+// }
+
 impl DocTypeDecl {
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        unimplemented!();
+        debug_assert!(iter.is('!'));
+        iter.advance_or_die()?;
+        iter.consume(STR_DOCTYPE);
+        let space_before_name = Whitespace::parse(iter)?;
+        let name = DocTypeName::parse(iter)?;
+        let mystery_space = Whitespace::parse_optional(iter);
+        let (external_id, mut space_before_int_subset) = if iter.is('S') || iter.is('P') {
+            if let Some(ws) = mystery_space {
+                (Some((ws, ExternalID::parse(iter)?)), None)
+            } else {
+                return parse_err!(iter, "i am confused");
+            }
+        } else {
+            (None, mystery_space)
+        };
+        if space_before_int_subset.is_none() {
+            space_before_int_subset = Whitespace::parse_optional(iter);
+        }
+        let int_subsets = if iter.is('[') {
+            iter.advance_or_die()?;
+            let int_subset = IntSubsets::parse(iter, ']')?;
+            expect!(iter, ']')?;
+            iter.advance_or_die()?;
+            Some((int_subset, Whitespace::parse_optional(iter)))
+        } else {
+            None
+        };
+        expect!(iter, '>')?;
+        iter.advance();
+        Ok(Self {
+            space_before_name,
+            name,
+            external_id,
+            space_before_int_subset,
+            int_subsets,
+        })
     }
 }
 
-impl DocTypeDeclSpaceExternalID {
-    fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        unimplemented!();
-    }
+enum ExternalIDOrSpaceBeforeIntSubset {
+    ExternalID(Whitespace, ExternalID),
+    SpaceBeforeIntSubset(Option<Whitespace>),
 }
 
 impl DocTypeName {
@@ -94,7 +142,17 @@ impl Quote {
 
 impl SystemLiteral {
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        unimplemented!();
+        let q = Quote::new(iter.st.c).map_err(|e| from_xe!(iter, e))?;
+        let mut value = String::new();
+        loop {
+            iter.advance_or_die()?;
+            if iter.is(q.char()) {
+                break;
+            }
+            value.push(iter.st.c);
+        }
+        iter.advance();
+        Ok(Self { quote: q, value })
     }
 }
 
@@ -117,6 +175,19 @@ impl PubIDLiteral {
             quote: Quote::Single,
             value: s,
         })
+    }
+}
+
+impl IntSubsets {
+    fn parse(iter: &mut Iter<'_>, end: char) -> Result<Self> {
+        let mut int_subsets = Vec::new();
+        loop {
+            if iter.is(end) {
+                break;
+            }
+            int_subsets.push(IntSubset::parse(iter)?)
+        }
+        Ok(Self::new(int_subsets))
     }
 }
 
