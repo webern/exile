@@ -1,16 +1,15 @@
 use crate::parser::Iter;
 use crate::xdoc::xdocv2::doctype::{
     AttDef, AttType, AttValue, AttValueData, AttlistDeclValue, CharRefValue, CharRefValueType,
-    ChildrenType, ChildrenValue, ChoiceOrSeqContent, ContentSpec, CpType, CpValue, DeclSep,
-    DefaultDecl, DefaultDeclAttValue, DelimitedListItem, DocTypeDecl, DocTypeDeclSpaceExternalID,
-    DocTypeName, ElementDeclValue, EntityDeclValue, EntityDef, EntityDefExternal, EntityValue,
-    EntityValueData, EnumeratedType, EnumerationValue, ExternalID, ExternalOrPublicID,
-    FormattedItem, GEDeclValue, IntSubset, MarkupDeclValue, MixedValue, NDataDecl, NmToken,
-    NotationDeclValue, NotationTypeValue, PEDeclValue, PEDef, PEReferenceValue, PubIDLiteral,
-    PublicExternalID, PublicID, Quote, Reference, ReferenceValue, Repetitions, Space,
-    SystemExternalID, SystemLiteral, Whitespace, CHAR_CARRIAGE_RETURN, CHAR_NEWLINE, CHAR_SPACE,
-    CHAR_TAB, STR_ATTLIST, STR_CDATA, STR_ENTITY, STR_FIXED, STR_IMPLIED, STR_NDATA, STR_NMTOKEN,
-    STR_NOTATION, STR_REQUIRED,
+    ChildrenType, ChildrenValue, ChoiceValue, ContentSpec, CpItem, CpValue, DeclSep, DefaultDecl,
+    DefaultDeclAttValue, DelimitedListItem, DocTypeDecl, DocTypeDeclSpaceExternalID, DocTypeName,
+    ElementDeclValue, EntityDeclValue, EntityDef, EntityDefExternal, EntityValue, EntityValueData,
+    EnumeratedType, EnumerationValue, ExternalID, ExternalOrPublicID, GEDeclValue, IntSubset,
+    MarkupDeclValue, MixedValue, NDataDecl, NmToken, NotationDeclValue, NotationTypeValue,
+    PEDeclValue, PEDef, PEReferenceValue, PubIDLiteral, PublicExternalID, PublicID, Quote,
+    Reference, ReferenceValue, Repetitions, SeqValue, Space, SystemExternalID, SystemLiteral,
+    Whitespace, CHAR_CARRIAGE_RETURN, CHAR_NEWLINE, CHAR_SPACE, CHAR_TAB, STR_ATTLIST, STR_CDATA,
+    STR_ENTITY, STR_FIXED, STR_IMPLIED, STR_NDATA, STR_NMTOKEN, STR_NOTATION, STR_REQUIRED,
 };
 
 use super::error::Result;
@@ -160,11 +159,11 @@ impl ContentSpec {
     }
 }
 
-impl<T> FormattedItem<T> {
-    fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        unimplemented!();
-    }
-}
+// impl<T> FormattedItem<T> {
+//     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
+//         unimplemented!();
+//     }
+// }
 
 impl<T> DelimitedListItem<T> {
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
@@ -172,6 +171,14 @@ impl<T> DelimitedListItem<T> {
     }
 }
 
+// /// > Mixed ::= '(' S? '#PCDATA' (S? '|' S? Name)* S? ')*'
+// /// >           | '(' S? '#PCDATA' S? ')'
+// #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+// pub struct MixedValue {
+//     pub(crate) space_after_open_parenthesis: Option<Whitespace>,
+//     pub(crate) element_names: Vec<DelimitedListItem<DocTypeName>>,
+//     pub(crate) space_before_close_parenthesis: Option<Whitespace>,
+// }
 impl MixedValue {
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
         unimplemented!();
@@ -179,50 +186,217 @@ impl MixedValue {
 }
 
 impl Repetitions {
-    fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        unimplemented!();
+    fn parse(iter: &mut Iter<'_>) -> Self {
+        let r = match iter.st.c {
+            '?' => Repetitions::Optional,
+            '+' => Repetitions::OneOrMore,
+            '*' => Repetitions::ZeroOrMore,
+            _ => return Repetitions::Once,
+        };
+        iter.advance();
+        r
     }
 }
 
 impl ChildrenType {
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        unimplemented!();
+        let choice_or_seq = parse_choice_or_seq(iter)?;
+        match choice_or_seq.t {
+            ParsedChoiceOrSeqType::Choice => Ok(ChildrenType::Choice(ChoiceValue {
+                cps: choice_or_seq.cps,
+                space_before_close: choice_or_seq.ws_before_close,
+            })),
+            ParsedChoiceOrSeqType::Seq => Ok(ChildrenType::Seq(SeqValue {
+                cps: choice_or_seq.cps,
+                space_before_close: choice_or_seq.ws_before_close,
+            })),
+        }
     }
 }
 
 impl ChildrenValue {
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        unimplemented!();
+        Ok(ChildrenValue {
+            children_type: ChildrenType::parse(iter)?,
+            repetitions: Repetitions::parse(iter),
+        })
     }
 }
 
-impl CpType {
+impl CpItem {
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        unimplemented!();
+        if iter.is('(') {
+            let choice_or_seq = parse_choice_or_seq(iter)?;
+            match choice_or_seq.t {
+                ParsedChoiceOrSeqType::Choice => Ok(CpItem::Choice(ChoiceValue {
+                    cps: choice_or_seq.cps,
+                    space_before_close: choice_or_seq.ws_before_close,
+                })),
+                ParsedChoiceOrSeqType::Seq => Ok(CpItem::Seq(SeqValue {
+                    cps: choice_or_seq.cps,
+                    space_before_close: choice_or_seq.ws_before_close,
+                })),
+            }
+        } else {
+            Ok(CpItem::Name(DocTypeName::parse(iter)?))
+        }
     }
 }
 
 impl CpValue {
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        unimplemented!();
+        Ok(CpValue {
+            cp_item: CpItem::parse(iter)?,
+            repetitions: Repetitions::parse(iter),
+        })
     }
 }
 
-impl ChoiceOrSeqContent {
-    fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        unimplemented!();
+#[derive(Clone, Copy)]
+enum ParsedChoiceOrSeqType {
+    Choice,
+    Seq,
+}
+
+struct ParsedChoiceOrSeq {
+    t: ParsedChoiceOrSeqType,
+    cps: Vec<DelimitedListItem<CpValue>>,
+    ws_before_close: Option<Whitespace>,
+}
+
+fn parse_choice_or_seq(iter: &mut Iter<'_>) -> Result<ParsedChoiceOrSeq> {
+    debug_assert!(iter.is('('));
+    iter.advance_or_die()?;
+    let space_before_first_cp = Whitespace::parse_optional(iter);
+    let first_cp_value = CpValue::parse(iter)?;
+    let mut cps = Vec::new();
+    cps.push(DelimitedListItem {
+        space_before_delimiter: None,
+        space_after_delimiter: space_before_first_cp,
+        item: first_cp_value,
+    });
+    let mut ws_before_delimiter = Whitespace::parse_optional(iter);
+    let mut choice_or_seq = None;
+    loop {
+        if iter.is(')') {
+            iter.advance();
+            break;
+        }
+        if let Some(t) = choice_or_seq {
+            match t {
+                ParsedChoiceOrSeqType::Choice => expect!(iter, ',')?,
+                ParsedChoiceOrSeqType::Seq => expect!(iter, '|')?,
+            }
+        } else {
+            match iter.st.c {
+                ',' => choice_or_seq = Some(ParsedChoiceOrSeqType::Seq),
+                '|' => choice_or_seq = Some(ParsedChoiceOrSeqType::Choice),
+                _ => return parse_err!(iter, "unexpected char when parsing choice or seq"),
+            }
+        }
+        let ws_after_delimiter = Whitespace::parse_optional(iter);
+        let cp = CpValue::parse(iter)?;
+        cps.push(DelimitedListItem {
+            space_before_delimiter: ws_before_delimiter,
+            space_after_delimiter: ws_after_delimiter,
+            item: cp,
+        });
+        ws_before_delimiter = Whitespace::parse_optional(iter);
     }
+    let t = choice_or_seq
+        .ok_or_else(|| create_parser_error!(&iter.st, "unable to determine choice or seq"))?;
+    match t {
+        ParsedChoiceOrSeqType::Choice => {
+            if cps.len() < 2 {
+                return parse_err!(iter, "choice must have at least two members");
+            }
+        }
+        ParsedChoiceOrSeqType::Seq => {
+            if cps.is_empty() {
+                return parse_err!(iter, "seq must have at least one member");
+            }
+        }
+    }
+    Ok(ParsedChoiceOrSeq {
+        t,
+        cps,
+        ws_before_close: ws_before_delimiter,
+    })
 }
 
 // impl ChoiceValue {
 //     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-//         unimplemented!();
+//         debug_assert!(iter.is('('));
+//         iter.advance_or_die()?;
+//         let space_before_first_cp = Whitespace::parse_optional(iter);
+//         let first_cp_value = CpValue::parse(iter)?;
+//         let mut cps = Vec::new();
+//         cps.push(DelimitedListItem {
+//             space_before_delimiter: None,
+//             space_after_delimiter: space_before_first_cp,
+//             item: first_cp_value,
+//         });
+//         let mut ws_before_delimiter = Whitespace::parse_optional(iter);
+//         loop {
+//             if iter.is(')') {
+//                 iter.advance();
+//                 break;
+//             }
+//             expect!(iter, '|')?;
+//             let ws_after_delimiter = Whitespace::parse_optional(iter);
+//             let cp = CpValue::parse(iter)?;
+//             cps.push(DelimitedListItem {
+//                 space_before_delimiter: ws_before_delimiter,
+//                 space_after_delimiter: ws_after_delimiter,
+//                 item: cp,
+//             });
+//             ws_before_delimiter = Whitespace::parse_optional(iter);
+//         }
+//         if cps.len() < 2 {
+//             return parse_err!(iter, "choice must have at least two members");
+//         }
+//         Ok(Self {
+//             cps,
+//             space_before_close: ws_before_delimiter,
+//         })
 //     }
 // }
 //
 // impl SeqValue {
 //     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-//         unimplemented!();
+//         debug_assert!(iter.is('('));
+//         iter.advance_or_die()?;
+//         let space_before_first_cp = Whitespace::parse_optional(iter);
+//         let first_cp_value = CpValue::parse(iter)?;
+//         let mut cps = Vec::new();
+//         cps.push(DelimitedListItem {
+//             space_before_delimiter: None,
+//             space_after_delimiter: space_before_first_cp,
+//             item: first_cp_value,
+//         });
+//         let mut ws_before_delimiter = Whitespace::parse_optional(iter);
+//         loop {
+//             if iter.is(')') {
+//                 iter.advance();
+//                 break;
+//             }
+//             expect!(iter, ',')?;
+//             let ws_after_delimiter = Whitespace::parse_optional(iter);
+//             let cp = CpValue::parse(iter)?;
+//             cps.push(DelimitedListItem {
+//                 space_before_delimiter: ws_before_delimiter,
+//                 space_after_delimiter: ws_after_delimiter,
+//                 item: cp,
+//             });
+//             ws_before_delimiter = Whitespace::parse_optional(iter);
+//         }
+//         if cps.is_empty() {
+//             return parse_err!(iter, "seq must have at least one member");
+//         }
+//         Ok(Self {
+//             cps,
+//             space_before_close: ws_before_delimiter,
+//         })
 //     }
 // }
 
@@ -423,15 +597,15 @@ impl NmToken {
         let mut value = String::new();
         loop {
             if !iter.is_name_char() {
-                if let Some(end) = end_marker {
+                return if let Some(end) = end_marker {
                     if iter.is(end) {
-                        return Ok(Self { value });
+                        Ok(Self { value })
                     } else {
-                        return parse_err!(iter, "unexpected char before '{}' was reached", end);
+                        parse_err!(iter, "unexpected char before '{}' was reached", end)
                     }
                 } else {
-                    return Ok(Self { value });
-                }
+                    Ok(Self { value })
+                };
             } else {
                 value.push(iter.st.c);
                 if end_marker.is_some() {
@@ -581,7 +755,7 @@ impl CharRefValue {
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
         debug_assert!(iter.is('&'));
         iter.advance_or_die()?;
-        expect!(iter, '#');
+        expect!(iter, '#')?;
         iter.advance_or_die()?;
         let next = iter.peek_or_die()?;
         let t = if next == 'x' {
@@ -620,7 +794,7 @@ impl NotationDeclValue {
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
         debug_assert!(iter.is('!'));
         iter.advance_or_die()?;
-        iter.consume(STR_NOTATION);
+        iter.consume(STR_NOTATION)?;
         Ok(Self {
             space_before_name: Whitespace::parse(iter)?,
             name: DocTypeName::parse(iter)?,

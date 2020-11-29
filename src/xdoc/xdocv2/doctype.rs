@@ -223,11 +223,11 @@ pub enum ContentSpec {
     Children(ChildrenValue),
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
-pub struct FormattedItem<T> {
-    pub(crate) space_before_item: Option<Whitespace>,
-    pub(crate) item: T,
-}
+// #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+// pub struct FormattedItem<T> {
+//     pub(crate) space_before_item: Option<Whitespace>,
+//     pub(crate) item: T,
+// }
 
 /// ```text
 /// [7] Nmtoken ::= (NameChar)+
@@ -243,6 +243,8 @@ pub struct DelimitedListItem<T> {
     pub(crate) space_after_delimiter: Option<Whitespace>,
     pub(crate) item: T,
 }
+
+pub(crate) const STR_PCDATA: &str = "#PCDATA";
 
 /// > Mixed ::= '(' S? '#PCDATA' (S? '|' S? Name)* S? ')*'
 /// >           | '(' S? '#PCDATA' S? ')'
@@ -264,10 +266,10 @@ pub enum Repetitions {
     Optional,
     /// Something must appear exactly once, i.e. it does not have a `?`, `*`, or `*`.
     Once,
-    /// Something may appear any numer of times, or not at all, i.e. it is suffixed with `*`.
-    ZeroOrMany,
+    /// Something may appear any number of times, or not at all, i.e. it is suffixed with `*`.
+    ZeroOrMore,
     /// Something may appear once or more than once, i.e. it is suffixed with `+`.
-    OneOrMany,
+    OneOrMore,
 }
 
 /// https://www.w3.org/TR/xml/#NT-children
@@ -276,8 +278,8 @@ pub enum Repetitions {
 /// ```
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum ChildrenType {
-    Choice(ChoiceOrSeqContent),
-    Seq(ChoiceOrSeqContent),
+    Choice(ChoiceValue),
+    Seq(SeqValue),
 }
 
 /// https://www.w3.org/TR/xml/#NT-children
@@ -292,61 +294,51 @@ pub struct ChildrenValue {
 
 /// https://www.w3.org/TR/xml/#NT-cp
 /// ```text
-///
+/// [48] cp ::= (Name | choice | seq) ('?' | '*' | '+')?
 /// ```
+/// This struct represents just the the part of the above represented by
+/// `(Name | choice | seq)`. That is the variant without the number of
+/// repetitions. [`CpValue`] represents the entire `cp` construct, including the
+/// number of repetitions.
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
-pub enum CpType {
+pub enum CpItem {
     Name(DocTypeName),
-    Choice(ChoiceOrSeqContent),
-    Seq(ChoiceOrSeqContent),
+    Choice(ChoiceValue),
+    Seq(SeqValue),
 }
 
 /// https://www.w3.org/TR/xml/#NT-cp
 /// ```text
 /// [48] cp ::= (Name | choice | seq) ('?' | '*' | '+')?
 /// ```
+/// This struct represents the entire `cp`, that is is has either a `Name`, `choice` or `seq` as
+/// well as the number of repetions. [`CpItem`] represents just the `Name`, `choice` or `seq`
+/// without the number of repetitions.
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct CpValue {
-    pub(crate) cp_type: CpType,
+    pub(crate) cp_item: CpItem,
     pub(crate) repetitions: Repetitions,
 }
 
 /// https://www.w3.org/TR/xml/#NT-choice
-/// https://www.w3.org/TR/xml/#NT-seq
 /// ```text
 /// [49] choice ::= '(' S? cp ( S? '|' S? cp )+ S? ')'
-/// [50] seq    ::= '(' S? cp ( S? ',' S? cp )* S? ')'
 /// ```
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
-pub struct ChoiceOrSeqContent {
-    pub(crate) choice_or_seq: ChoiceOrSeq,
+pub struct ChoiceValue {
     pub(crate) cps: Vec<DelimitedListItem<CpValue>>,
     pub(crate) space_before_close: Option<Whitespace>,
 }
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash)]
-pub(crate) enum ChoiceOrSeq {
-    Choice,
-    Seq,
+/// https://www.w3.org/TR/xml/#NT-seq
+/// ```text
+/// [50] seq    ::= '(' S? cp ( S? ',' S? cp )* S? ')'
+/// ```
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub struct SeqValue {
+    pub(crate) cps: Vec<DelimitedListItem<CpValue>>,
+    pub(crate) space_before_close: Option<Whitespace>,
 }
-
-// /// https://www.w3.org/TR/xml/#NT-choice
-// /// ```text
-// /// [49] choice ::= '(' S? cp ( S? '|' S? cp )+ S? ')'
-// /// ```
-// #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
-// pub struct ChoiceValue {
-//     pub(crate) content: ChoiceOrSeqContent,
-// }
-//
-// /// https://www.w3.org/TR/xml/#NT-seq
-// /// ```text
-// /// [50] seq ::= '(' S? cp ( S? ',' S? cp )* S? ')'
-// /// ```
-// #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
-// pub struct SeqValue {
-//     pub(crate) content: ChoiceOrSeqContent,
-// }
 
 /// https://www.w3.org/TR/xml/#NT-AttlistDecl
 /// AttlistDecl ::= '<!ATTLIST' S Name AttDef* S? '>'
