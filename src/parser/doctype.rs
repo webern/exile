@@ -9,7 +9,8 @@ use crate::xdoc::xdocv2::doctype::{
     PEDeclValue, PEDef, PEReferenceValue, PubIDLiteral, PublicExternalID, PublicID, Quote,
     Reference, ReferenceValue, Repetitions, SeqValue, Space, SystemExternalID, SystemLiteral,
     Whitespace, CHAR_CARRIAGE_RETURN, CHAR_NEWLINE, CHAR_SPACE, CHAR_TAB, STR_ATTLIST, STR_CDATA,
-    STR_ENTITY, STR_FIXED, STR_IMPLIED, STR_NDATA, STR_NMTOKEN, STR_NOTATION, STR_REQUIRED,
+    STR_ENTITY, STR_FIXED, STR_IMPLIED, STR_NDATA, STR_NMTOKEN, STR_NOTATION, STR_PCDATA,
+    STR_REQUIRED,
 };
 
 use super::error::Result;
@@ -159,29 +160,30 @@ impl ContentSpec {
     }
 }
 
-// impl<T> FormattedItem<T> {
-//     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-//         unimplemented!();
-//     }
-// }
-
-impl<T> DelimitedListItem<T> {
-    fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        unimplemented!();
-    }
-}
-
-// /// > Mixed ::= '(' S? '#PCDATA' (S? '|' S? Name)* S? ')*'
-// /// >           | '(' S? '#PCDATA' S? ')'
-// #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
-// pub struct MixedValue {
-//     pub(crate) space_after_open_parenthesis: Option<Whitespace>,
-//     pub(crate) element_names: Vec<DelimitedListItem<DocTypeName>>,
-//     pub(crate) space_before_close_parenthesis: Option<Whitespace>,
-// }
 impl MixedValue {
-    fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        unimplemented!();
+    /// Expects iter pointing at `#PCDATA` and takes whatever whitespace proceeded it as an argument.
+    fn parse(
+        iter: &mut Iter<'_>,
+        space_after_open_parenthesis: Option<Whitespace>,
+    ) -> Result<Self> {
+        iter.consume(STR_PCDATA)?;
+        let mut space_before_delim = None;
+        let mut element_names = Vec::new();
+        loop {
+            space_before_delim = Whitespace::parse_optional(iter);
+            if iter.is(')') {
+                break;
+            }
+            expect!(iter, '|')?;
+            let space_after_delim = Whitespace::parse_optional(iter);
+            element_names.push(DocTypeName::parse(iter)?);
+        }
+        iter.advance();
+        Ok(Self {
+            space_after_open_parenthesis,
+            element_names: Vec::new(),
+            space_before_close_parenthesis: space_before_delim,
+        })
     }
 }
 
@@ -200,7 +202,10 @@ impl Repetitions {
 
 impl ChildrenType {
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        let choice_or_seq = parse_choice_or_seq(iter)?;
+        let choice_or_seq = match parse_mystery(iter)? {
+            ParsedMystery::ChoiceOrSeq(val) => val,
+            ParsedMystery::Mixed(_) => return parse_err!(iter, "#PCDATA cannot exist here"),
+        };
         match choice_or_seq.t {
             ParsedChoiceOrSeqType::Choice => Ok(ChildrenType::Choice(ChoiceValue {
                 cps: choice_or_seq.cps,
@@ -226,7 +231,10 @@ impl ChildrenValue {
 impl CpItem {
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
         if iter.is('(') {
-            let choice_or_seq = parse_choice_or_seq(iter)?;
+            let choice_or_seq = match parse_mystery(iter)? {
+                ParsedMystery::ChoiceOrSeq(val) => val,
+                ParsedMystery::Mixed(_) => return parse_err!(iter, "#PCDATA cannot exist here"),
+            };
             match choice_or_seq.t {
                 ParsedChoiceOrSeqType::Choice => Ok(CpItem::Choice(ChoiceValue {
                     cps: choice_or_seq.cps,
@@ -252,27 +260,54 @@ impl CpValue {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash)]
 enum ParsedChoiceOrSeqType {
     Choice,
     Seq,
 }
 
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 struct ParsedChoiceOrSeq {
     t: ParsedChoiceOrSeqType,
     cps: Vec<DelimitedListItem<CpValue>>,
     ws_before_close: Option<Whitespace>,
 }
 
-fn parse_choice_or_seq(iter: &mut Iter<'_>) -> Result<ParsedChoiceOrSeq> {
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+enum ParsedMystery {
+    ChoiceOrSeq(ParsedChoiceOrSeq),
+    Mixed(MixedValue),
+}
+
+/// Choice, Seq and Mixed cannot be determined until we have started parsing.
+fn parse_mystery(iter: &mut Iter<'_>) -> Result<ParsedMystery> {
     debug_assert!(iter.is('('));
     iter.advance_or_die()?;
-    let space_before_first_cp = Whitespace::parse_optional(iter);
+    let space_after_open = Whitespace::parse_optional(iter);
+    if iter.is('#') {
+        // must be '#PCDATA' which indicates Mixed
+        Ok(ParsedMystery::Mixed(MixedValue::parse(
+            iter,
+            space_after_open,
+        )?))
+    } else {
+        Ok(ParsedMystery::ChoiceOrSeq(parse_choice_or_seq(
+            iter,
+            space_after_open,
+        )?))
+    }
+}
+
+/// Takes the iter after `(` and first `Whitespace`.
+fn parse_choice_or_seq(
+    iter: &mut Iter<'_>,
+    space_after_open: Option<Whitespace>,
+) -> Result<ParsedChoiceOrSeq> {
     let first_cp_value = CpValue::parse(iter)?;
     let mut cps = Vec::new();
     cps.push(DelimitedListItem {
         space_before_delimiter: None,
-        space_after_delimiter: space_before_first_cp,
+        space_after_delimiter: space_after_open,
         item: first_cp_value,
     });
     let mut ws_before_delimiter = Whitespace::parse_optional(iter);

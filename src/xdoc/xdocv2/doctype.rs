@@ -215,6 +215,13 @@ pub struct ElementDeclValue {
     pub(crate) space_after_content_spec: Option<Whitespace>,
 }
 
+pub(crate) const STR_EMPTY: &str = "EMPTY";
+pub(crate) const STR_ANY: &str = "ANY";
+
+/// https://www.w3.org/TR/xml/#NT-contentspec
+/// ```text
+/// [46] contentspec ::= 'EMPTY' | 'ANY' | Mixed | children
+/// ```
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum ContentSpec {
     Empty,
