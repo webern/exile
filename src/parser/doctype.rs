@@ -1,3 +1,5 @@
+use crate::parser::bang::parse_comment;
+use crate::parser::pi::parse_pi;
 use crate::parser::Iter;
 use crate::xdoc::xdocv2::doctype::{
     AttDef, AttType, AttValue, AttValueData, AttlistDeclValue, CharRefValue, CharRefValueType,
@@ -8,9 +10,9 @@ use crate::xdoc::xdocv2::doctype::{
     MarkupDeclValue, MixedValue, NDataDecl, NmToken, NotationDeclValue, NotationTypeValue,
     PEDeclValue, PEDef, PEReferenceValue, PubIDLiteral, PublicExternalID, PublicID, Quote,
     Reference, ReferenceValue, Repetitions, SeqValue, Space, SystemExternalID, SystemLiteral,
-    Whitespace, CHAR_CARRIAGE_RETURN, CHAR_NEWLINE, CHAR_SPACE, CHAR_TAB, STR_ATTLIST, STR_CDATA,
-    STR_ENTITY, STR_FIXED, STR_IMPLIED, STR_NDATA, STR_NMTOKEN, STR_NOTATION, STR_PCDATA,
-    STR_REQUIRED,
+    Whitespace, CHAR_CARRIAGE_RETURN, CHAR_NEWLINE, CHAR_SPACE, CHAR_TAB, STR_ANY, STR_ATTLIST,
+    STR_CDATA, STR_ELEMENT, STR_EMPTY, STR_ENTITY, STR_FIXED, STR_IMPLIED, STR_NDATA, STR_NMTOKEN,
+    STR_NOTATION, STR_PCDATA, STR_REQUIRED,
 };
 
 use super::error::Result;
@@ -144,19 +146,101 @@ impl PEReferenceValue {
 
 impl MarkupDeclValue {
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        unimplemented!();
+        debug_assert!(iter.is('<'));
+        iter.advance_or_die()?;
+        match iter.st.c {
+            '!' => match iter.peek_or_die()? {
+                'A' => Ok(MarkupDeclValue::AttlistDecl(AttlistDeclValue::parse(iter)?)),
+                'E' => {
+                    iter.advance_or_die()?;
+                    match iter.peek_or_die()? {
+                        'L' => {
+                            iter.consume(STR_ELEMENT)?;
+                            Ok(MarkupDeclValue::ElementDecl(ElementDeclValue::parse(iter)?))
+                        }
+                        'N' => {
+                            iter.consume(STR_ENTITY)?;
+                            Ok(MarkupDeclValue::EntityDecl(EntityDeclValue::parse(iter)?))
+                        }
+                        _ => parse_err!(iter, "expected {} or {}", STR_ELEMENT, STR_ENTITY),
+                    }
+                }
+                'N' => Ok(MarkupDeclValue::NotationDecl(NotationDeclValue::parse(
+                    iter,
+                )?)),
+                '-' => Ok(MarkupDeclValue::Comment(parse_comment(iter)?)),
+                _ => parse_err!(
+                    iter,
+                    "expected {}, {}, {}, {} or comment",
+                    STR_ATTLIST,
+                    STR_ELEMENT,
+                    STR_ENTITY,
+                    STR_NOTATION
+                ),
+            },
+            '?' => Ok(MarkupDeclValue::PI(parse_pi(iter)?)),
+            _ => parse_err!(
+                iter,
+                "expected {}, {}, {}, {}, processing instruction or comment",
+                STR_ATTLIST,
+                STR_ELEMENT,
+                STR_ENTITY,
+                STR_NOTATION
+            ),
+        }
     }
 }
 
 impl ElementDeclValue {
+    /// > elementdecl ::= '<!ELEMENT' S Name S contentspec S? '>'
+    /// expects iter at the first space following `<!ELEMENT`
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        unimplemented!();
+        iter.consume(STR_ELEMENT)?;
+        OK(Self {
+            space_before_name: Whitespace::parse(iter)?,
+            name: DocTypeName::parse(iter)?,
+            space_after_name: Whitespace::parse(iter)?,
+            content_spec: ContentSpec::parse(iter)?,
+            space_after_content_spec: Whitespace::parse_optional(iter),
+        })
     }
 }
 
 impl ContentSpec {
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        unimplemented!();
+        match iter.st.c {
+            'E' => {
+                iter.consume(STR_EMPTY)?;
+                Ok(ContentSpec::Empty)
+            }
+            'A' => {
+                iter.consume(STR_ANY)?;
+                Ok(ContentSpec::Any)
+            }
+            '(' => {
+                let mystery = parse_mystery(iter)?;
+                match mystery {
+                    ParsedMystery::ChoiceOrSeq(c_or_s) => match c_or_s.t {
+                        ParsedChoiceOrSeqType::Choice => Ok(ContentSpec::Children(ChildrenValue {
+                            children_type: ChildrenType::Choice(ChoiceValue {
+                                cps: c_or_s.cps,
+                                space_before_close: c_or_s.ws_before_close,
+                            }),
+                            repetitions: Repetitions::parse(iter),
+                        })),
+                        ParsedChoiceOrSeqType::Seq => Ok(ContentSpec::Children(ChildrenValue {
+                            children_type: ChildrenType::Seq(SeqValue {
+                                cps: c_or_s.cps,
+                                space_before_close: c_or_s.ws_before_close,
+                            }),
+                            repetitions: Repetitions::parse(iter),
+                        })),
+                    },
+                    ParsedMystery::Mixed(m) => Ok(ContentSpec::Mixed(m)),
+                }
+            }
+            _ => parse_err!(iter, "unable to parse ContentSpec"),
+        }
     }
 }
 
@@ -656,13 +740,10 @@ impl NmToken {
 }
 
 impl EntityDeclValue {
-    /// Expects the iter pointing at `!`.
+    /// Expects the iter pointing at the space following `<!ENTITY`.
     /// GEDecl ::= '<!ENTITY' S Name S EntityDef S? '>'
     /// PEDecl ::=  '<!ENTITY' S '%' S Name S PEDef S? '>'
     fn parse(iter: &mut Iter<'_>) -> Result<Self> {
-        debug_assert!(iter.is('!'));
-        iter.advance_or_die()?;
-        iter.consume(STR_ENTITY)?;
         let space_after_entity = Whitespace::parse(iter)?;
         if iter.is('%') {
             iter.advance_or_die()?;

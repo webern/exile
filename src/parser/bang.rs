@@ -38,7 +38,7 @@ pub(super) fn parse_bang(iter: &mut Iter<'_>) -> Result<LTParse> {
 /// Advances the iterator past a comment. Takes the iterator pointing at `!` and returns the
 /// iterator pointing at the first character after the closing '>'. Returns an error  if it is not a
 /// well-formed comment.
-fn parse_comment(iter: &mut Iter<'_>) -> Result<String> {
+pub(super) fn parse_comment(iter: &mut Iter<'_>) -> Result<String> {
     expect!(iter, '!')?;
     iter.advance_or_die()?;
     expect!(iter, '-')?;

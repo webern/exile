@@ -194,7 +194,9 @@ pub(crate) const STR_ELEMENT: &str = "ELEMENT";
 pub(crate) const STR_ATTLIST: &str = "ATTLIST";
 
 /// https://www.w3.org/TR/xml/#NT-markupdecl
-/// > markupdecl ::= elementdecl | AttlistDecl | EntityDecl | NotationDecl | PI | Comment
+/// ```text
+/// markupdecl ::= elementdecl | AttlistDecl | EntityDecl | NotationDecl | PI | Comment
+/// ```
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum MarkupDeclValue {
     ElementDecl(ElementDeclValue),
@@ -205,7 +207,10 @@ pub enum MarkupDeclValue {
     Comment(String),
 }
 
-/// > elementdecl ::= '<!ELEMENT' S Name S contentspec S? '>'
+/// https://www.w3.org/TR/xml/#NT-elementdecl
+/// ```text
+/// elementdecl ::= '<!ELEMENT' S Name S contentspec S? '>'
+/// ```
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct ElementDeclValue {
     pub(crate) space_before_name: Whitespace,
