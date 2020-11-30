@@ -17,7 +17,9 @@ fn expected() -> Document {
         version: None,
         encoding: None,
     });
-    // TODO - write doctype information
+    // TODO - support doctype https://github.com/webern/exile/issues/22
+    doc.set_doctype("<!DOCTYPE doc [\r\n<!ELEMENT doc (#PCDATA)>\r\n]>")
+        .unwrap();
     let root = doc.root_mut();
     root.set_name(r#"doc"#);
     root.add_cdata(r#"<&]>]"#).unwrap();

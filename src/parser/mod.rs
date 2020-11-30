@@ -6,6 +6,7 @@ use std::iter::Peekable;
 use std::path::Path;
 use std::str::Chars;
 
+use crate::constants::{CARRIAGE_RETURN, NEWLINE, SPACE, TAB};
 use crate::error::{OtherError, ThrowSite};
 use crate::parser::bang::parse_bang;
 use crate::parser::chars::{is_name_char, is_name_start_char};
@@ -13,7 +14,6 @@ use crate::parser::element::{parse_element, LTParse};
 use crate::parser::error::{display_char, Result};
 pub use crate::parser::error::{ParseError, XmlSite};
 use crate::parser::pi::{parse_pi, parse_pi_logic};
-use crate::xdoc::xdocv2::doctype::{CHAR_CARRIAGE_RETURN, CHAR_NEWLINE, CHAR_SPACE, CHAR_TAB};
 use crate::{Declaration, Document, Encoding, Misc, Node, Version};
 
 #[macro_use]
@@ -21,6 +21,7 @@ mod macros;
 
 mod bang;
 mod chars;
+#[cfg(feature = "doctype_wip")]
 mod doctype;
 mod element;
 mod error;
@@ -194,10 +195,7 @@ impl<'a> Iter<'a> {
     }
 
     pub(crate) fn is_whitespace(&self) -> bool {
-        matches!(
-            self.st.c,
-            CHAR_SPACE | CHAR_TAB | CHAR_NEWLINE | CHAR_CARRIAGE_RETURN
-        )
+        matches!(self.st.c, SPACE | TAB | NEWLINE | CARRIAGE_RETURN)
     }
 
     pub(crate) fn is(&self, value: char) -> bool {
@@ -233,6 +231,7 @@ impl<'a> Iter<'a> {
 
     /// Advance the iter past the end of the string given as `s`. Error if we are not point at the
     /// beginning of `s`.
+    #[allow(dead_code)] // TODO - this is because of doctype_wip
     pub(crate) fn consume<S: AsRef<str>>(&mut self, s: S) -> Result<()> {
         for c in s.as_ref().chars() {
             expect!(self, c)?;

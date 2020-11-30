@@ -1,5 +1,6 @@
 use std::fmt::Write;
 
+use crate::constants::{CARRIAGE_RETURN, NEWLINE, SPACE};
 use crate::xdoc::error::Result;
 use crate::PI;
 
@@ -23,15 +24,6 @@ pub(crate) const STR_DOCTYPE: &str = "DOCTYPE";
 pub struct DocTypeName {
     pub(crate) name: String,
 }
-
-/// `#x20` or `' '`
-pub(crate) const CHAR_SPACE: char = ' ';
-/// `#x9` or `'\t'`
-pub(crate) const CHAR_TAB: char = '\t';
-/// `#xD` or `'\r'`
-pub(crate) const CHAR_CARRIAGE_RETURN: char = '\r';
-/// `#0A` pr `'\n'`
-pub(crate) const CHAR_NEWLINE: char = '\n';
 
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Whitespace {
@@ -134,9 +126,9 @@ impl PubIDLiteral {
             _ => {}
         }
         matches!(c,
-           CHAR_SPACE |
-           CHAR_CARRIAGE_RETURN |
-           CHAR_NEWLINE |
+           SPACE |
+           CARRIAGE_RETURN |
+           NEWLINE |
            'a'..='z' |
            'A'..='Z' |
            '0'..='9' |

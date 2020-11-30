@@ -1,3 +1,4 @@
+use crate::constants::{CARRIAGE_RETURN, NEWLINE, SPACE, TAB};
 use crate::parser::bang::parse_comment;
 use crate::parser::pi::parse_pi;
 use crate::parser::Iter;
@@ -10,9 +11,9 @@ use crate::xdoc::xdocv2::doctype::{
     MarkupDeclValue, MixedValue, NDataDecl, NmToken, NotationDeclValue, NotationTypeValue,
     PEDeclValue, PEDef, PEReferenceValue, PubIDLiteral, PublicExternalID, PublicID, Quote,
     Reference, ReferenceValue, Repetitions, SeqValue, Space, SystemExternalID, SystemLiteral,
-    Whitespace, CHAR_CARRIAGE_RETURN, CHAR_NEWLINE, CHAR_SPACE, CHAR_TAB, STR_ANY, STR_ATTLIST,
-    STR_CDATA, STR_DOCTYPE, STR_ELEMENT, STR_EMPTY, STR_ENTITY, STR_FIXED, STR_IMPLIED, STR_NDATA,
-    STR_NMTOKEN, STR_NOTATION, STR_PCDATA, STR_PUBLIC, STR_REQUIRED, STR_SYSTEM,
+    Whitespace, STR_ANY, STR_ATTLIST, STR_CDATA, STR_DOCTYPE, STR_ELEMENT, STR_EMPTY, STR_ENTITY,
+    STR_FIXED, STR_IMPLIED, STR_NDATA, STR_NMTOKEN, STR_NOTATION, STR_PCDATA, STR_PUBLIC,
+    STR_REQUIRED, STR_SYSTEM,
 };
 
 use super::error::Result;
@@ -92,10 +93,10 @@ impl Whitespace {
         }
         loop {
             match iter.st.c {
-                CHAR_SPACE => w.push(Space::Space),
-                CHAR_TAB => w.push(Space::Tab),
-                CHAR_NEWLINE => w.push(Space::Newline),
-                CHAR_CARRIAGE_RETURN => w.push(Space::CarriageReturn),
+                SPACE => w.push(Space::Space),
+                TAB => w.push(Space::Tab),
+                NEWLINE => w.push(Space::Newline),
+                CARRIAGE_RETURN => w.push(Space::CarriageReturn),
                 _ => break,
             }
             if !iter.advance() {

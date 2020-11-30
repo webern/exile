@@ -136,8 +136,15 @@ impl Document {
     /// instructions you have added with [`add_prolog_comment`] or [`add_prolog_pi`]. Once this has
     /// been set, using those functions will place additional comments or processing instructions
     /// *after* the doctype declaration.
+    #[cfg(feature = "doctype_wip")]
     pub fn set_doctype<S: Into<String>>(&mut self, doctype: S) -> Result<()> {
         self.prolog.doctypedecl = Some(doctype.into());
+        Ok(())
+    }
+
+    /// Disabled doctype setter.
+    #[cfg(not(feature = "doctype_wip"))]
+    pub fn set_doctype<S: Into<String>>(&mut self, _: S) -> Result<()> {
         Ok(())
     }
 
@@ -242,7 +249,15 @@ impl Document {
                 return wrap_err!(e);
             }
         }
-        for misc in self.prolog_misc() {
+        for misc in &self.prolog.misc_before_doctype {
+            misc.write(writer, opts, 0)?;
+            opts.newline(writer)?;
+        }
+        if let Some(doctype) = &self.prolog.doctypedecl {
+            xwrite!(writer, "{}", doctype)?;
+            opts.newline(writer)?;
+        }
+        for misc in &self.prolog.misc_after_doctype {
             misc.write(writer, opts, 0)?;
             opts.newline(writer)?;
         }

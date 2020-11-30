@@ -98,7 +98,6 @@ fn parse_nested_doctype_stuff(iter: &mut Iter<'_>, s: &mut String) -> Result<()>
         s.push(iter.st.c);
         iter.advance_or_die()?;
     }
-    s.push(iter.st.c);
     Ok(())
 }
 
@@ -262,7 +261,7 @@ fn parse_bang_doctype() {
 <!ATTLIST doc a1 CDATA #IMPLIED>
 ]>x"#;
     let iter_char_after = 'x';
-    let expected = LTParse::Skip;
+    let expected = LTParse::DocType(data[..data.len() - 1].to_owned());
     let mut iter = Iter::new(data).unwrap();
     let actual = parse_bang(&mut iter).unwrap();
     assert_eq!(expected, actual);

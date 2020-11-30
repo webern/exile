@@ -141,6 +141,7 @@ pub(super) enum LTParse {
     // the parsed entity was an EndTag.
     EndTag,
     // the parsed entity was an unsupported node type, i.e. something we want to skip.
+    #[allow(dead_code)] // TODO - this is because of doctype_wip
     Skip,
     // the parsed entity was a supported node type.
     Some(Node),

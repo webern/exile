@@ -80,6 +80,7 @@ pub use crate::xdoc::{
 /// The `error` module defines the error types for this library.
 #[macro_use]
 mod macros;
+mod constants;
 pub mod error;
 pub mod parser;
 mod xdoc;
