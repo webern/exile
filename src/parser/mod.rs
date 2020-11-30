@@ -345,7 +345,10 @@ fn parse_document(iter: &mut Iter<'_>, document: &mut Document) -> Result<()> {
                         _ => return parse_err!(iter, "can not add document node '{:?}", node),
                     },
                     LTParse::Skip => {}
-                    _ => return parse_err!(iter, "unexpected {:?}", ltparse),
+                    LTParse::EndTag => return parse_err!(iter, "unexpected {:?}", LTParse::EndTag),
+                    LTParse::DocType(s) => {
+                        document.set_doctype(s).map_err(|e| from_xe!(iter, e))?
+                    }
                 }
             }
             _ => {

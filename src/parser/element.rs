@@ -123,6 +123,7 @@ fn parse_children(iter: &mut Iter<'_>, parent: &mut Element) -> Result<()> {
                     Node::PI(pi) => parent.add_pi(pi),
                     Node::DocType(_) => panic!("doctype unsupported"),
                 },
+                LTParse::DocType(_) => return parse_err!(iter, "doctype not allowed here"),
             }
         } else {
             let text = parse_text(iter)?;
@@ -143,6 +144,8 @@ pub(super) enum LTParse {
     Skip,
     // the parsed entity was a supported node type.
     Some(Node),
+    // TODO - make this a struct to support doctypes https://github.com/webern/exile/issues/22
+    DocType(String),
 }
 
 // parse the correct type of node (or end tag) when encountering a '<'
