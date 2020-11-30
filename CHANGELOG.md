@@ -8,6 +8,13 @@ Currently we are using v0.0.x where every version can and will contain breaking 
 
 ## [Unreleased]
 ## Added
+- TBD
+
+### Changed
+- TBD
+
+## [v0.0.4] 2020-11-29
+## Added
 - Support comments [#77]
 
 ### Changed
@@ -74,7 +81,8 @@ Currently we are using v0.0.x where every version can and will contain breaking 
 [#52]: https://github.com/webern/exile/pull/52
 
 <!-- version diff links -->
-[Unreleased]: https://github.com/webern/exile/compare/v0.0.2...HEAD
+[Unreleased]: https://github.com/webern/exile/compare/v0.0.4...HEAD
+[v0.0.4]: https://github.com/webern/exile/compare/v0.0.3...v0.0.4
 [v0.0.3]: https://github.com/webern/exile/compare/v0.0.2...v0.0.3
 [v0.0.2]: https://github.com/webern/exile/compare/v0.0.1...v0.0.2
 [v0.0.1]: https://github.com/webern/exile/compare/v0.0.0...v0.0.1
