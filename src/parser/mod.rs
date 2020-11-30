@@ -6,6 +6,7 @@ use std::iter::Peekable;
 use std::path::Path;
 use std::str::Chars;
 
+use crate::constants::{CARRIAGE_RETURN, NEWLINE, SPACE, TAB};
 use crate::error::{OtherError, ThrowSite};
 use crate::parser::bang::parse_bang;
 use crate::parser::chars::{is_name_char, is_name_start_char};
@@ -20,6 +21,8 @@ mod macros;
 
 mod bang;
 mod chars;
+#[cfg(feature = "doctype_wip")]
+mod doctype;
 mod element;
 mod error;
 mod pi;
@@ -192,7 +195,7 @@ impl<'a> Iter<'a> {
     }
 
     pub(crate) fn is_whitespace(&self) -> bool {
-        self.st.c.is_ascii_whitespace()
+        matches!(self.st.c, SPACE | TAB | NEWLINE | CARRIAGE_RETURN)
     }
 
     pub(crate) fn is(&self, value: char) -> bool {
@@ -224,6 +227,17 @@ impl<'a> Iter<'a> {
             Some(c) => Ok(*c),
             None => parse_err!(self, "unexpected end of document"),
         }
+    }
+
+    /// Advance the iter past the end of the string given as `s`. Error if we are not point at the
+    /// beginning of `s`.
+    #[allow(dead_code)] // TODO - this is because of doctype_wip
+    pub(crate) fn consume<S: AsRef<str>>(&mut self, s: S) -> Result<()> {
+        for c in s.as_ref().chars() {
+            expect!(self, c)?;
+            self.advance_or_die()?
+        }
+        Ok(())
     }
 
     /// Returns true if the character is `'\0'`, which means that the iter is exhausted.
@@ -330,7 +344,10 @@ fn parse_document(iter: &mut Iter<'_>, document: &mut Document) -> Result<()> {
                         _ => return parse_err!(iter, "can not add document node '{:?}", node),
                     },
                     LTParse::Skip => {}
-                    _ => return parse_err!(iter, "unexpected {:?}", ltparse),
+                    LTParse::EndTag => return parse_err!(iter, "unexpected {:?}", LTParse::EndTag),
+                    LTParse::DocType(s) => {
+                        document.set_doctype(s).map_err(|e| from_xe!(iter, e))?
+                    }
                 }
             }
             _ => {
@@ -534,6 +551,22 @@ fn xml_03() {
     assert!(doc.declaration().encoding.is_none());
     assert_eq!(0, doc.root().nodes_len());
     assert_eq!("doc", doc.root().fullname());
+}
+
+#[test]
+fn consume_test() {
+    let s = "bones and bish(";
+    let mut iter = Iter::new(s).unwrap();
+    iter.consume("bones and bish").unwrap();
+    assert_eq!(iter.st.c, '(')
+}
+
+#[test]
+fn consume_test_err() {
+    let s = "bones and fish(";
+    let mut iter = Iter::new(s).unwrap();
+    let result = iter.consume("bones and bish");
+    assert!(result.is_err());
 }
 
 #[cfg(test)]

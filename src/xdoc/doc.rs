@@ -47,15 +47,25 @@ pub struct Declaration {
     pub encoding: Option<Encoding>,
 }
 
-#[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash, Default)]
 /// Represents an XML Document.
 pub struct Document {
-    declaration: Declaration,
-    // TODO - add doctype support https://github.com/webern/exile/issues/22
-    doctypedecl: Option<()>,
-    prolog_misc: Vec<Misc>,
+    prolog: Prolog,
     root: Element,
     epilog_misc: Vec<Misc>,
+}
+
+/// https://www.w3.org/TR/xml/#NT-prolog
+/// ```text
+/// [22] prolog ::= XMLDecl? Misc* (doctypedecl Misc*)?
+/// ```
+#[derive(Debug, Clone, Eq, Ord, PartialOrd, PartialEq, Hash, Default)]
+struct Prolog {
+    // TODO xml_decl should be an Option and inside it, Version should not be optional.
+    xml_decl: Declaration,
+    misc_before_doctype: Vec<Misc>,
+    doctypedecl: Option<String>,
+    misc_after_doctype: Vec<Misc>,
 }
 
 impl<'a> From<&'a Element> for Cow<'a, Element> {
@@ -70,17 +80,15 @@ impl<'a> From<Element> for Cow<'a, Element> {
     }
 }
 
-impl Default for Document {
-    fn default() -> Self {
-        Document {
-            declaration: Declaration::default(),
-            doctypedecl: None,
-            prolog_misc: Vec::new(),
-            root: Element::default(),
-            epilog_misc: Vec::new(),
-        }
-    }
-}
+// impl Default for Document {
+//     fn default() -> Self {
+//         Document {
+//             prolog: Prolog::default(),
+//             root: Element::default(),
+//             epilog_misc: Vec::new(),
+//         }
+//     }
+// }
 
 impl<'a> Document {
     /// Create a new default document.
@@ -93,9 +101,7 @@ impl Document {
     /// Construct a new `Document` using the given `Element` as the root.
     pub fn from_root(root: Element) -> Self {
         Document {
-            declaration: Default::default(),
-            doctypedecl: None,
-            prolog_misc: Vec::new(),
+            prolog: Default::default(),
             root,
             epilog_misc: Vec::new(),
         }
@@ -118,34 +124,66 @@ impl Document {
 
     /// Get the `Declaration` object.
     pub fn declaration(&self) -> &Declaration {
-        &self.declaration
+        &self.prolog.xml_decl
     }
 
     /// Set the `Declaration` object for the `Document`.
     pub fn set_declaration(&mut self, declaration: Declaration) {
-        self.declaration = declaration;
+        self.prolog.xml_decl = declaration;
+    }
+
+    /// Set the doctype declaration. This will go before any prolog comments or processing
+    /// instructions you have added with [`add_prolog_comment`] or [`add_prolog_pi`]. Once this has
+    /// been set, using those functions will place additional comments or processing instructions
+    /// *after* the doctype declaration.
+    #[cfg(feature = "doctype_wip")]
+    pub fn set_doctype<S: Into<String>>(&mut self, doctype: S) -> Result<()> {
+        self.prolog.doctypedecl = Some(doctype.into());
+        Ok(())
+    }
+
+    /// Disabled doctype setter.
+    #[cfg(not(feature = "doctype_wip"))]
+    pub fn set_doctype<S: Into<String>>(&mut self, _: S) -> Result<()> {
+        Ok(())
     }
 
     /// Add a comment before the document root element.
     pub fn add_prolog_comment<S: Into<String>>(&mut self, comment: S) -> Result<()> {
         // TODO check for --
-        self.prolog_misc.push(Misc::Comment(comment.into()));
+        if self.prolog.doctypedecl.is_none() {
+            self.prolog
+                .misc_before_doctype
+                .push(Misc::Comment(comment.into()));
+        } else {
+            self.prolog
+                .misc_after_doctype
+                .push(Misc::Comment(comment.into()));
+        }
         Ok(())
     }
 
     /// Add a processing instruction before the document root element.
     pub fn add_prolog_pi(&mut self, pi: PI) {
-        self.prolog_misc.push(Misc::PI(pi));
+        if self.prolog.doctypedecl.is_none() {
+            self.prolog.misc_before_doctype.push(Misc::PI(pi));
+        } else {
+            self.prolog.misc_after_doctype.push(Misc::PI(pi));
+        }
     }
 
-    /// Remove all `PI` and comment entries before the root element.
+    /// Remove all [`PI`] and comment entries before the root element.
     pub fn clear_prolog_misc(&mut self) {
-        self.prolog_misc.clear()
+        self.prolog.misc_before_doctype.clear();
+        self.prolog.misc_after_doctype.clear();
     }
 
     /// Access the `Misc` entries before the root element.
-    pub fn prolog_misc(&self) -> std::slice::Iter<'_, Misc> {
-        self.prolog_misc.iter()
+    pub fn prolog_misc(&self) -> impl Iterator<Item = &Misc> + '_ {
+        self.prolog
+            .misc_before_doctype
+            .iter()
+            .chain(self.prolog.misc_after_doctype.iter())
     }
 
     /// Add a comment after the document root element.
@@ -183,10 +221,10 @@ impl Document {
     where
         W: Write,
     {
-        if self.declaration.encoding.is_some() || self.declaration.version.is_some() {
+        if self.declaration().encoding.is_some() || self.declaration().version.is_some() {
             xwrite!(writer, "<?xml ")?;
             let need_space = true;
-            if let Some(version) = &self.declaration.version {
+            if let Some(version) = &self.declaration().version {
                 match version {
                     Version::V10 => {
                         xwrite!(writer, "version=\"1.0\"")?;
@@ -196,7 +234,7 @@ impl Document {
                     }
                 }
             }
-            if let Some(encoding) = &self.declaration.encoding {
+            if let Some(encoding) = &self.declaration().encoding {
                 match encoding {
                     Encoding::Utf8 => {
                         if need_space {
@@ -211,7 +249,15 @@ impl Document {
                 return wrap_err!(e);
             }
         }
-        for misc in self.prolog_misc() {
+        for misc in &self.prolog.misc_before_doctype {
+            misc.write(writer, opts, 0)?;
+            opts.newline(writer)?;
+        }
+        if let Some(doctype) = &self.prolog.doctypedecl {
+            xwrite!(writer, "{}", doctype)?;
+            opts.newline(writer)?;
+        }
+        for misc in &self.prolog.misc_after_doctype {
             misc.write(writer, opts, 0)?;
             opts.newline(writer)?;
         }

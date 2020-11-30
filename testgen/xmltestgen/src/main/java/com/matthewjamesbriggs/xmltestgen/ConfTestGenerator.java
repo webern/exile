@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -267,6 +268,7 @@ class ConfTestGenerator {
         writeCodeFileHeader(os);
         F.writeln(os, "");
         FoundDecl foundDecl = findDecl(t);
+        String foundDoctype = findDoctype(t);
         writeUseStatements(t, foundDecl, os);
         F.writeln(os, "");
         writeConstDeclarations(t, os);
@@ -277,10 +279,33 @@ class ConfTestGenerator {
             writeSerializationTestFunction(t, os);
         }
         F.writeln(os, "");
-        writeExpectedFunction(t, foundDecl, os);
+        writeExpectedFunction(t, foundDecl, foundDoctype, os);
 
         // close the stream, we are done writing to the test file
         F.closeStream(testFile, os);
+    }
+
+    private static String findDoctype(ConfTest t) throws TestGenException {
+        String contents;
+        try {
+            byte[] encoded = Files.readAllBytes(t.getPath());
+            contents = new String(encoded, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new TestGenException("could not load " + t.getPath().toString(), e);
+        }
+        Pattern pattern = Pattern.compile("<!DOCTYPE[^<>]*(?:<![^<>]*>[^<>]*)*>");
+        Matcher matcher = pattern.matcher(contents);
+        if (matcher.find()) {
+            try {
+                String result = matcher.group(0);
+                return result;
+            } catch (Throwable e) {
+                return "";
+            }
+        } else {
+            return "";
+        }
+
     }
 
     private static void writeCodeFileHeader(OutputStreamWriter os) throws TestGenException {
@@ -350,6 +375,7 @@ class ConfTestGenerator {
 
     private static void writeExpectedFunction(ConfTest t,
                                               FoundDecl foundDecl,
+                                              String foundDoctype,
                                               OutputStreamWriter os) throws TestGenException {
 
         F.writeln(os, "fn expected() -> Document {");
@@ -360,7 +386,7 @@ class ConfTestGenerator {
         List<Node> postlude = findPostlude(doc);
         DocumentType doctype = doc.getDoctype();
         if (doctype != null) {
-            writeExpectedDoctype(doctype, os);
+            writeExpectedDoctype(doctype, os, foundDoctype);
         }
         writeExpectedPrelude(prelude, os);
         writeExpectedContents(t, doc, os);
@@ -655,11 +681,19 @@ class ConfTestGenerator {
         F.writeln(os, "doc.set_declaration(Declaration{ version: %s, encoding: %s });", rsVersion, rsEncoding);
     }
 
-    private static void writeExpectedDoctype(DocumentType dt, OutputStreamWriter os) throws TestGenException {
+    private static void writeExpectedDoctype(DocumentType dt,
+                                             OutputStreamWriter os,
+                                             String fromRegex) throws TestGenException {
         if (dt == null) {
             return;
         }
-        F.writeln(os, "// TODO - write doctype information");
+        if (fromRegex == null || fromRegex.isEmpty()) {
+            return;
+        }
+        F.writeln(os, "// TODO - support doctype https://github.com/webern/exile/issues/22");
+        F.writeln(os, "doc.set_doctype(");
+        F.writeln(os, "%s", rustStringLiteral(fromRegex));
+        F.writeln(os, ").unwrap();");
     }
 
     private void copyXmlTestFile(ConfTest t) throws TestGenException {

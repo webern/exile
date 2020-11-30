@@ -15,3 +15,7 @@ repository = "https://github.com/webern/exile/"
 
 [build-dependencies]
 cargo-readme = "3.2.0"
+
+[features]
+default = []
+doctype_wip = []

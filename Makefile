@@ -26,6 +26,6 @@ check:
 	cargo fmt -- --check && \
 	cargo clippy --locked -- -D warnings && \
 	cargo clippy --tests --locked -- -D warnings && \
-	cargo test --all-features && \
-	cargo build --all-features --lib
+	cargo test && \
+	cargo build --lib
 

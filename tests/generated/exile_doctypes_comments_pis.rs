@@ -17,7 +17,10 @@ fn expected() -> Document {
         version: Some(Version::V10),
         encoding: None,
     });
-    // TODO - write doctype information
+    // TODO - support doctype https://github.com/webern/exile/issues/22
+    doc.set_doctype(
+"<!DOCTYPE note [\n<!ELEMENT note (to,from,heading,body)>\n<!ELEMENT to (#PCDATA)>\n<!ELEMENT from (#PCDATA)>\n<!ELEMENT heading (#PCDATA)>\n<!ELEMENT body (#PCDATA)>\n]>"
+).unwrap();
     doc.add_prolog_comment(r#" comment before doctype "#)
         .unwrap();
     doc.add_prolog_pi(exile::PI {

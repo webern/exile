@@ -51,28 +51,8 @@ macro_rules! parse_err {
     };
 }
 
-// Create an Err object. Arguments:
-// * Original error that is being wrapped
-// * Optional string literal
-// * Optional arguments for format! of the string literal
-// macro_rules! other_err {
-//     // Base case:
-//     ($err:expr) => (Err($crate::parser::error::ParseError {
-//         throw_site: throw_site!(),
-//         xml_site: None,
-//         message: None,
-//         source: None,
-//     }));
-//     ($err:expr, $msg:expr) => (Err($crate::parser::error::ParseError {
-//         throw_site: throw_site!(),
-//         xml_site: None,
-//         message: Some($msg.into()),
-//         source: None,
-//     }));
-//     ($err:expr, $fmt:expr, $($arg:expr),+) => (Err($crate::parser::error::ParseError {
-//         throw_site: throw_site!(),
-//         xml_site: None,
-//         message: Some(format!($fmt, $($arg),+)),
-//         source: None,
-//     }));
-// }
+macro_rules! from_xe {
+    ($iter:expr, $xdoc_error:expr) => {{
+        create_parser_error!(&$iter.st, "{}", $xdoc_error)
+    }};
+}

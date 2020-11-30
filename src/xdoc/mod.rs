@@ -33,6 +33,8 @@ mod node;
 pub(crate) mod ord_map;
 mod pi;
 mod write_ops;
+#[cfg(feature = "doctype_wip")]
+pub(crate) mod xdocv2;
 
 #[cfg(test)]
 mod tests {
