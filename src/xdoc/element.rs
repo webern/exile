@@ -155,13 +155,23 @@ impl Element {
     }
 
     /// Gets the attribute value at `key`. `None` if an attribute by that name does not exist.
-    pub fn attribute<S: AsRef<str>>(&self, key: S) -> Option<&str> {
-        self.attributes.map().get(key.as_ref()).map(|s| s.as_str())
+    pub fn attribute<S: AsRef<str>>(&self, key: S) -> Option<&String> {
+        self.attributes.map().get(key.as_ref())
     }
 
     /// Gets the count of attributes.
     pub fn attributes_len(&self) -> usize {
         self.attributes.map().len()
+    }
+
+    /// Gets an iterator over the attribute key/value pairs.
+    pub fn attributes(&self) -> impl Iterator<Item = (&String, &String)> + '_ {
+        self.attributes.map().iter()
+    }
+
+    /// Gets an iterator over the attribute keys
+    pub fn attribute_keys(&self) -> impl Iterator<Item = &String> + '_ {
+        self.attributes.map().keys()
     }
 
     /// Creates a new element as the last child of this element and returns a mut ref to it.
