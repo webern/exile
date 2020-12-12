@@ -406,13 +406,6 @@ fn parse_declaration(iter: &Iter<'_>, target: &str, data: &str) -> Result<Declar
         return parse_err!(iter, "pi_data.target != xml");
     }
     let instructions: Vec<&str> = data.split_whitespace().collect();
-    if instructions.len() > 2 {
-        return parse_err!(
-            iter,
-            "only able to parse xml declarations that include version and encoding. \
-        a string split of the xml processing instruction data yielded more than two items."
-        );
-    }
     let map = parse_as_map(iter, &instructions)?;
     if let Some(&val) = map.get("version") {
         match val {
@@ -428,8 +421,8 @@ fn parse_declaration(iter: &Iter<'_>, target: &str, data: &str) -> Result<Declar
         }
     }
     if let Some(&val) = map.get("encoding") {
-        match val {
-            "UTF-8" => {
+        match val.to_ascii_lowercase().as_str() {
+            "utf-8" => {
                 declaration.encoding = Some(Encoding::Utf8);
             }
             _ => {
@@ -571,8 +564,10 @@ fn consume_test_err() {
 
 #[cfg(test)]
 mod tests {
-    const _XML1: &str = r##"
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+    use super::*;
+
+    const XML1: &str = r##"
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
 <!DOCTYPE something PUBLIC "-//Some//Path//EN" "http://www.example.org/dtds/partwise.dtd">
 <cats>
   <cat id="b1">
@@ -587,4 +582,12 @@ mod tests {
   </cat>
 </cats>
     "##;
+
+    #[test]
+    fn encoding_lowercase() {
+        let mut iter = Iter::new(XML1).unwrap();
+        let mut doc = Document::new();
+        parse_document(&mut iter, &mut doc).unwrap();
+        assert_eq!(Encoding::Utf8, doc.declaration().encoding.unwrap());
+    }
 }

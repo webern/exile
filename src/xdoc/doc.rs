@@ -80,16 +80,6 @@ impl<'a> From<Element> for Cow<'a, Element> {
     }
 }
 
-// impl Default for Document {
-//     fn default() -> Self {
-//         Document {
-//             prolog: Prolog::default(),
-//             root: Element::default(),
-//             epilog_misc: Vec::new(),
-//         }
-//     }
-// }
-
 impl<'a> Document {
     /// Create a new default document.
     pub fn new() -> Document {
