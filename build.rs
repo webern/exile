@@ -11,6 +11,10 @@ fn main() {
 
 fn generate_readme() {
     // Check for environment variable "SKIP_README". If it is set, skip README generation.
+    println!("cargo:rerun-if-env-changed=EXILE_GENERATE_README");
+    println!("cargo:rerun-if-changed=src/lib.rs");
+    println!("cargo:rerun-if-changed=README.md");
+    println!("cargo:rerun-if-changed=readme.template");
     if env::var_os("EXILE_GENERATE_README").is_none() {
         return;
     }

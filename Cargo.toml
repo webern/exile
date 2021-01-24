@@ -1,11 +1,18 @@
 [package]
 name = "exile"
-version = "0.0.5"
+version = "0.0.6"
 description = "DOM-Style XML Parser"
 authors = ["Matthew James Briggs <matthew.james.briggs@gmail.com>"]
 categories = ["encoding", "parser-implementations", "parsing"]
 edition = "2018"
-exclude = ["bin/", "data/", "target/", "testgen/", "tests/"]
+exclude = [
+    ".github",
+    "bin/",
+    "data/",
+    "target/",
+    "testgen/",
+    "tests/",
+]
 keywords = ["xml"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
