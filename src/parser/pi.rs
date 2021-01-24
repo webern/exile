@@ -59,7 +59,7 @@ fn parse_pi_target(iter: &mut Iter<'_>) -> Result<String> {
 /// The iter should be pointing to the opening `<` of a processing instruction.
 pub(crate) fn parse_pi(iter: &mut Iter<'_>) -> Result<PI> {
     let (target, data) = parse_pi_logic(iter)?;
-    Ok(PI { target, data })
+    Ok(PI::new_unchecked(target, data))
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -69,8 +69,8 @@ fn parse_pi_easy() {
     let pi_str = "<?target data?>";
     let mut iter = Iter::new(pi_str).unwrap();
     let pi = parse_pi(&mut iter).unwrap();
-    assert_eq!("target", pi.target);
-    assert_eq!("data", pi.data);
+    assert_eq!("target", pi.target());
+    assert_eq!("data", pi.data());
     assert!(!iter.advance());
 }
 
@@ -79,8 +79,8 @@ fn parse_pi_peasy() {
     let pi_str = "<?target data?>X";
     let mut iter = Iter::new(pi_str).unwrap();
     let pi = parse_pi(&mut iter).unwrap();
-    assert_eq!("target", pi.target);
-    assert_eq!("data", pi.data);
+    assert_eq!("target", pi.target());
+    assert_eq!("data", pi.data());
     assert!(iter.is('X'));
 }
 
@@ -97,8 +97,8 @@ fn parse_pi_funky_2() {
     let pi_str = "<??>";
     let mut iter = Iter::new(pi_str).unwrap();
     let pi = parse_pi(&mut iter).unwrap();
-    assert_eq!("", pi.target);
-    assert!(pi.data.is_empty());
+    assert_eq!("", pi.target());
+    assert!(pi.data().is_empty());
 }
 
 #[test]
@@ -123,8 +123,8 @@ fn parse_pi_funky_5() {
     let pi_str = "<?bones?>";
     let mut iter = Iter::new(pi_str).unwrap();
     let pi = parse_pi(&mut iter).unwrap();
-    assert_eq!("bones", pi.target);
-    assert!(pi.data.is_empty());
+    assert_eq!("bones", pi.target());
+    assert!(pi.data().is_empty());
 }
 
 #[test]
@@ -133,6 +133,6 @@ fn parse_pi_funky_6() {
     let pi_str = "<?pi some data ? > <??>";
     let mut iter = Iter::new(pi_str).unwrap();
     let pi = parse_pi(&mut iter).unwrap();
-    assert_eq!("pi", pi.target);
-    assert_eq!("some data ? > <?", pi.data);
+    assert_eq!("pi", pi.target());
+    assert_eq!("some data ? > <?", pi.data());
 }

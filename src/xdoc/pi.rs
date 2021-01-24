@@ -26,12 +26,11 @@ use crate::xdoc::WriteOpts;
 /// > recognized within processing instructions.
 ///
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Ord, Hash, Default)]
-// TODO - make the fields private
 pub struct PI {
     /// The processing instruction target.
-    pub target: String,
+    target: String,
     /// The processing instruction data.
-    pub data: String,
+    data: String,
 }
 
 impl PI {
