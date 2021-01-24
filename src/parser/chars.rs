@@ -37,25 +37,23 @@ pub(crate) fn is_name_start_char(c: char) -> bool {
     // [#xF8-#x2FF] | [#x370-#x37D] | [#x37F-#x1FFF] | [#x200C-#x200D] | [#x2070-#x218F] |
     // [#x2C00-#x2FEF] | [#x3001-#xD7FF] | [#xF900-#xFDCF] | [#xFDF0-#xFFFD] | [#x10000-#xEFFFF]
     // let x = c as u64;
-    match c {
-        'A'..='Z' => true,
-        'a'..='z' => true,
-        ':' => true,
-        '_' => true,
-        U_00C0..=U_00D6 => true,
-        U_00D8..=U_00F6 => true,
-        U_00F8..=U_02FF => true,
-        U_0370..=U_037D => true,
-        U_037F..=U_1FFF => true,
-        U_200C..=U_200D => true,
-        U_2070..=U_218F => true,
-        U_2C00..=U_2FEF => true,
-        U_3001..=U_D7FF => true,
-        U_F900..=U_FDCF => true,
-        U_FDF0..=U_FFFD => true,
-        U_10000..=U_EFFFF => true,
-        _ => false,
-    }
+    matches!(c,
+        'A'..='Z' |
+        'a'..='z' |
+        ':' |
+        '_' |
+        U_00C0..=U_00D6 |
+        U_00D8..=U_00F6 |
+        U_00F8..=U_02FF |
+        U_0370..=U_037D |
+        U_037F..=U_1FFF |
+        U_200C..=U_200D |
+        U_2070..=U_218F |
+        U_2C00..=U_2FEF |
+        U_3001..=U_D7FF |
+        U_F900..=U_FDCF |
+        U_FDF0..=U_FFFD |
+        U_10000..=U_EFFFF)
 }
 
 pub(crate) fn is_name_char(c: char) -> bool {
@@ -64,13 +62,5 @@ pub(crate) fn is_name_char(c: char) -> bool {
     if is_name_start_char(c) {
         return true;
     }
-    match c {
-        U_00B7 => true,
-        U_0300..=U_036F => true,
-        U_203F..=U_2040 => true,
-        '0'..='9' => true,
-        '-' => true,
-        '.' => true,
-        _ => false,
-    }
+    matches!(c, U_00B7 | U_0300..=U_036F | U_203F..=U_2040 | '0'..='9' | '-' | '.')
 }
