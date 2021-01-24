@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Currently we are using v0.0.x where every version can and will contain breaking changes.
 
+## [v0.0.6] 2021-01-23
+## Added
+- Implement display for `Element` [#81]
+- Add some types for XML Namespaces [#81]
+
+### Changed
+- Make the fields of `PI` (processing instruction) private [#81]
+
+[#81]: https://github.com/webern/exile/pull/81
+
 ## [v0.0.5] 2020-12-12
 ## Added
 - Add a way to iterate attributes [#80]
@@ -83,7 +93,8 @@ Currently we are using v0.0.x where every version can and will contain breaking 
 [#52]: https://github.com/webern/exile/pull/52
 
 <!-- version diff links -->
-[Unreleased]: https://github.com/webern/exile/compare/v0.0.5...HEAD
+[Unreleased]: https://github.com/webern/exile/compare/v0.0.6...HEAD
+[v0.0.6]: https://github.com/webern/exile/compare/v0.0.5...v0.0.6
 [v0.0.5]: https://github.com/webern/exile/compare/v0.0.4...v0.0.5
 [v0.0.4]: https://github.com/webern/exile/compare/v0.0.3...v0.0.4
 [v0.0.3]: https://github.com/webern/exile/compare/v0.0.2...v0.0.3

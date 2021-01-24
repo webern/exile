@@ -2,7 +2,7 @@ use core::fmt;
 use std::fmt::{Display, Formatter};
 use std::io::{Cursor, Write};
 
-use crate::xdoc::error::Result;
+use crate::xdoc::error::{Result, XDocErr};
 use crate::xdoc::WriteOpts;
 
 /// Represents a Processing Instruction (PI) in an XML document.
@@ -28,18 +28,60 @@ use crate::xdoc::WriteOpts;
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Ord, Hash, Default)]
 pub struct PI {
     /// The processing instruction target.
-    pub target: String,
+    target: String,
     /// The processing instruction data.
-    pub data: String,
+    data: String,
 }
 
 impl PI {
+    /// Create a new processing instruction.
+    pub fn new<S1, S2>(target: S1, data: S2) -> Result<Self>
+    where
+        S1: Into<String> + AsRef<str>,
+        S2: Into<String> + AsRef<str>,
+    {
+        if !pi_str_ok(target.as_ref()) {
+            // TODO - improve this error mess
+            return Err(XDocErr {
+                message: format!(
+                    "invalid processing instruction target '{}'",
+                    target.as_ref()
+                ),
+                file: file!().into(),
+                line: line!() as u64,
+                source: None,
+            });
+        }
+        if !pi_str_ok(data.as_ref()) {
+            // TODO - improve this error mess
+            return Err(XDocErr {
+                message: format!("invalid processing instruction data '{}'", target.as_ref()),
+                file: file!().into(),
+                line: line!() as u64,
+                source: None,
+            });
+        }
+        // TODO - validate strings
+        Ok(Self::new_unchecked(target, data))
+    }
+
+    /// Return the target from a processing instruction, e.g. in `<?foo bar baz?>`, `foo` is the
+    /// target.
+    pub fn target(&self) -> &String {
+        &self.target
+    }
+
+    /// Return the data from a processing instruction, e.g. in `<?foo bar baz?>`, `bar baz` is the
+    /// data.
+    pub fn data(&self) -> &String {
+        &self.data
+    }
+
     /// Write the processing instruction to the `Write` object.
     pub fn write<W>(&self, writer: &mut W, opts: &WriteOpts, depth: usize) -> Result<()>
     where
         W: Write,
     {
-        self.check()?;
         opts.indent(writer, depth)?;
         xwrite!(writer, "<?{}", &self.target)?;
         if !self.data.is_empty() {
@@ -49,13 +91,20 @@ impl PI {
         Ok(())
     }
 
-    fn check(&self) -> Result<()> {
-        // TODO - check that the name is compliant
-        if self.data.contains("?>") {
-            return raise!("Processing instruction data contains '?>'.");
+    pub(crate) fn new_unchecked<S1, S2>(target: S1, data: S2) -> Self
+    where
+        S1: Into<String>,
+        S2: Into<String>,
+    {
+        Self {
+            target: target.into(),
+            data: data.into(),
         }
-        Ok(())
     }
+}
+
+fn pi_str_ok<S: AsRef<str>>(s: S) -> bool {
+    !s.as_ref().contains("?>")
 }
 
 impl Display for PI {
@@ -65,19 +114,14 @@ impl Display for PI {
             return write!(f, "<?error?>");
         }
         let data = c.into_inner();
-        let data_str = match std::str::from_utf8(data.as_slice()) {
-            Ok(s) => s,
-            Err(_) => "<?error?>",
-        };
+        let data_str = std::str::from_utf8(data.as_slice()).unwrap_or("<?error?>");
         write!(f, "{}", data_str)
     }
 }
 
 #[test]
 fn pi_test_simple() {
-    let mut pi = PI::default();
-    pi.target = "thetarget".into();
-    pi.data = "dat1 dat2".into();
+    let pi = PI::new("thetarget", "dat1 dat2").unwrap();
     let got = pi.to_string();
     let want = "<?thetarget dat1 dat2?>";
     assert_eq!(got, want);
@@ -85,8 +129,7 @@ fn pi_test_simple() {
 
 #[test]
 fn pi_test_empty() {
-    let mut pi = PI::default();
-    pi.target = "x".into();
+    let pi = PI::new("x", "").unwrap();
     let got = pi.to_string();
     let want = "<?x?>";
     assert_eq!(got, want);
@@ -94,10 +137,6 @@ fn pi_test_empty() {
 
 #[test]
 fn pi_test_bad() {
-    let mut pi = PI::default();
-    pi.target = "x".into();
-    pi.data = "da?>t1".into();
-    let got = pi.to_string();
-    let want = "<?error?>";
-    assert_eq!(got, want);
+    let result = PI::new("x", "da?>t1");
+    assert!(result.is_err());
 }

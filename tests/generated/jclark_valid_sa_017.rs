@@ -22,9 +22,6 @@ fn expected() -> Document {
         .unwrap();
     let root = doc.root_mut();
     root.set_name(r#"doc"#);
-    root.add_pi(exile::PI {
-        target: r#"pi"#.into(),
-        data: r#"some data ? > <?"#.into(),
-    });
+    root.add_pi(exile::PI::new(r#"pi"#, r#"some data ? > <?"#).unwrap());
     doc
 }

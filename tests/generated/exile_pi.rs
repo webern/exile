@@ -24,25 +24,13 @@ fn expected() -> Document {
         version: Some(Version::V11),
         encoding: Some(Encoding::Utf8),
     });
-    doc.add_prolog_pi(exile::PI {
-        target: r#"a"#.into(),
-        data: r#"b"#.into(),
-    });
+    doc.add_prolog_pi(exile::PI::new(r#"a"#, r#"b"#).unwrap());
     let root = doc.root_mut();
     root.set_name(r#"c"#);
-    root.add_pi(exile::PI {
-        target: r#"d"#.into(),
-        data: r#"e"#.into(),
-    });
+    root.add_pi(exile::PI::new(r#"d"#, r#"e"#).unwrap());
     let gen1n3 = root.add_new_child().unwrap();
     gen1n3.set_name(r#"f"#);
-    root.add_pi(exile::PI {
-        target: r#"g"#.into(),
-        data: r#"h"#.into(),
-    });
-    doc.add_epilog_pi(exile::PI {
-        target: r#"i"#.into(),
-        data: r#"j"#.into(),
-    });
+    root.add_pi(exile::PI::new(r#"g"#, r#"h"#).unwrap());
+    doc.add_epilog_pi(exile::PI::new(r#"i"#, r#"j"#).unwrap());
     doc
 }

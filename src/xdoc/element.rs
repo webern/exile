@@ -1,4 +1,5 @@
-use std::io::Write;
+use std::fmt::{Display, Formatter};
+use std::io::{Cursor, Write};
 
 use crate::xdoc::cdata::check_cdata;
 use crate::xdoc::error::{Result, XDocErr};
@@ -21,6 +22,17 @@ pub struct Element {
 impl Default for Element {
     fn default() -> Self {
         Self::from_name("element")
+    }
+}
+
+impl Display for Element {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let mut cursor = Cursor::new(Vec::new());
+        self.write(&mut cursor, &WriteOpts::default(), 0)
+            .map_err(|_| std::fmt::Error)?;
+        let bytes = cursor.into_inner();
+        let s = String::from_utf8_lossy(bytes.as_slice());
+        write!(f, "{}", s)
     }
 }
 

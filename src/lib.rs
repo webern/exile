@@ -76,6 +76,7 @@ pub use crate::parser::ParseError;
 pub use crate::xdoc::{
     Declaration, Document, Element, Encoding, Misc, Node, Version, WriteOpts, PI,
 };
+pub use crate::xmlns::{Namespace, NcName, NsErr, QName};
 
 /// The `error` module defines the error types for this library.
 #[macro_use]
@@ -84,6 +85,7 @@ mod constants;
 pub mod error;
 pub mod parser;
 mod xdoc;
+mod xmlns;
 
 /// Parse an XML file held in string contents.
 pub fn parse<S: AsRef<str>>(xml: S) -> crate::error::Result<Document> {
