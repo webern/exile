@@ -11,6 +11,7 @@ mod exile_simple_musicxml;
 mod exile_single_quotes;
 mod exile_unescaped_angle;
 mod exile_whitespace_normalization;
+mod exile_xml_xsd;
 mod jclark_not_wf_sa_001;
 mod jclark_not_wf_sa_002;
 mod jclark_not_wf_sa_003;
