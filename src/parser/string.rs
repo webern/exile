@@ -26,6 +26,10 @@ pub(crate) fn parse_string(iter: &mut Iter<'_>, string_type: StringType) -> Resu
                 }
             } else {
                 is_non_white_reached = true;
+                if let Some(space) = space_buffer {
+                    result.push(space);
+                    space_buffer = None;
+                }
                 result.push(c);
             }
         } else if is_forbidden(iter, string_type) {
@@ -55,9 +59,9 @@ pub(crate) fn parse_string(iter: &mut Iter<'_>, string_type: StringType) -> Resu
 }
 
 fn is_forbidden(iter: &Iter<'_>, string_type: StringType) -> bool {
-    // &, < and > are illegal (as well as " or ' in attributes).
+    // & and < are illegal (as well as " or ' in attributes).
     match iter.st.c {
-        '&' | '<' | '>' => true,
+        '&' | '<' => true,
         '"' => string_type == StringType::AttributeDouble,
         '\'' => string_type == StringType::AttributeSingle,
         _ => false,
@@ -407,5 +411,15 @@ fn test_parse_string_quotes_inside_2() {
     use crate::parser::Iter;
     let mut iter = Iter::new(terminated.as_str()).unwrap();
     let got = parse_string(&mut iter, StringType::AttributeSingle).unwrap();
+    assert_eq!(got, want);
+}
+
+#[test]
+fn test_space_before_escape() {
+    let input = "x:\n      &lt; y ><";
+    let want = "x: < y >";
+    use crate::parser::Iter;
+    let mut iter = Iter::new(input).unwrap();
+    let got = parse_string(&mut iter, StringType::Element).unwrap();
     assert_eq!(got, want);
 }

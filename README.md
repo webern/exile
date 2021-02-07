@@ -1,6 +1,6 @@
 # exile
 
-Current version: 0.0.6
+Current version: 0.0.7
 
 ![build](https://github.com/webern/exile/workflows/exile%20ci/badge.svg)
 

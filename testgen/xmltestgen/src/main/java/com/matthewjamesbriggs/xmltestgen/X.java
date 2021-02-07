@@ -71,16 +71,17 @@ class X {
      * @throws TestGenException
      */
     static Document loadComplete(File file, XNamespaces namespaces) throws TestGenException {
-        return load(file, XEntityExpansion.ON, namespaces);
+        return load(file, XEntityExpansion.ON, namespaces, false);
     }
 
     static Document loadShallow(File file, XNamespaces namespaces) throws TestGenException {
-        return load(file, XEntityExpansion.OFF, namespaces);
+        return load(file, XEntityExpansion.OFF, namespaces, true);
     }
 
     private static Document load(File file,
                                  XEntityExpansion entityEpansion,
-                                 XNamespaces namespace) throws TestGenException {
+                                 XNamespaces namespace,
+                                 boolean extraShallow) throws TestGenException {
         file = F.canonicalize(file);
         F.checkFile(file);
         String uri = file.toPath().toUri().toString();
@@ -90,6 +91,14 @@ class X {
             if (entityEpansion == XEntityExpansion.OFF) {
                 // https://bugs.openjdk.java.net/browse/JDK-8217937
                 factory.setExpandEntityReferences(false);
+            }
+            if (extraShallow) {
+                factory.setValidating(false);
+                factory.setNamespaceAware(true);
+                factory.setFeature("http://xml.org/sax/features/namespaces", false);
+                factory.setFeature("http://xml.org/sax/features/validation", false);
+                factory.setFeature("http://apache.org/xml/features/nonvalidating/load-dtd-grammar", false);
+                factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
             }
             factory.setNamespaceAware(namespace == XNamespaces.ON);
             factory.setIgnoringElementContentWhitespace(true);
