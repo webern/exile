@@ -100,7 +100,7 @@ Currently we are using v0.0.x where every version can and will contain breaking 
 
 <!-- version diff links -->
 [Unreleased]: https://github.com/webern/exile/compare/v0.0.6...HEAD
-[v0.0.6]: https://github.com/webern/exile/compare/v0.0.6...v0.0.7
+[v0.0.7]: https://github.com/webern/exile/compare/v0.0.6...v0.0.7
 [v0.0.6]: https://github.com/webern/exile/compare/v0.0.5...v0.0.6
 [v0.0.5]: https://github.com/webern/exile/compare/v0.0.4...v0.0.5
 [v0.0.4]: https://github.com/webern/exile/compare/v0.0.3...v0.0.4
