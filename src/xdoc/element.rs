@@ -64,6 +64,24 @@ impl Element {
         })
     }
 
+    /// Returns the 'child' elements of the current element. Consider the XML document:
+    /// ```xml
+    /// <r>
+    ///   <a/>
+    ///   <b/>
+    /// </r>
+    /// ```
+    /// r's `children_mut()` function would return an iterator over 'a' and 'b'.
+    /// Text nodes, processing instructions and comments are skipped/ignored by the iterator.
+    pub fn children_mut(&mut self) -> impl Iterator<Item = &mut Element> {
+        self.nodes.iter_mut().filter_map(|n| {
+            if let Node::Element(element) = n {
+                return Some(element);
+            }
+            None
+        })
+    }
+
     /// Find the first occurrance specific child element (does not recurse to lower levels of children).
     pub fn child<S: AsRef<str>>(&self, name: S) -> Option<&Element> {
         let name = name.as_ref();
