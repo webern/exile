@@ -199,11 +199,12 @@ impl Document {
     }
 
     /// Write the `Document` to the `Write` object.
-    pub fn write<W>(&self, writer: &mut W) -> Result<()>
+    pub fn write<W>(&self, writer: &mut W) -> crate::error::Result<()>
     where
         W: Write,
     {
         self.write_opts(writer, &WriteOpts::default())
+            .map_err(crate::error::Error::XdocErr)
     }
 
     /// Write the `Document` to the `Write` object using the given options.
