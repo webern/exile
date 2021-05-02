@@ -10,7 +10,7 @@ use crate::constants::{CARRIAGE_RETURN, NEWLINE, SPACE, TAB};
 use crate::error::{OtherError, ThrowSite};
 use crate::parser::bang::parse_bang;
 use crate::parser::chars::{is_name_char, is_name_start_char};
-use crate::parser::element::{parse_element, LTParse};
+use crate::parser::element::{parse_element, LtParse};
 use crate::parser::error::{display_char, Result};
 pub use crate::parser::error::{ParseError, XmlSite};
 use crate::parser::pi::{parse_pi, parse_pi_logic};
@@ -338,14 +338,14 @@ fn parse_document(iter: &mut Iter<'_>, document: &mut Document) -> Result<()> {
             '!' => {
                 let ltparse = parse_bang(iter)?;
                 match ltparse {
-                    LTParse::Some(node) => match node {
+                    LtParse::Some(node) => match node {
                         Node::Comment(c) => add_doc_misc(iter, document, Misc::Comment(c))?,
-                        Node::PI(p) => add_doc_misc(iter, document, Misc::PI(p))?,
+                        Node::Pi(p) => add_doc_misc(iter, document, Misc::Pi(p))?,
                         _ => return parse_err!(iter, "can not add document node '{:?}", node),
                     },
-                    LTParse::Skip => {}
-                    LTParse::EndTag => return parse_err!(iter, "unexpected {:?}", LTParse::EndTag),
-                    LTParse::DocType(s) => {
+                    LtParse::Skip => {}
+                    LtParse::EndTag => return parse_err!(iter, "unexpected {:?}", LtParse::EndTag),
+                    LtParse::DocType(s) => {
                         document.set_doctype(s).map_err(|e| from_xe!(iter, e))?
                     }
                 }
@@ -372,11 +372,11 @@ fn add_doc_misc(iter: &mut Iter<'_>, document: &mut Document, misc: Misc) -> Res
         Misc::Comment(c) if iter.st.doc_status == DocStatus::Epilog => document
             .add_epilog_comment(c)
             .map_err(|e| create_parser_error!(&iter.st, "{}", e)),
-        Misc::PI(p) if iter.st.doc_status == DocStatus::Prolog => {
+        Misc::Pi(p) if iter.st.doc_status == DocStatus::Prolog => {
             document.add_prolog_pi(p);
             Ok(())
         }
-        Misc::PI(p) if iter.st.doc_status == DocStatus::Epilog => {
+        Misc::Pi(p) if iter.st.doc_status == DocStatus::Epilog => {
             document.add_epilog_pi(p);
             Ok(())
         }

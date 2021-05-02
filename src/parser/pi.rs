@@ -1,6 +1,6 @@
 use crate::parser::error::Result;
 use crate::parser::Iter;
-use crate::PI;
+use crate::Pi;
 
 /// The iter should be pointing to the opening `<` of a processing instruction.
 pub(crate) fn parse_pi_logic(iter: &mut Iter<'_>) -> Result<(String, String)> {
@@ -57,9 +57,9 @@ fn parse_pi_target(iter: &mut Iter<'_>) -> Result<String> {
 }
 
 /// The iter should be pointing to the opening `<` of a processing instruction.
-pub(crate) fn parse_pi(iter: &mut Iter<'_>) -> Result<PI> {
+pub(crate) fn parse_pi(iter: &mut Iter<'_>) -> Result<Pi> {
     let (target, data) = parse_pi_logic(iter)?;
-    Ok(PI::new_unchecked(target, data))
+    Ok(Pi::new_unchecked(target, data))
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

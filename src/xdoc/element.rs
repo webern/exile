@@ -6,7 +6,7 @@ use crate::xdoc::error::{Result, XDocErr};
 use crate::xdoc::ord_map::OrdMap;
 use crate::xdoc::write_ops::write_attribute_value;
 use crate::xdoc::Name;
-use crate::{Node, WriteOpts, PI};
+use crate::{Node, Pi, WriteOpts};
 
 #[derive(Debug, Clone, Eq, PartialOrd, Ord, PartialEq, Hash)]
 /// Represents an Element in an XML Document.
@@ -57,6 +57,24 @@ impl Element {
     /// Text nodes, processing instructions and comments are skipped/ignored by the iterator.
     pub fn children(&self) -> impl Iterator<Item = &Element> {
         self.nodes.iter().filter_map(|n| {
+            if let Node::Element(element) = n {
+                return Some(element);
+            }
+            None
+        })
+    }
+
+    /// Returns the 'child' elements of the current element. Consider the XML document:
+    /// ```xml
+    /// <r>
+    ///   <a/>
+    ///   <b/>
+    /// </r>
+    /// ```
+    /// r's `children_mut()` function would return an iterator over 'a' and 'b'.
+    /// Text nodes, processing instructions and comments are skipped/ignored by the iterator.
+    pub fn children_mut(&mut self) -> impl Iterator<Item = &mut Element> {
+        self.nodes.iter_mut().filter_map(|n| {
             if let Node::Element(element) = n {
                 return Some(element);
             }
@@ -213,8 +231,8 @@ impl Element {
     }
 
     /// Append a processing instruction to this element's nodes.
-    pub fn add_pi(&mut self, pi: PI) {
-        self.nodes.push(Node::PI(pi))
+    pub fn add_pi(&mut self, pi: Pi) {
+        self.nodes.push(Node::Pi(pi))
     }
 
     /// Append a processing instruction to this element's nodes.

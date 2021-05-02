@@ -3,7 +3,7 @@ use std::io::Write;
 use crate::xdoc::cdata::write_cdata;
 use crate::xdoc::error::Result;
 use crate::xdoc::write_ops::write_element_text;
-use crate::{Element, WriteOpts, PI};
+use crate::{Element, Pi, WriteOpts};
 
 #[derive(Debug, Clone, Eq, PartialOrd, Ord, PartialEq, Hash)]
 /// Represents a Node in an XML Document. The Document consists of a recursive nesting of these.
@@ -22,7 +22,7 @@ pub enum Node {
     Element(Element),
 
     /// Processing Instruction, e.g. `<?target data?>`
-    PI(PI),
+    Pi(Pi),
 
     /// Text data in an element, i.e. `<x>hello &lt;</x>` where the `Text` is `hello <`.
     Text(String),
@@ -45,7 +45,7 @@ impl Node {
             Node::Comment(comment) => write_comment(writer, opts, depth, comment),
             Node::DocType(_) => panic!("doctypes unsupported"),
             Node::Element(data) => data.write(writer, opts, depth),
-            Node::PI(pi) => pi.write(writer, opts, depth),
+            Node::Pi(pi) => pi.write(writer, opts, depth),
             Node::Text(s) => write_element_text(s.as_str(), writer, opts, depth),
         }
     }
@@ -65,7 +65,7 @@ pub enum Misc {
     /// `<!-- comment -->` - not implemented
     Comment(String),
     /// ProcessingInstruction, e.g. `<?target whatever?>` - not implemented
-    PI(crate::PI),
+    Pi(crate::Pi),
 }
 
 impl Default for Misc {
@@ -82,7 +82,7 @@ impl Misc {
     {
         match self {
             Misc::Comment(comment) => write_comment(writer, opts, depth, comment),
-            Misc::PI(pi) => pi.write(writer, opts, depth),
+            Misc::Pi(pi) => pi.write(writer, opts, depth),
         }
     }
 }

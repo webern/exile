@@ -26,14 +26,14 @@ use crate::xdoc::WriteOpts;
 /// > recognized within processing instructions.
 ///
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Ord, Hash, Default)]
-pub struct PI {
+pub struct Pi {
     /// The processing instruction target.
     target: String,
     /// The processing instruction data.
     data: String,
 }
 
-impl PI {
+impl Pi {
     /// Create a new processing instruction.
     pub fn new<S1, S2>(target: S1, data: S2) -> Result<Self>
     where
@@ -107,7 +107,7 @@ fn pi_str_ok<S: AsRef<str>>(s: S) -> bool {
     !s.as_ref().contains("?>")
 }
 
-impl Display for PI {
+impl Display for Pi {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let mut c = Cursor::new(Vec::new());
         if self.write(&mut c, &WriteOpts::default(), 0).is_err() {
@@ -121,7 +121,7 @@ impl Display for PI {
 
 #[test]
 fn pi_test_simple() {
-    let pi = PI::new("thetarget", "dat1 dat2").unwrap();
+    let pi = Pi::new("thetarget", "dat1 dat2").unwrap();
     let got = pi.to_string();
     let want = "<?thetarget dat1 dat2?>";
     assert_eq!(got, want);
@@ -129,7 +129,7 @@ fn pi_test_simple() {
 
 #[test]
 fn pi_test_empty() {
-    let pi = PI::new("x", "").unwrap();
+    let pi = Pi::new("x", "").unwrap();
     let got = pi.to_string();
     let want = "<?x?>";
     assert_eq!(got, want);
@@ -137,6 +137,6 @@ fn pi_test_empty() {
 
 #[test]
 fn pi_test_bad() {
-    let result = PI::new("x", "da?>t1");
+    let result = Pi::new("x", "da?>t1");
     assert!(result.is_err());
 }
