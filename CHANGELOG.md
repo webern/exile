@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Currently we are using v0.0.x where every version can and will contain breaking changes.
 
+## [v0.0.8] 2021-05-02
+### Changed
+- Provide mutable access to element children [#84]
+- Use the correct error type for XDoc::write [#84]
+- Rename `PI` to `Pi` for clippy's happiness [#84]
+
+[#84]: https://github.com/webern/exile/pull/84
+
 ## [v0.0.7] 2021-02-06
 ### Changed
 - Allow '>' in strings [#83]
@@ -100,6 +108,7 @@ Currently we are using v0.0.x where every version can and will contain breaking 
 
 <!-- version diff links -->
 [Unreleased]: https://github.com/webern/exile/compare/v0.0.6...HEAD
+[v0.0.8]: https://github.com/webern/exile/compare/v0.0.7...v0.0.8
 [v0.0.7]: https://github.com/webern/exile/compare/v0.0.6...v0.0.7
 [v0.0.6]: https://github.com/webern/exile/compare/v0.0.5...v0.0.6
 [v0.0.5]: https://github.com/webern/exile/compare/v0.0.4...v0.0.5
