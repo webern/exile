@@ -15,7 +15,7 @@ pub use doc::{Declaration, Encoding, Version};
 pub use element::Element;
 pub(crate) use name::Name;
 pub use node::{Misc, Node};
-pub use pi::PI;
+pub use pi::Pi;
 pub use write_ops::{Newline, WriteOpts};
 
 pub use crate::xdoc::error::Result;

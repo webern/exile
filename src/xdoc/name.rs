@@ -101,9 +101,9 @@ impl AsRef<String> for Name {
     }
 }
 
-impl Into<String> for Name {
-    fn into(self) -> String {
-        self.value
+impl From<Name> for String {
+    fn from(n: Name) -> Self {
+        n.value
     }
 }
 

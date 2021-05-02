@@ -5,7 +5,7 @@ use std::path::Path;
 
 use crate::error::OtherError;
 use crate::xdoc::error::Result;
-use crate::{Element, Misc, WriteOpts, PI};
+use crate::{Element, Misc, Pi, WriteOpts};
 
 #[derive(Debug, Clone, Copy, Eq, Ord, PartialOrd, PartialEq, Hash)]
 /// Represents the XML Version being used.
@@ -154,11 +154,11 @@ impl Document {
     }
 
     /// Add a processing instruction before the document root element.
-    pub fn add_prolog_pi(&mut self, pi: PI) {
+    pub fn add_prolog_pi(&mut self, pi: Pi) {
         if self.prolog.doctypedecl.is_none() {
-            self.prolog.misc_before_doctype.push(Misc::PI(pi));
+            self.prolog.misc_before_doctype.push(Misc::Pi(pi));
         } else {
-            self.prolog.misc_after_doctype.push(Misc::PI(pi));
+            self.prolog.misc_after_doctype.push(Misc::Pi(pi));
         }
     }
 
@@ -184,8 +184,8 @@ impl Document {
     }
 
     /// Add a processing instruction after the document root element.
-    pub fn add_epilog_pi(&mut self, pi: PI) {
-        self.epilog_misc.push(Misc::PI(pi));
+    pub fn add_epilog_pi(&mut self, pi: Pi) {
+        self.epilog_misc.push(Misc::Pi(pi));
     }
 
     /// Clear all `Misc` entries after the root element.

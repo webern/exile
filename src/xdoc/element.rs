@@ -6,7 +6,7 @@ use crate::xdoc::error::{Result, XDocErr};
 use crate::xdoc::ord_map::OrdMap;
 use crate::xdoc::write_ops::write_attribute_value;
 use crate::xdoc::Name;
-use crate::{Node, WriteOpts, PI};
+use crate::{Node, Pi, WriteOpts};
 
 #[derive(Debug, Clone, Eq, PartialOrd, Ord, PartialEq, Hash)]
 /// Represents an Element in an XML Document.
@@ -231,8 +231,8 @@ impl Element {
     }
 
     /// Append a processing instruction to this element's nodes.
-    pub fn add_pi(&mut self, pi: PI) {
-        self.nodes.push(Node::PI(pi))
+    pub fn add_pi(&mut self, pi: Pi) {
+        self.nodes.push(Node::Pi(pi))
     }
 
     /// Append a processing instruction to this element's nodes.

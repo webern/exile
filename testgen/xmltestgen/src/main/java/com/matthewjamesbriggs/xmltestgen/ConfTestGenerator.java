@@ -434,7 +434,7 @@ class ConfTestGenerator {
     }
 
     private static void constructProcessingInstruction(PI pi, OutputStreamWriter os) throws TestGenException {
-        F.writeln(os, "exile::PI::new(");
+        F.writeln(os, "exile::Pi::new(");
         F.writeln(os, "%s,", rustStringLiteral(pi.getTarget()));
         F.writeln(os, "%s,", rustStringLiteral(pi.getData()));
         F.writeln(os, ").unwrap()");

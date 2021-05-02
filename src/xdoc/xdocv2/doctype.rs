@@ -2,7 +2,7 @@ use std::fmt::Write;
 
 use crate::constants::{CARRIAGE_RETURN, NEWLINE, SPACE};
 use crate::xdoc::error::Result;
-use crate::PI;
+use crate::Pi;
 
 /// https://www.w3.org/TR/xml/#NT-doctypedecl
 /// ```text
@@ -214,7 +214,7 @@ pub enum MarkupDeclValue {
     AttlistDecl(AttlistDeclValue),
     EntityDecl(EntityDeclValue),
     NotationDecl(NotationDeclValue),
-    PI(PI),
+    PI(Pi),
     Comment(String),
 }
 

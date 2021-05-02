@@ -5,14 +5,14 @@ The `bang` module parses those constructs that start with `<!`.
 // use crate::xdoc::xdocv2::doctype::DocTypeDecl;
 use crate::Node;
 
-use super::element::LTParse;
+use super::element::LtParse;
 use super::error::Result;
 use super::Iter;
 
 /// Parses an XML node that starts with `<!`. Expected the iterator to be pointing at `<` when
 /// called, and expects the next character to be `!`. Returns the iterator pointing at the next
 /// character after the closing `>`.
-pub(super) fn parse_bang(iter: &mut Iter<'_>) -> Result<LTParse> {
+pub(super) fn parse_bang(iter: &mut Iter<'_>) -> Result<LtParse> {
     debug_assert_eq!('<', iter.st.c);
     iter.advance_or_die()?;
     debug_assert_eq!('!', iter.st.c);
@@ -21,15 +21,15 @@ pub(super) fn parse_bang(iter: &mut Iter<'_>) -> Result<LTParse> {
         '-' => {
             // skip comment expects the iter to be advanced passed lt
             let comment = parse_comment(iter)?;
-            Ok(LTParse::Some(Node::Comment(comment)))
+            Ok(LtParse::Some(Node::Comment(comment)))
         }
         '[' => {
             let cdata = parse_cdata(iter)?;
-            Ok(LTParse::Some(Node::CData(cdata)))
+            Ok(LtParse::Some(Node::CData(cdata)))
         }
         'D' => {
             let s = parse_doctype(iter)?;
-            Ok(LTParse::DocType(s))
+            Ok(LtParse::DocType(s))
         }
         _ => return parse_err!(iter, "illegal char '{}' after <!", iter.st.c),
     }
@@ -150,7 +150,7 @@ fn parse_bang_cdata_1() {
     let data = "foo";
     let iter_char_after = 'b';
     let input = format!("<![CDATA[{}]]>bar", data);
-    let expected = LTParse::Some(Node::CData(data.into()));
+    let expected = LtParse::Some(Node::CData(data.into()));
     let mut iter = Iter::new(&input).unwrap();
     let actual = parse_bang(&mut iter).unwrap();
     assert_eq!(expected, actual);
@@ -162,7 +162,7 @@ fn parse_bang_cdata_2() {
     let data = "foo]] >bar]>]>x";
     let iter_char_after = 'x';
     let input = format!("<![CDATA[{}]]>x", data);
-    let expected = LTParse::Some(Node::CData(data.into()));
+    let expected = LtParse::Some(Node::CData(data.into()));
     let mut iter = Iter::new(&input).unwrap();
     let actual = parse_bang(&mut iter).unwrap();
     assert_eq!(expected, actual);
@@ -174,7 +174,7 @@ fn parse_bang_cdata_3() {
     let data = "foo]]>bar]>]>x";
     let iter_char_after = 'b';
     let input = format!("<![CDATA[{}]]>x", data);
-    let expected = LTParse::Some(Node::CData("foo".into()));
+    let expected = LtParse::Some(Node::CData("foo".into()));
     let mut iter = Iter::new(&input).unwrap();
     let actual = parse_bang(&mut iter).unwrap();
     assert_eq!(expected, actual);
@@ -186,7 +186,7 @@ fn parse_bang_cdata_4() {
     let data = "<xml>bloop</xml>";
     let iter_char_after = '<';
     let input = format!("<![CDATA[{}]]><foo></foo>", data);
-    let expected = LTParse::Some(Node::CData(data.into()));
+    let expected = LtParse::Some(Node::CData(data.into()));
     let mut iter = Iter::new(&input).unwrap();
     let actual = parse_bang(&mut iter).unwrap();
     assert_eq!(expected, actual);
@@ -198,7 +198,7 @@ fn parse_bang_cdata_5() {
     let data = "<![CDATA[";
     let iter_char_after = '<';
     let input = format!("<![CDATA[{}]]><foo></foo>", data);
-    let expected = LTParse::Some(Node::CData(data.into()));
+    let expected = LtParse::Some(Node::CData(data.into()));
     let mut iter = Iter::new(&input).unwrap();
     let actual = parse_bang(&mut iter).unwrap();
     assert_eq!(expected, actual);
@@ -210,7 +210,7 @@ fn parse_bang_cdata_6() {
     let data = "<&]>]";
     let iter_char_after = 'b';
     let input = format!("<![CDATA[{}]]>bar", data);
-    let expected = LTParse::Some(Node::CData(data.into()));
+    let expected = LtParse::Some(Node::CData(data.into()));
     let mut iter = Iter::new(&input).unwrap();
     let actual = parse_bang(&mut iter).unwrap();
     assert_eq!(expected, actual);
@@ -222,7 +222,7 @@ fn parse_bang_cdata_7() {
     let data = "]";
     let iter_char_after = 'b';
     let input = format!("<![CDATA[{}]]>bar", data);
-    let expected = LTParse::Some(Node::CData(data.into()));
+    let expected = LtParse::Some(Node::CData(data.into()));
     let mut iter = Iter::new(&input).unwrap();
     let actual = parse_bang(&mut iter).unwrap();
     assert_eq!(expected, actual);
@@ -234,7 +234,7 @@ fn parse_bang_cdata_8() {
     let data = "]]";
     let iter_char_after = 'b';
     let input = format!("<![CDATA[{}]]>bar", data);
-    let expected = LTParse::Some(Node::CData(data.into()));
+    let expected = LtParse::Some(Node::CData(data.into()));
     let mut iter = Iter::new(&input).unwrap();
     let actual = parse_bang(&mut iter).unwrap();
     assert_eq!(expected, actual);
@@ -246,7 +246,7 @@ fn parse_bang_cdata_9() {
     let data = "]]]";
     let iter_char_after = 'b';
     let input = format!("<![CDATA[{}]]>bar", data);
-    let expected = LTParse::Some(Node::CData(data.into()));
+    let expected = LtParse::Some(Node::CData(data.into()));
     let mut iter = Iter::new(&input).unwrap();
     let actual = parse_bang(&mut iter).unwrap();
     assert_eq!(expected, actual);
@@ -261,7 +261,7 @@ fn parse_bang_doctype() {
 <!ATTLIST doc a1 CDATA #IMPLIED>
 ]>x"#;
     let iter_char_after = 'x';
-    let expected = LTParse::DocType(data[..data.len() - 1].to_owned());
+    let expected = LtParse::DocType(data[..data.len() - 1].to_owned());
     let mut iter = Iter::new(data).unwrap();
     let actual = parse_bang(&mut iter).unwrap();
     assert_eq!(expected, actual);
@@ -272,7 +272,7 @@ fn parse_bang_doctype() {
 fn parse_bang_comment_1() {
     let data = r#"<!-- foo -->x"#;
     let iter_char_after = 'x';
-    let expected = LTParse::Some(Node::Comment(" foo ".into()));
+    let expected = LtParse::Some(Node::Comment(" foo ".into()));
     let mut iter = Iter::new(data).unwrap();
     let actual = parse_bang(&mut iter).unwrap();
     assert_eq!(expected, actual);
@@ -283,7 +283,7 @@ fn parse_bang_comment_1() {
 fn parse_bang_comment_2() {
     let data = r#"<!-- foo-->x"#;
     let iter_char_after = 'x';
-    let expected = LTParse::Some(Node::Comment(" foo".into()));
+    let expected = LtParse::Some(Node::Comment(" foo".into()));
     let mut iter = Iter::new(data).unwrap();
     let actual = parse_bang(&mut iter).unwrap();
     assert_eq!(expected, actual);
@@ -294,7 +294,7 @@ fn parse_bang_comment_2() {
 fn parse_bang_comment_3() {
     let data = r#"<!--foo-->x"#;
     let iter_char_after = 'x';
-    let expected = LTParse::Some(Node::Comment("foo".into()));
+    let expected = LtParse::Some(Node::Comment("foo".into()));
     let mut iter = Iter::new(data).unwrap();
     let actual = parse_bang(&mut iter).unwrap();
     assert_eq!(expected, actual);

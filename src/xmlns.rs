@@ -39,7 +39,7 @@ impl NcName {
     /// Create a new `NcName` is `s` is valid.
     pub fn new<S: Into<String>>(s: S) -> std::result::Result<Self, NsErr> {
         let s = s.into();
-        Ok(s.try_into()?)
+        s.try_into()
     }
 
     /// Reference the inner string.

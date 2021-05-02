@@ -74,7 +74,7 @@ use std::path::Path;
 
 pub use crate::parser::ParseError;
 pub use crate::xdoc::{
-    Declaration, Document, Element, Encoding, Misc, Node, Version, WriteOpts, PI,
+    Declaration, Document, Element, Encoding, Misc, Node, Pi, Version, WriteOpts,
 };
 pub use crate::xmlns::{Namespace, NcName, NsErr, QName};
 

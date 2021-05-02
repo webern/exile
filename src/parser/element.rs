@@ -104,14 +104,14 @@ fn parse_children(iter: &mut Iter<'_>, parent: &mut Element) -> Result<()> {
         if iter.is('<') {
             let lt_parse = parse_lt(iter, parent)?;
             match lt_parse {
-                LTParse::EndTag => {
+                LtParse::EndTag => {
                     // this is the recursion's breaking condition
                     return Ok(());
                 }
-                LTParse::Skip => {
+                LtParse::Skip => {
                     // do nothing
                 }
-                LTParse::Some(node) => match node {
+                LtParse::Some(node) => match node {
                     Node::Element(elem) => parent.add_child(elem),
                     Node::Text(text) => parent.add_text(text),
                     Node::CData(cdata) => parent
@@ -120,10 +120,10 @@ fn parse_children(iter: &mut Iter<'_>, parent: &mut Element) -> Result<()> {
                     Node::Comment(comment) => parent
                         .add_comment(comment)
                         .map_err(|e| create_parser_error!(&iter.st, "{}", e))?,
-                    Node::PI(pi) => parent.add_pi(pi),
+                    Node::Pi(pi) => parent.add_pi(pi),
                     Node::DocType(_) => panic!("doctype unsupported"),
                 },
-                LTParse::DocType(_) => return parse_err!(iter, "doctype not allowed here"),
+                LtParse::DocType(_) => return parse_err!(iter, "doctype not allowed here"),
             }
         } else {
             let text = parse_text(iter)?;
@@ -137,7 +137,7 @@ fn parse_children(iter: &mut Iter<'_>, parent: &mut Element) -> Result<()> {
 // the return type for `parse_lt`. since the caller of `parse_lt` doesn't know what type of node
 // has been encountered, this enum is used to describe what was parsed.
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
-pub(super) enum LTParse {
+pub(super) enum LtParse {
     // the parsed entity was an EndTag.
     EndTag,
     // the parsed entity was an unsupported node type, i.e. something we want to skip.
@@ -150,23 +150,23 @@ pub(super) enum LTParse {
 }
 
 // parse the correct type of node (or end tag) when encountering a '<'
-fn parse_lt(iter: &mut Iter<'_>, parent: &mut Element) -> Result<LTParse> {
+fn parse_lt(iter: &mut Iter<'_>, parent: &mut Element) -> Result<LtParse> {
     debug_assert_eq!('<', iter.st.c);
     let next = iter.peek_or_die()?;
     // do the most common case first
     if is_name_start_char(next) {
         let element = parse_element(iter)?;
         debug_assert_ne!('>', iter.st.c);
-        return Ok(LTParse::Some(Node::Element(element)));
+        return Ok(LtParse::Some(Node::Element(element)));
     }
     match next {
         '/' => {
             parse_end_tag_name(iter, parent)?;
-            Ok(LTParse::EndTag)
+            Ok(LtParse::EndTag)
         }
         '?' => {
             let pi = parse_pi(iter)?;
-            Ok(LTParse::Some(Node::PI(pi)))
+            Ok(LtParse::Some(Node::Pi(pi)))
         }
         '!' => parse_bang(iter),
         _ => {
