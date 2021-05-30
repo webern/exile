@@ -42,6 +42,18 @@ for child in doc.root().children() {
         println!("name attribute: {}", attribute);
     }
 }
+
+// we can create an index of elements
+let index = doc.index();
+
+// the element at index 2 is <thing>bar</thing>
+let thing = index.element(2).unwrap();
+
+// the parent of index 2 is <root>
+let root = index.parent(&thing).unwrap();
+
+assert_eq!("bar", thing.text().unwrap());
+assert_eq!("root", root.name());
 ```
 
 Authoring XML looks like this.
@@ -74,7 +86,7 @@ use std::path::Path;
 
 pub use crate::parser::ParseError;
 pub use crate::xdoc::{
-    Declaration, Document, Element, Encoding, Misc, Node, Pi, Version, WriteOpts,
+    Declaration, Document, Element, Encoding, Index, Misc, Node, Pi, Version, WriteOpts,
 };
 pub use crate::xmlns::{Namespace, NcName, NsErr, QName};
 

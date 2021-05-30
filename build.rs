@@ -15,6 +15,7 @@ fn generate_readme() {
     println!("cargo:rerun-if-changed=src/lib.rs");
     println!("cargo:rerun-if-changed=README.md");
     println!("cargo:rerun-if-changed=readme.template");
+    println!("cargo:rerun-if-changed=Cargo.toml");
     if env::var_os("EXILE_GENERATE_README").is_none() {
         return;
     }

@@ -1,6 +1,6 @@
 [package]
 name = "exile"
-version = "0.0.8"
+version = "0.0.9"
 description = "DOM-Style XML Parser"
 authors = ["Matthew James Briggs <matthew.james.briggs@gmail.com>"]
 categories = ["encoding", "parser-implementations", "parsing"]
