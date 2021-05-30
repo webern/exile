@@ -37,27 +37,9 @@ impl Display for crate::error::Error {
 impl std::error::Error for crate::error::Error {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
-            Error::Parse(e) => {
-                if let Some(s) = &e.source {
-                    Some(s.as_ref())
-                } else {
-                    None
-                }
-            }
-            Error::XdocErr(e) => {
-                if let Some(s) = &e.source {
-                    Some(s.as_ref())
-                } else {
-                    None
-                }
-            }
-            Error::Other(e) => {
-                if let Some(s) = &e.source {
-                    Some(s.as_ref())
-                } else {
-                    None
-                }
-            }
+            Error::Parse(e) => convert_err(&e.source),
+            Error::XdocErr(e) => convert_err(&e.source),
+            Error::Other(e) => convert_err(&e.source),
         }
     }
 }
@@ -66,6 +48,12 @@ impl From<XDocErr> for Error {
     fn from(xe: XDocErr) -> Self {
         Error::XdocErr(xe)
     }
+}
+
+fn convert_err<'a>(
+    e: &'a Option<Box<dyn std::error::Error + Send + Sync + 'static>>,
+) -> Option<&'a (dyn std::error::Error + 'static)> {
+    e.as_ref().map(|e| e.as_ref() as _)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

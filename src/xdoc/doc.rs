@@ -5,7 +5,7 @@ use std::path::Path;
 
 use crate::error::OtherError;
 use crate::xdoc::error::Result;
-use crate::{Element, Misc, Pi, WriteOpts};
+use crate::{Element, Index, Misc, Pi, WriteOpts};
 
 #[derive(Debug, Clone, Copy, Eq, Ord, PartialOrd, PartialEq, Hash)]
 /// Represents the XML Version being used.
@@ -54,6 +54,8 @@ pub struct Document {
     root: Element,
     epilog_misc: Vec<Misc>,
 }
+
+impl Unpin for Document {}
 
 /// https://www.w3.org/TR/xml/#NT-prolog
 /// ```text
@@ -281,6 +283,11 @@ impl Document {
                 source: Some(Box::new(e)),
             })
         })
+    }
+
+    /// Create an index of the elements in this document. Takes ownership of `document`.
+    pub fn index(self) -> Index {
+        Index::build(self)
     }
 }
 

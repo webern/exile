@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Currently we are using v0.0.x where every version can and will contain breaking changes.
 
+## [v0.0.9] 2021-05-29
+### Added
+- An index type for accessing elements and their parents [#85]
+[#85]: https://github.com/webern/exile/pull/85
+
 ## [v0.0.8] 2021-05-02
 ### Changed
 - Provide mutable access to element children [#84]
@@ -107,7 +112,8 @@ Currently we are using v0.0.x where every version can and will contain breaking 
 [#52]: https://github.com/webern/exile/pull/52
 
 <!-- version diff links -->
-[Unreleased]: https://github.com/webern/exile/compare/v0.0.6...HEAD
+[Unreleased]: https://github.com/webern/exile/compare/v0.0.9...HEAD
+[v0.0.9]: https://github.com/webern/exile/compare/v0.0.8...v0.0.9
 [v0.0.8]: https://github.com/webern/exile/compare/v0.0.7...v0.0.8
 [v0.0.7]: https://github.com/webern/exile/compare/v0.0.6...v0.0.7
 [v0.0.6]: https://github.com/webern/exile/compare/v0.0.5...v0.0.6
