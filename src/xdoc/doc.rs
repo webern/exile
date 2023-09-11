@@ -7,32 +7,22 @@ use crate::error::OtherError;
 use crate::xdoc::error::Result;
 use crate::{Element, Index, Misc, Pi, WriteOpts};
 
-#[derive(Debug, Clone, Copy, Eq, Ord, PartialOrd, PartialEq, Hash)]
+#[derive(Debug, Default, Clone, Copy, Eq, Ord, PartialOrd, PartialEq, Hash)]
 /// Represents the XML Version being used.
 pub enum Version {
     /// The XML Version is 1.0.
+    #[default]
     V10,
     /// The XML Version is 1.1.
     V11,
 }
 
-impl Default for Version {
-    fn default() -> Self {
-        Version::V10
-    }
-}
-
-#[derive(Debug, Clone, Copy, Eq, Ord, PartialOrd, PartialEq, Hash)]
+#[derive(Debug, Default, Clone, Copy, Eq, Ord, PartialOrd, PartialEq, Hash)]
 /// The encoding of the XML Document, currently only UTF-8 is supported.
 pub enum Encoding {
     /// The encoding is UTF-8.
+    #[default]
     Utf8,
-}
-
-impl Default for Encoding {
-    fn default() -> Self {
-        Encoding::Utf8
-    }
 }
 
 #[derive(Debug, Clone, Copy, Eq, Ord, PartialOrd, PartialEq, Hash, Default)]
@@ -82,7 +72,7 @@ impl<'a> From<Element> for Cow<'a, Element> {
     }
 }
 
-impl<'a> Document {
+impl Document {
     /// Create a new default document.
     pub fn new() -> Document {
         Document::default()
@@ -266,7 +256,7 @@ impl Document {
     /// Write the `Document` to a `String` using the given options.
     pub fn to_string_opts(&self, opts: &WriteOpts) -> Result<String> {
         let mut c = Cursor::new(Vec::new());
-        self.write_opts(&mut c, &opts)?;
+        self.write_opts(&mut c, opts)?;
         let data = c.into_inner();
         match std::str::from_utf8(data.as_slice()) {
             Ok(s) => Ok(s.to_owned()),

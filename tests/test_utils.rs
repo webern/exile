@@ -29,7 +29,7 @@ pub fn path(filename: &str) -> PathBuf {
 pub fn run_parse_test(filename: &str, expected: &Document) {
     save_serialization(filename, expected);
     let path = path(filename);
-    let actual = exile::load(&path).unwrap();
+    let actual = exile::load(path).unwrap();
     if actual != *expected {
         let actual_str = actual.to_string();
         let expected_str = expected.to_string();
@@ -66,7 +66,7 @@ pub fn save_serialization(filename: &str, expected: &Document) {
         return;
     }
     let filename = filename.replace(".xml", ".serialized.xml");
-    let filepath = input_data().join(&filename);
+    let filepath = input_data().join(filename);
     expected.save(filepath).unwrap();
 }
 

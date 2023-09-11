@@ -5,6 +5,7 @@ use std::hash::{Hash, Hasher};
 
 /// OrdMap implements some conveniences like Clone and PartialEq for BTreeMap so that we can compare
 /// XML Documents.
+#[derive(Default)]
 pub(crate) struct OrdMap(BTreeMap<String, String>);
 
 impl Clone for OrdMap {
@@ -14,12 +15,6 @@ impl Clone for OrdMap {
             result.insert(k.clone(), v.clone());
         }
         Self(result)
-    }
-}
-
-impl Default for OrdMap {
-    fn default() -> Self {
-        Self(BTreeMap::new())
     }
 }
 
@@ -65,27 +60,7 @@ impl OrdMap {
 
 impl PartialOrd for OrdMap {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        if self.size_le(other) {
-            return Some(Ordering::Less);
-        } else if self.size_gt(other) {
-            return Some(Ordering::Greater);
-        }
-        for (k, my_val) in self.0.iter() {
-            let get_opt = other.0.get(k.as_str());
-            match get_opt {
-                None => {
-                    return Some(Ordering::Greater);
-                }
-                Some(other_val) if my_val < other_val => {
-                    return Some(Ordering::Less);
-                }
-                Some(other_val) if my_val > other_val => {
-                    return Some(Ordering::Greater);
-                }
-                Some(_) => {}
-            }
-        }
-        Some(Ordering::Equal)
+        Some(self.cmp(other))
     }
 
     fn lt(&self, other: &Self) -> bool {
@@ -119,9 +94,27 @@ impl PartialOrd for OrdMap {
 
 impl Ord for OrdMap {
     fn cmp(&self, other: &Self) -> Ordering {
-        let ordering = self.partial_cmp(other);
-        // TODO - I think I implemented these backwards, maybe all I needed was Ord not PartialOrd
-        ordering.unwrap()
+        if self.size_le(other) {
+            return Ordering::Less;
+        } else if self.size_gt(other) {
+            return Ordering::Greater;
+        }
+        for (k, my_val) in self.0.iter() {
+            let get_opt = other.0.get(k.as_str());
+            match get_opt {
+                None => {
+                    return Ordering::Greater;
+                }
+                Some(other_val) if my_val < other_val => {
+                    return Ordering::Less;
+                }
+                Some(other_val) if my_val > other_val => {
+                    return Ordering::Greater;
+                }
+                Some(_) => {}
+            }
+        }
+        Ordering::Equal
     }
 }
 

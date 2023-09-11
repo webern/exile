@@ -31,7 +31,7 @@ pub(super) fn parse_bang(iter: &mut Iter<'_>) -> Result<LtParse> {
             let s = parse_doctype(iter)?;
             Ok(LtParse::DocType(s))
         }
-        _ => return parse_err!(iter, "illegal char '{}' after <!", iter.st.c),
+        _ => parse_err!(iter, "illegal char '{}' after <!", iter.st.c),
     }
 }
 

@@ -85,12 +85,7 @@ impl Element {
     /// Find the first occurrance specific child element (does not recurse to lower levels of children).
     pub fn child<S: AsRef<str>>(&self, name: S) -> Option<&Element> {
         let name = name.as_ref();
-        for child in self.children() {
-            if child.name.as_str() == name {
-                return Some(child);
-            }
-        }
-        None
+        self.children().find(|&child| child.name.as_str() == name)
     }
 
     /// Add an element as a child of this element.

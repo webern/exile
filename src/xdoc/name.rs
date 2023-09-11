@@ -91,7 +91,7 @@ impl Display for Name {
 
 impl AsRef<str> for Name {
     fn as_ref(&self) -> &str {
-        self.full().as_ref()
+        self.full()
     }
 }
 

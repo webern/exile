@@ -150,7 +150,7 @@ pub(super) enum LtParse {
 }
 
 // parse the correct type of node (or end tag) when encountering a '<'
-fn parse_lt(iter: &mut Iter<'_>, parent: &mut Element) -> Result<LtParse> {
+fn parse_lt(iter: &mut Iter<'_>, parent: &Element) -> Result<LtParse> {
     debug_assert_eq!('<', iter.st.c);
     let next = iter.peek_or_die()?;
     // do the most common case first
