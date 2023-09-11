@@ -112,7 +112,7 @@ where
 {
     crate::parser::error::ParseError {
         throw_site,
-        xml_site: Some(XmlSite::from_parser(&parser_state)),
+        xml_site: Some(XmlSite::from_parser(parser_state)),
         message: message.map(|s| s.into()),
         source: source.map(|e| e.into()),
     }

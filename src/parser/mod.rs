@@ -272,35 +272,25 @@ pub(crate) fn document_from_file<P: AsRef<Path>>(path: P) -> crate::error::Resul
 
 // TODO - disallow dead code
 #[allow(dead_code)]
-#[derive(Debug, Clone, Copy, Eq, PartialOrd, PartialEq, Hash)]
+#[derive(Debug, Default, Clone, Copy, Eq, PartialOrd, PartialEq, Hash)]
 pub(crate) enum TagStatus {
     TagOpen(u64),
     InsideTag(u64),
     InsideProcessingInstruction(u64),
     TagClose(u64, u64),
+    #[default]
     OutsideTag,
-}
-
-impl Default for TagStatus {
-    fn default() -> Self {
-        TagStatus::OutsideTag
-    }
 }
 
 // TODO - disallow dead code
 #[allow(dead_code)]
-#[derive(Debug, Clone, Copy, Eq, PartialOrd, PartialEq, Hash)]
+#[derive(Debug, Default, Clone, Copy, Eq, PartialOrd, PartialEq, Hash)]
 pub(crate) enum DocStatus {
+    #[default]
     Declaration,
     Prolog,
     Root,
     Epilog,
-}
-
-impl Default for DocStatus {
-    fn default() -> Self {
-        DocStatus::Declaration
-    }
 }
 
 fn parse_document(iter: &mut Iter<'_>, document: &mut Document) -> Result<()> {
@@ -364,7 +354,7 @@ fn parse_document(iter: &mut Iter<'_>, document: &mut Document) -> Result<()> {
 }
 
 // TODO - this is horrible
-fn add_doc_misc(iter: &mut Iter<'_>, document: &mut Document, misc: Misc) -> Result<()> {
+fn add_doc_misc(iter: &Iter<'_>, document: &mut Document, misc: Misc) -> Result<()> {
     match misc {
         Misc::Comment(c) if iter.st.doc_status == DocStatus::Prolog => document
             .add_prolog_comment(c)
@@ -478,7 +468,7 @@ fn parse_as_map<'a, S: AsRef<str>>(
 
 fn state_must_be_before_declaration(iter: &Iter<'_>) -> Result<()> {
     if iter.st.doc_status != DocStatus::Declaration {
-        return parse_err!(iter, "state_must_be_before_declaration");
+        parse_err!(iter, "state_must_be_before_declaration")
     } else {
         Ok(())
     }
@@ -566,7 +556,7 @@ fn consume_test_err() {
 mod tests {
     use super::*;
 
-    const XML1: &str = r##"
+    const XML1: &str = r#"
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <!DOCTYPE something PUBLIC "-//Some//Path//EN" "http://www.example.org/dtds/partwise.dtd">
 <cats>
@@ -581,7 +571,7 @@ mod tests {
     <birthdate>2012-01-01</birthdate>
   </cat>
 </cats>
-    "##;
+    "#;
 
     #[test]
     fn encoding_lowercase() {

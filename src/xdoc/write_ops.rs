@@ -3,20 +3,15 @@ use std::io::Write;
 use crate::xdoc::error::Result;
 
 /// The type of newline character to use when writing the XML Document
-#[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
+#[derive(Debug, Default, Clone, Eq, PartialOrd, PartialEq, Hash)]
 pub enum Newline {
     /// No newline character.
     None,
     /// The unix/linux newline character `\n`.
+    #[default]
     Newline,
     /// The Windows newline sequence `\n\r`.
     Windows,
-}
-
-impl Default for Newline {
-    fn default() -> Self {
-        Newline::Newline
-    }
 }
 
 #[derive(Debug, Clone, Eq, PartialOrd, PartialEq, Hash)]
@@ -54,8 +49,7 @@ impl WriteOpts {
     where
         W: Write,
     {
-        let s = std::iter::repeat(s).take(num).collect::<String>();
-        xwrite!(writer, "{}", s)?;
+        xwrite!(writer, "{}", s.repeat(num))?;
         Ok(())
     }
 
