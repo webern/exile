@@ -21,7 +21,7 @@ repository = "https://github.com/webern/exile/"
 [dependencies]
 
 [build-dependencies]
-cargo-readme = "3.2.0"
+cargo-readme = "3.3.1"
 
 [features]
 default = []
