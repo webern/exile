@@ -44,7 +44,7 @@ pub(super) fn display_char(c: char) -> String {
         '\u{000B}' => "\\u000B".into(),
         '\u{000C}' => "\\u000C".into(),
         ' ' => "%20".into(),
-        _ => format!("{}", c),
+        _ => format!("{c}"),
     }
 }
 
@@ -81,7 +81,7 @@ impl Display for ParseError {
         }
         if let Some(msg) = &self.message {
             if !msg.is_empty() {
-                write!(f, " - {}", msg)?;
+                write!(f, " - {msg}")?;
             }
         }
         if let Some(e) = &self.source {

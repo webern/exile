@@ -91,7 +91,7 @@ impl Display for OtherError {
         self.throw_site.fmt(f)?;
         if let Some(msg) = &self.message {
             if !msg.is_empty() {
-                write!(f, " - {}", msg)?;
+                write!(f, " - {msg}")?;
             }
         }
         if let Some(e) = &self.source {

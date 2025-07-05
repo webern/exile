@@ -17,9 +17,7 @@ pub use index::Index;
 pub(crate) use name::Name;
 pub use node::{Misc, Node};
 pub use pi::Pi;
-pub use write_ops::{Newline, WriteOpts};
-
-pub use crate::xdoc::error::Result;
+pub use write_ops::WriteOpts;
 
 #[macro_use]
 mod macros;

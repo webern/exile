@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 use std::default::Default;
+use std::fmt::{Display, Formatter};
 use std::io::{Cursor, Write};
 use std::path::Path;
 
@@ -281,13 +282,13 @@ impl Document {
     }
 }
 
-impl ToString for Document {
-    fn to_string(&self) -> String {
+impl Display for Document {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let opts = WriteOpts::default();
-        match self.to_string_opts(&opts) {
-            Ok(s) => s,
-            Err(_) => "<error/>".to_string(),
-        }
+        let s = self
+            .to_string_opts(&opts)
+            .unwrap_or_else(|_| "<error/>".to_string());
+        write!(f, "{s}")
     }
 }
 

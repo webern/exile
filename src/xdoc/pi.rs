@@ -115,7 +115,7 @@ impl Display for Pi {
         }
         let data = c.into_inner();
         let data_str = std::str::from_utf8(data.as_slice()).unwrap_or("<?error?>");
-        write!(f, "{}", data_str)
+        write!(f, "{data_str}")
     }
 }
 

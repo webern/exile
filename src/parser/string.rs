@@ -397,7 +397,7 @@ fn test_parse_string_bad_amp_or_apos_err() {
 #[test]
 fn test_parse_string_quotes_inside_1() {
     let want = r#"attr val with something 'quoted' inside"#;
-    let terminated = format!("{}\"", want);
+    let terminated = format!("{want}\"");
     use crate::parser::Iter;
     let mut iter = Iter::new(terminated.as_str()).unwrap();
     let got = parse_string(&mut iter, StringType::AttributeDouble).unwrap();
@@ -407,7 +407,7 @@ fn test_parse_string_quotes_inside_1() {
 #[test]
 fn test_parse_string_quotes_inside_2() {
     let want = r#"attr val with something "quoted" inside"#;
-    let terminated = format!("{}'", want);
+    let terminated = format!("{want}'");
     use crate::parser::Iter;
     let mut iter = Iter::new(terminated.as_str()).unwrap();
     let got = parse_string(&mut iter, StringType::AttributeSingle).unwrap();

@@ -79,10 +79,7 @@ impl Index {
 
     /// Gets the parent of the given `element`.
     pub fn parent(&self, element: &Element) -> Option<&Element> {
-        let child_index = match self.index(element) {
-            Some(ix) => ix,
-            None => return None,
-        };
+        let child_index = self.index(element)?;
 
         self.parent_index(child_index)
             .and_then(|parent_index| self.element(parent_index))

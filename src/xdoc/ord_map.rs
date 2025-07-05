@@ -152,7 +152,7 @@ mod tests {
         a.mut_map().insert("4".to_string(), String::new());
         let entries = a.map().keys();
         for (i, item) in entries.enumerate() {
-            assert_eq!(format!("{}", i), item.to_owned());
+            assert_eq!(format!("{i}"), item.to_owned());
         }
     }
 
