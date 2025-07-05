@@ -149,7 +149,7 @@ fn parse_cdata(iter: &mut Iter<'_>) -> Result<String> {
 fn parse_bang_cdata_1() {
     let data = "foo";
     let iter_char_after = 'b';
-    let input = format!("<![CDATA[{}]]>bar", data);
+    let input = format!("<![CDATA[{data}]]>bar");
     let expected = LtParse::Some(Node::CData(data.into()));
     let mut iter = Iter::new(&input).unwrap();
     let actual = parse_bang(&mut iter).unwrap();
@@ -161,7 +161,7 @@ fn parse_bang_cdata_1() {
 fn parse_bang_cdata_2() {
     let data = "foo]] >bar]>]>x";
     let iter_char_after = 'x';
-    let input = format!("<![CDATA[{}]]>x", data);
+    let input = format!("<![CDATA[{data}]]>x");
     let expected = LtParse::Some(Node::CData(data.into()));
     let mut iter = Iter::new(&input).unwrap();
     let actual = parse_bang(&mut iter).unwrap();
@@ -173,7 +173,7 @@ fn parse_bang_cdata_2() {
 fn parse_bang_cdata_3() {
     let data = "foo]]>bar]>]>x";
     let iter_char_after = 'b';
-    let input = format!("<![CDATA[{}]]>x", data);
+    let input = format!("<![CDATA[{data}]]>x");
     let expected = LtParse::Some(Node::CData("foo".into()));
     let mut iter = Iter::new(&input).unwrap();
     let actual = parse_bang(&mut iter).unwrap();
@@ -185,7 +185,7 @@ fn parse_bang_cdata_3() {
 fn parse_bang_cdata_4() {
     let data = "<xml>bloop</xml>";
     let iter_char_after = '<';
-    let input = format!("<![CDATA[{}]]><foo></foo>", data);
+    let input = format!("<![CDATA[{data}]]><foo></foo>");
     let expected = LtParse::Some(Node::CData(data.into()));
     let mut iter = Iter::new(&input).unwrap();
     let actual = parse_bang(&mut iter).unwrap();
@@ -197,7 +197,7 @@ fn parse_bang_cdata_4() {
 fn parse_bang_cdata_5() {
     let data = "<![CDATA[";
     let iter_char_after = '<';
-    let input = format!("<![CDATA[{}]]><foo></foo>", data);
+    let input = format!("<![CDATA[{data}]]><foo></foo>");
     let expected = LtParse::Some(Node::CData(data.into()));
     let mut iter = Iter::new(&input).unwrap();
     let actual = parse_bang(&mut iter).unwrap();
@@ -209,7 +209,7 @@ fn parse_bang_cdata_5() {
 fn parse_bang_cdata_6() {
     let data = "<&]>]";
     let iter_char_after = 'b';
-    let input = format!("<![CDATA[{}]]>bar", data);
+    let input = format!("<![CDATA[{data}]]>bar");
     let expected = LtParse::Some(Node::CData(data.into()));
     let mut iter = Iter::new(&input).unwrap();
     let actual = parse_bang(&mut iter).unwrap();
@@ -221,7 +221,7 @@ fn parse_bang_cdata_6() {
 fn parse_bang_cdata_7() {
     let data = "]";
     let iter_char_after = 'b';
-    let input = format!("<![CDATA[{}]]>bar", data);
+    let input = format!("<![CDATA[{data}]]>bar");
     let expected = LtParse::Some(Node::CData(data.into()));
     let mut iter = Iter::new(&input).unwrap();
     let actual = parse_bang(&mut iter).unwrap();
@@ -233,7 +233,7 @@ fn parse_bang_cdata_7() {
 fn parse_bang_cdata_8() {
     let data = "]]";
     let iter_char_after = 'b';
-    let input = format!("<![CDATA[{}]]>bar", data);
+    let input = format!("<![CDATA[{data}]]>bar");
     let expected = LtParse::Some(Node::CData(data.into()));
     let mut iter = Iter::new(&input).unwrap();
     let actual = parse_bang(&mut iter).unwrap();
@@ -245,7 +245,7 @@ fn parse_bang_cdata_8() {
 fn parse_bang_cdata_9() {
     let data = "]]]";
     let iter_char_after = 'b';
-    let input = format!("<![CDATA[{}]]>bar", data);
+    let input = format!("<![CDATA[{data}]]>bar");
     let expected = LtParse::Some(Node::CData(data.into()));
     let mut iter = Iter::new(&input).unwrap();
     let actual = parse_bang(&mut iter).unwrap();

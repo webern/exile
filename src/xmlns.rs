@@ -18,9 +18,9 @@ impl Display for NsErr {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             NsErr::Empty => std::fmt::Display::fmt("empty string not allowed", f),
-            NsErr::InvalidStart(c) => write!(f, "invalid start char '{}'", c),
-            NsErr::InvalidChar(c) => write!(f, "invalid char '{}'", c),
-            NsErr::Malformed(msg) => write!(f, "malformed: {}", msg),
+            NsErr::InvalidStart(c) => write!(f, "invalid start char '{c}'"),
+            NsErr::InvalidChar(c) => write!(f, "invalid char '{c}'"),
+            NsErr::Malformed(msg) => write!(f, "malformed: {msg}"),
         }
     }
 }

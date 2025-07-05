@@ -32,7 +32,7 @@ impl Display for Element {
             .map_err(|_| std::fmt::Error)?;
         let bytes = cursor.into_inner();
         let s = String::from_utf8_lossy(bytes.as_slice());
-        write!(f, "{}", s)
+        write!(f, "{s}")
     }
 }
 

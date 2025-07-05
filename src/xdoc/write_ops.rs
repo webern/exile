@@ -9,6 +9,7 @@ pub enum Newline {
     None,
     /// The unix/linux newline character `\n`.
     #[default]
+    #[allow(clippy::enum_variant_names)]
     Newline,
     /// The Windows newline sequence `\n\r`.
     Windows,
