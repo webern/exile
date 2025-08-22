@@ -7,7 +7,7 @@ Current version: 0.0.9
 `exile` is a Rust library for reading and writing XML.
 
 The goal, at least initially, is to provide an abstract syntax tree of an XML file.
-As such, this is a Exile is a dom parser and loads the complete contents of the document into memory.
+As such, Exile is a dom parser and loads the complete contents of the document into memory.
 
 Currently supported:
 - Attributes
